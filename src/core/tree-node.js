@@ -33,7 +33,7 @@ export class TreeNode {
         this.traverseLeaves(callback, child);
       }
     } else {
-      callback(node.obj);
+      callback(node);
     }
   }
 }
