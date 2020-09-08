@@ -3,8 +3,8 @@ import { TreeNode } from '../core/tree-node';
 export class EngineBase {
   tree = null;
 
-  constructor(initialMass) {
-    this.tree = new TreeNode(initialMass);
+  constructor(primarySector) {
+    this.tree = new TreeNode(primarySector);
   }
 
   execute() {
