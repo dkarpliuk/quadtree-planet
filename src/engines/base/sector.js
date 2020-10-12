@@ -22,7 +22,7 @@ export class Sector {
   constructor(address, matrix) {
     this.#address = address;
     this.#matrix = matrix;
-    this.#area = new Area();
+    this.#area = this.#createArea();
   }
 
   instantiate(attractor) {
@@ -55,7 +55,7 @@ export class Sector {
     matrix.makeScale(.5, .5, .5);
     this.#adjustPosition(address, matrix);
 
-    return new Sector(address, matrix);
+    return this.#createSector(address, matrix);
   }
 
   #adjustPosition(address, matrix) {
@@ -89,5 +89,13 @@ export class Sector {
       default:
         throw `Invalid sector address: ${address.join('-')}`;
     }
+  }
+
+  #createArea() {
+    return new Area();
+  }
+
+  #createSector(address, matrix) {
+    return new Sector(address, matrix);
   }
 }

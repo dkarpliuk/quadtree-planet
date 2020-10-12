@@ -69,12 +69,12 @@ export class Engine {
     }
 
     let sectors = [
-      new Sector(AxisEnum.abscissaPositive),
-      new Sector(AxisEnum.abscissaNegative),
-      new Sector(AxisEnum.ordinatePositive),
-      new Sector(AxisEnum.ordinateNegative),
-      new Sector(AxisEnum.applicataPositive),
-      new Sector(AxisEnum.applicataNegative)
+      this.#createSector(AxisEnum.abscissaPositive),
+      this.#createSector(AxisEnum.abscissaNegative),
+      this.#createSector(AxisEnum.ordinatePositive),
+      this.#createSector(AxisEnum.ordinateNegative),
+      this.#createSector(AxisEnum.applicataPositive),
+      this.#createSector(AxisEnum.applicataNegative)
     ];
 
     this.#tree.setChildren(sectors);
@@ -105,5 +105,9 @@ export class Engine {
       parent.removeChildren();
       parent.obj.show();
     }
+  }
+
+  #createSector(address, matrix) {
+    return new Sector(address, matrix);
   }
 }
