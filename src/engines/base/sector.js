@@ -1,4 +1,4 @@
-import { AxisEnum } from '../core/axis-enum';
+import { AxisEnum } from '../../enums/axis-enum';
 import { Area } from './area';
 
 export class Sector {

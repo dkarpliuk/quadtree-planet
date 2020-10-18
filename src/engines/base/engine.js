@@ -1,22 +1,15 @@
 import { Object3D } from 'three';
-import { AxisEnum } from '../core/axis-enum';
+import { AxisEnum } from '../../enums/axis-enum';
 import { TreeNode } from '../core/tree-node';
 import { debounce } from '../helpers/debounce';
 import { Sector } from './sector';
 
 export class Engine {
-  #spectatorRef = null;
   #tree = null;
+  #spectatorRef = null;
   #sphereRadius = 0;
   #depthLevel = 1;
   #executionDebounceMs = 0;
-
-  get spectator() {
-    return this.#spectatorRef;
-  }
-  set spectator(spectator) {
-    this.#spectatorRef = spectator;
-  }
 
   get attractor() {
     return this.#tree?.obj;
@@ -58,9 +51,13 @@ export class Engine {
     }
   }
 
-  initialize() {
-    if (!this.spectator) {
-      throw `Engine can not be initialized. Spectator is ${this.spectator.toString()}`;
+  constructor(spectator) {
+    this.#spectatorRef = spectator;
+  }
+
+  initialize(initialPosition) {
+    if (!this.#spectatorRef) {
+      throw `Engine can not be initialized. Spectator is ${this.#spectatorRef.toString()}`;
     }
 
     this.#tree = new TreeNode(new Object3D(), null);
@@ -91,7 +88,7 @@ export class Engine {
   }
 
   #work(leafNode) {
-    let distance = leafNode.obj.getDistanceToMatter(this.spectator.position);
+    let distance = leafNode.obj.getDistanceToMatter(this.#spectatorRef.position);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level);
 
     if (distance < splitDistanceBoundary && leafNode.level < this.depthLevel) {
