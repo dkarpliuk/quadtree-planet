@@ -7,7 +7,7 @@ export class PlanetProcessor {
   #engines = new Array();
   #position = null;
   #engineGroup = null;
-
+  
   get radius() {
     return this.#radius;
   }
@@ -17,6 +17,10 @@ export class PlanetProcessor {
 
   get position() {
     return this.#position;
+  }
+
+  get object3d() {
+    return this.#engineGroup;
   }
 
   constructor(spectator, position) {
