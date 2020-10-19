@@ -2,44 +2,44 @@ import { AxisEnum } from '../../enums/axis-enum';
 import { Area } from './area';
 
 export class Sector {
-  #matrix = null;
-  #area = null;
-  #address = new Array();
+  _matrix = null;
+  _area = null;
+  _address = new Array();
 
   get address() {
-    return this.#address;
+    return this._address;
   }
 
   get visible() {
-    return this.#area?.visible;
+    return this._area?.visible;
   }
   set visible(value) {
-    if (this.#area) {
-      this.#area.visible = value;
+    if (this._area) {
+      this._area.visible = value;
     }
   }
 
   constructor(address, matrix) {
-    this.#address = address;
-    this.#matrix = matrix;
-    this.#area = this.#createArea();
+    this._address = address;
+    this._matrix = matrix;
+    this._area = this._createArea();
   }
 
   instantiate(attractor) {
-    this.#area.instantiate(attractor, this.#matrix);
+    this._area.instantiate(attractor, this._matrix);
   }
 
   split() {
     return [
-      this.#createSubsector(0),
-      this.#createSubsector(1),
-      this.#createSubsector(2),
-      this.#createSubsector(3),
+      this._createSubsector(0),
+      this._createSubsector(1),
+      this._createSubsector(2),
+      this._createSubsector(3),
     ];
   }
 
   getCenterAreaDistance(toVector) {
-    let center = this.#area.center;
+    let center = this._area.center;
 
     let a = toVector.x - center.x;
     let b = toVector.y - center.y;
@@ -48,17 +48,17 @@ export class Sector {
     return Math.sqrt(a * a + b * b + c * c);
   }
 
-  #createSubsector(number) {
-    let matrix = this.#matrix.clone();
+  _createSubsector(number) {
+    let matrix = this._matrix.clone();
     let address = [...this.address, number];
 
     matrix.makeScale(.5, .5, .5);
-    this.#adjustPosition(address, matrix);
+    this._adjustPosition(address, matrix);
 
-    return this.#createSector(address, matrix);
+    return this._createSector(address, matrix);
   }
 
-  #adjustPosition(address, matrix) {
+  _adjustPosition(address, matrix) {
     let level = address.length - 1;
     let sphereRadius = matrix.getMaxScaleOnAxis();
     let shiftDistanceOnAxis = sphereRadius / Math.pow(2, level);
@@ -91,11 +91,11 @@ export class Sector {
     }
   }
 
-  #createArea() {
+  _createArea() {
     return new Area();
   }
 
-  #createSector(address, matrix) {
+  _createSector(address, matrix) {
     return new Sector(address, matrix);
   }
 }
