@@ -1,6 +1,6 @@
 import { Object3D } from 'three';
-import { AxisEnum } from '../../enums/axis-enum';
 import { TreeNode } from '../../core/tree-node';
+import { AxisEnum } from '../../enums/axis-enum';
 import { debounce } from '../../helpers/debounce';
 import { Sector } from './sector';
 
@@ -23,7 +23,6 @@ export class Engine {
       throw 'Sphere radius out of range. Must be greater than 0.';
     } else {
       this._sphereRadius = val;
-      this.initialize();
     }
   }
 
@@ -35,7 +34,6 @@ export class Engine {
       throw 'Depth level out of range. Must be greater than 1.';
     } else {
       this._depthLevel = val;
-      this.initialize();
     }
   }
 
@@ -47,7 +45,6 @@ export class Engine {
       throw 'Execution debounce out of range. Must be greater than 0.';
     } else {
       this._executionDebounceMs = val;
-      this.initialize();
     }
   }
 
@@ -55,7 +52,7 @@ export class Engine {
     this._spectatorRef = spectator;
   }
 
-  initialize(initialPosition) {
+  initialize() {
     if (!this._spectatorRef) {
       throw `Engine can not be initialized. Spectator is ${this._spectatorRef.toString()}`;
     }
@@ -66,45 +63,56 @@ export class Engine {
     }
 
     let sectors = [
-      this._createSector(AxisEnum.abscissaPositive),
-      this._createSector(AxisEnum.abscissaNegative),
-      this._createSector(AxisEnum.ordinatePositive),
-      this._createSector(AxisEnum.ordinateNegative),
-      this._createSector(AxisEnum.applicataPositive),
-      this._createSector(AxisEnum.applicataNegative)
+      //this._createSector([AxisEnum.abscissaPositive]),
+      //this._createSector([AxisEnum.abscissaNegative]),
+      //this._createSector([AxisEnum.ordinatePositive]),
+      //this._createSector([AxisEnum.ordinateNegative]),
+      this._createSector([AxisEnum.applicataPositive]),
+      //this._createSector([AxisEnum.applicataNegative])
     ];
 
     this._tree.setChildren(sectors);
 
-    for (let side of sectors) {
-      side.instantiate(this.attractor);
+    for (let sector of sectors) {
+      sector.instantiate(this.attractor);
     }
   }
 
   execute() {
     if (this._tree) {
-      this._tree.traverseLeaves(this._work);
+      this._tree.traverseLeaves(this._work.bind(this));
     }
   }
 
   _work(leafNode) {
-    let distance = leafNode.obj.getDistanceToMatter(this._spectatorRef.position);
-    let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level);
+    let distance = leafNode.obj.calcDistanceToAreaCenter(this._spectatorRef.position);
+    let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
 
     if (distance < splitDistanceBoundary && leafNode.level < this.depthLevel) {
-      leafNode.setChildren(leafNode.obj.split());
-      leafNode.obj.hide();
+      leafNode.setChildren(this._splitSector(leafNode.obj));
+      leafNode.obj.visible = false;
       for (let childNode of leafNode.children) {
         childNode.obj.instantiate(this.attractor);
       }
-    } else if (distance > splitDistanceBoundary * 2 && leafNode.level > 1) {
+    }
+    
+    if (distance > splitDistanceBoundary * 3 && leafNode.level > 1) {
       let parent = leafNode.parent;
       parent.removeChildren();
-      parent.obj.show();
+      parent.obj.visible = true;
     }
   }
 
-  _createSector(address, matrix) {
-    return new Sector(address, matrix);
+  _createSector(address) {
+    return new Sector(address, this._sphereRadius);
+  }
+
+  _splitSector(sector) {
+    return [
+      this._createSector([...sector.address, 0]),
+      this._createSector([...sector.address, 1]),
+      this._createSector([...sector.address, 2]),
+      this._createSector([...sector.address, 3])
+    ];
   }
 }

@@ -13,8 +13,8 @@ export class TreeNode {
     this.obj = obj;
   }
 
-  setChildren(...children) {
-    this.children = new Array(children.length);
+  setChildren(children) {
+    this.children = new Array();
 
     for (let child of children) {
       this.children.push(new TreeNode(child, this));
@@ -25,15 +25,13 @@ export class TreeNode {
     this.children = null;
   }
 
-  traverseLeaves(callback, node) {
-    let children = node ? node.children : this.children;
-
-    if (children) {
-      for (let child of children) {
-        this.traverseLeaves(callback, child);
+  traverseLeaves(callback) {
+    if (this.children) {
+      for (let child of this.children) {
+        child.traverseLeaves(callback);
       }
     } else {
-      callback(node);
+      callback(this);
     }
   }
 }

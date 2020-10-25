@@ -1,34 +1,34 @@
-const AxisTransformMatrix = [
-  0, 0, -1, 1,
+const AxisRotationMatrix = [
+  0, 0, -1, 0,
   0, 1, 0, 0,
   1, 0, 0, 0,
   0, 0, 0, 1,
 
-  0, 0, 1, -1,
+  0, 0, 1, 0,
   0, 1, 0, 0,
   -1, 0, 0, 0,
   0, 0, 0, 1,
 
   1, 0, 0, 0,
-  0, 0, -1, 1,
+  0, 0, -1, 0,
   0, 1, 0, 0,
   0, 0, 0, 1,
 
   1, 0, 0, 0,
-  0, 0, 1, -1,
+  0, 0, 1, 0,
   0, -1, 0, 0,
   0, 0, 0, 1,
 
   1, 0, 0, 0,
   0, 1, 0, 0,
-  0, 0, 1, 1,
+  0, 0, 1, 0,
   0, 0, 0, 1,
 
   1, 0, 0, 0,
   0, -1, 0, 0,
-  0, 0, -1, -1,
+  0, 0, -1, 0,
   0, 0, 0, 1
 ];
 
-Object.freeze(AxisTransformMatrix);
-export { AxisTransformMatrix }
+Object.freeze(AxisRotationMatrix);
+export { AxisRotationMatrix }

@@ -35,8 +35,9 @@ export class PlanetProcessor {
     landmassEngine.executionDebounce = processFrequency;
     landmassEngine.depthLevel = lod;
     landmassEngine.sphereRadius = this._radius;
-    this._engineGroup.add(landmassEngine);
-    landmassEngine.position.set(0, 0, 0);
+    landmassEngine.initialize();
+    this._engineGroup.add(landmassEngine.attractor);
+    landmassEngine.attractor.position.set(0, 0, 0);
     this._engines.push(landmassEngine);
   }
 
