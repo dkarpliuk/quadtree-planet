@@ -63,12 +63,12 @@ export class Engine {
     }
 
     let sectors = [
-      //this._createSector([AxisEnum.abscissaPositive]),
-      //this._createSector([AxisEnum.abscissaNegative]),
-      //this._createSector([AxisEnum.ordinatePositive]),
-      //this._createSector([AxisEnum.ordinateNegative]),
+      this._createSector([AxisEnum.abscissaPositive]),
+      this._createSector([AxisEnum.abscissaNegative]),
+      this._createSector([AxisEnum.ordinatePositive]),
+      this._createSector([AxisEnum.ordinateNegative]),
       this._createSector([AxisEnum.applicataPositive]),
-      //this._createSector([AxisEnum.applicataNegative])
+      this._createSector([AxisEnum.applicataNegative])
     ];
 
     this._tree.setChildren(sectors);
