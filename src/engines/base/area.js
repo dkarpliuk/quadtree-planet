@@ -1,6 +1,6 @@
 import { Matrix4, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Ray, Vector3 } from 'three';
 
-const density = 8; //must be power of 2
+const density = 16; //must be power of 2
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true })
 
 export class Area {
@@ -61,7 +61,7 @@ export class Area {
 
   _calculateCenter(sphereRadius) {
     let vertices = this._geometry.attributes.position.array;
-    let mid = Math.round(vertices.length / 2);
+    let mid = Math.round((vertices.length - 1) / 2);
     return new Vector3(vertices[mid - 1], vertices[mid], vertices[mid + 1])
       .normalize()
       .multiplyScalar(sphereRadius);

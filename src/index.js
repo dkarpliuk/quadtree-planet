@@ -1,5 +1,5 @@
 import * as STATS from 'stats.js';
-import { AmbientLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import { LOD } from './enums/lod';
@@ -26,11 +26,15 @@ function init() {
   controls = new Controls(1000, 45);
   controls.controlledObject = camera;
 
+  let radius = 3000;
   scene = new Scene();
   planet = new PlanetProcessor(camera, new Vector3(0, 0, 0));
-  planet.radius = 3000;
+  planet.radius = radius;
   planet.createLandmass(LOD.high, ProcessFrequency.medium);
   scene.add(planet.object3d);
+
+  let tmpBlackSphere = new Mesh(new SphereGeometry(radius * .98, 64, 64), new MeshBasicMaterial({ color: 0x000000 }));
+  scene.add(tmpBlackSphere);
 
   light = new AmbientLight(0xFFF8CA, 0.2);
   scene.add(light);
