@@ -1,63 +1,28 @@
 import { Object3D } from 'three';
 import { TreeNode } from '../../core/tree-node';
 import { AxisEnum } from '../../enums/axis-enum';
+import { CalcMisc } from '../../helpers/calc-misc';
 import { debounce } from '../../helpers/debounce';
 import { Sector } from './sector';
 
 export class Engine {
-  _tree = null;
+  _depthLevel = null;
+  _executionDebounceMs = null;
   _spectatorRef = null;
-  _sphereRadius = 0;
-  _depthLevel = 1;
-  _executionDebounceMs = 0;
-
-  get attractor() {
-    return this._tree?.obj;
-  }
-
-  get sphereRadius() {
-    return this._sphereRadius;
-  }
-  set sphereRadius(val) {
-    if (val < 0) {
-      throw 'Sphere radius out of range. Must be greater than 0.';
-    } else {
-      this._sphereRadius = val;
-    }
-  }
-
-  get depthLevel() {
-    return this._depthLevel;
-  }
-  set depthLevel(val) {
-    if (val < 1) {
-      throw 'Depth level out of range. Must be greater than 1.';
-    } else {
-      this._depthLevel = val;
-    }
-  }
-
-  get executionDebounce() {
-    return this._executionDebounceMs;
-  }
-  set executionDebounce(val) {
-    if (val < 0) {
-      throw 'Execution debounce out of range. Must be greater than 0.';
-    } else {
-      this._executionDebounceMs = val;
-    }
-  }
-
-  constructor(spectator) {
-    this._spectatorRef = spectator;
+  _sphereRadius = null;
+  _tree = null;
+  
+  get attractor() { return this._tree?.obj; }
+  get depthLevel() { return this._depthLevel; }
+  get executionDebounce() { return this._executionDebounceMs; }
+  get spectatorRef() { return this._spectatorRef; }
+  get sphereRadius() { return this._sphereRadius; }
+  
+  constructor() {
+    this._tree = new TreeNode(new Object3D(), null);
   }
 
   initialize() {
-    if (!this._spectatorRef) {
-      throw `Engine can not be initialized. Spectator is ${this._spectatorRef.toString()}`;
-    }
-
-    this._tree = new TreeNode(new Object3D(), null);
     if (this.executionDebounce > 0) {
       this.execute = debounce(this.execute, this.executionDebounce);
     }
@@ -72,39 +37,27 @@ export class Engine {
     ];
 
     this._tree.setChildren(sectors);
-
-    for (let sector of sectors) {
-      sector.instantiate(this.attractor);
-    }
+    sectors.forEach(sector => sector.instantiate(this.attractor));
   }
 
   execute() {
-    if (this._tree) {
-      this._tree.traverseLeaves(this._work.bind(this));
-    }
+    this._tree.traverseLeaves(this._work.bind(this));
   }
 
   _work(leafNode) {
-    let distance = leafNode.obj.calcDistanceToAreaCenter(this._spectatorRef.position);
+    let distance = CalcMisc.calcDistance(this._spectatorRef.position, leafNode.obj.center);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
 
     if (distance < splitDistanceBoundary && leafNode.level < this.depthLevel) {
-      leafNode.setChildren(this._splitSector(leafNode.obj));
       leafNode.obj.visible = false;
-      for (let childNode of leafNode.children) {
-        childNode.obj.instantiate(this.attractor);
-      }
-    }
-    
-    if (distance > splitDistanceBoundary * 3 && leafNode.level > 1) {
+      leafNode.setChildren(this._splitSector(leafNode.obj));
+      leafNode.children.forEach(childNode => childNode.obj.instantiate(this.attractor));
+    } else if (distance > splitDistanceBoundary * 3 && leafNode.level > 1) {
       let parent = leafNode.parent;
+      parent.children.forEach(childNode => childNode.obj.detach(this.attractor));
       parent.removeChildren();
       parent.obj.visible = true;
     }
-  }
-
-  _createSector(address) {
-    return new Sector(address, this._sphereRadius);
   }
 
   _splitSector(sector) {
@@ -114,5 +67,9 @@ export class Engine {
       this._createSector([...sector.address, 2]),
       this._createSector([...sector.address, 3])
     ];
+  }
+
+  _createSector(address) {
+    return new Sector(address, this.sphereRadius);
   }
 }

@@ -1,4 +1,3 @@
-
 export class Controls {
   _keyboard = {};
   _previousTimeStamp = 0;
@@ -6,12 +5,8 @@ export class Controls {
   _speedMetersPerSecond = 0;
   _turnDegreesPerSecond = 0;
 
-  get controlledObject() {
-    return this._controlledObject;
-  }
-  set controlledObject(value) {
-    this._controlledObject = value;
-  }
+  get controlledObject() { return this._controlledObject; }
+  set controlledObject(value) { this._controlledObject = value; }
 
   constructor(speedMetersPerSecond, turnDegreesPerSecond) {
     this._speedMetersPerSecond = speedMetersPerSecond;

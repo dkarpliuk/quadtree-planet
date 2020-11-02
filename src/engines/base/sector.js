@@ -1,115 +1,76 @@
-import { AxisRotationMatrix } from '../../core/axis-rotation-matrix';
-import { AxisEnum } from '../../enums/axis-enum';
-import { Area } from './area';
+import { Matrix4, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { SectorTransform } from '../../core/sector-transform';
+
+const density = 16; //must be power of 2
+const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true })
 
 export class Sector {
-  _address = new Array();
-  _area = null;
-  _matrix = null;
-  _sphereRadius = 0;
+  _address = null;
+  _center = null;
+  _mesh = null;
+  _sphereRadius = null;
 
-  get address() {
-    return this._address;
+  get _density() { return density; }
+  get _material() { return material; }
+
+  get address() { return this._address; }
+  get center() {
+    if (!this._center) {
+      this._center = this._calculateCenter();
+    }
+
+    return this._center;
   }
 
-  get visible() {
-    return this._area?.visible;
-  }
+  get visible() { return this._mesh?.visible; }
   set visible(value) {
-    if (this._area) {
-      this._area.visible = value;
+    if (this._mesh) {
+      this._mesh.visible = value;
     }
   }
 
   constructor(address, sphereRadius) {
     this._address = address;
     this._sphereRadius = sphereRadius;
-    this._matrix = this._calculateMarix();
-    this._area = this._createArea();
   }
 
   instantiate(attractor) {
-    this._area.instantiate(attractor, this._matrix);
+    let geometry = new PlaneBufferGeometry(2, 2, this._density, this._density);
+    this._mesh = new Mesh(geometry, this._material);
+
+    attractor.add(this._mesh);
+
+    let rawMatrix = SectorTransform.calculateTransformationMatrix(this.address, this._sphereRadius);
+    let transformationMatrix = new Matrix4().set(...rawMatrix);
+    this._mesh.geometry.applyMatrix4(transformationMatrix);
+    this._spherize();
+  }
+  
+  detach(attractor) {
+    attractor.remove(this._mesh);
+  }
+  
+  _calculateCenter() {
+    let vertices = this._mesh.geometry.attributes.position.array;
+    let mid = Math.round((vertices.length - 1) / 2);
+    return new Vector3(vertices[mid - 1], vertices[mid], vertices[mid + 1])
+      .normalize()
+      .multiplyScalar(this._sphereRadius);
   }
 
-  calcDistanceToAreaCenter(fromVector) {
-    let center = this._area.center;
+  _spherize() {
+    let vertices = this._mesh.geometry.attributes.position.array;
 
-    let a = fromVector.x - center.x;
-    let b = fromVector.y - center.y;
-    let c = fromVector.z - center.z;
+    for (let i = 0; i < vertices.length; i += 3) {
+      let vx = vertices[i];
+      let vy = vertices[i + 1];
+      let vz = vertices[i + 2];
 
-    return Math.sqrt(a * a + b * b + c * c);
-  }
+      let factor = this._sphereRadius / Math.sqrt(vx * vx + vy * vy + vz * vz);
 
-  _calculateMarix() {
-    let matrix = AxisRotationMatrix.slice(this.address[0] * 16, (this.address[0] + 1) * 16);
-
-    let scale = this._sphereRadius / Math.pow(2, this.address.length - 1);
-    matrix[0] *= scale;
-    matrix[1] *= scale;
-    matrix[2] *= scale;
-    matrix[4] *= scale;
-    matrix[5] *= scale;
-    matrix[6] *= scale;
-    matrix[8] *= scale;
-    matrix[9] *= scale;
-    matrix[10] *= scale;
-
-    let translation = this._calculateTranslation();
-    matrix[3] = translation.x;
-    matrix[7] = translation.y;
-    matrix[11] = translation.z;
-
-    return matrix;
-  }
-
-  _calculateTranslation() {
-    let a = 0;
-    let b = 0;
-    for (let i = 1; i < this.address.length; i++) {
-      let factor = Math.pow(2, i);
-      switch (this.address[i]) {
-        case 0:
-          a -= this._sphereRadius / factor;
-          b += this._sphereRadius / factor;
-          break;
-        case 1:
-          a += this._sphereRadius / factor;
-          b += this._sphereRadius / factor;
-          break;
-        case 2:
-          a += this._sphereRadius / factor;
-          b -= this._sphereRadius / factor;
-          break;
-        case 3:
-          a -= this._sphereRadius / factor;
-          b -= this._sphereRadius / factor;
-          break;
-        default:
-          throw `Invalid sector address: ${this.address.join('-')}`;
-      }
+      vertices[i] *= factor;
+      vertices[i + 1] *= factor;
+      vertices[i + 2] *= factor;
     }
-
-    switch (this.address[0]) {
-      case AxisEnum.abscissaPositive:
-        return { x: this._sphereRadius, y: b, z: a };
-      case AxisEnum.abscissaNegative:
-        return { x: -this._sphereRadius, y: -b, z: -a };
-      case AxisEnum.ordinatePositive:
-        return { x: a, y: this._sphereRadius, z: b };
-      case AxisEnum.ordinateNegative:
-        return { x: -a, y: -this._sphereRadius, z: -b };
-      case AxisEnum.applicataPositive:
-        return { x: a, y: b, z: this._sphereRadius };
-      case AxisEnum.applicataNegative:
-        return { x: -a, y: -b, z: -this._sphereRadius };
-      default:
-        throw `Invalid sector address: ${this.address.join('-')}`;
-    }
-  }
-
-  _createArea() {
-    return new Area();
   }
 }
