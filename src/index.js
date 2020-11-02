@@ -10,7 +10,7 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 
 //temporary for development
 var radiusTest = 3000;
-var planetPositionTest = new Vector3(0, 0, 0);
+var planetPositionTest = new Vector3(3000, 0, 0);
 
 init();
 animate();
@@ -50,9 +50,10 @@ function initPlanet() {
   planetProcessor.createLandmass(LOD.high, ProcessFrequency.medium);
   planetProcessor.initialize();
 
-  let tmpBlackSphere = new Mesh(new SphereGeometry(radiusTest * .98, 64, 64), new MeshBasicMaterial({ color: 0x222222 }));
+  let tmpBlackSphere = new Mesh(new SphereGeometry(radiusTest * .98, 64, 64), new MeshBasicMaterial({ color: 0x000000 }));
+  tmpBlackSphere.position.copy(planetPositionTest);
 
-  //scene.add(tmpBlackSphere);
+  scene.add(tmpBlackSphere);
   scene.add(planetProcessor.object3d);
 }
 
