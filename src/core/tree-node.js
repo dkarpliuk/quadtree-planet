@@ -22,6 +22,7 @@ export class TreeNode {
   }
 
   removeChildren() {
+    this.children.forEach(child => child.parent = null);
     this.children = null;
   }
 
@@ -30,8 +31,12 @@ export class TreeNode {
       for (let child of this.children) {
         child.traverseLeaves(callback);
       }
-    } else {
+    } else if (!this.isOrphan()) {
       callback(this);
     }
+  }
+
+  isOrphan() {
+    return this.parent == null && this.level > 0;
   }
 }
