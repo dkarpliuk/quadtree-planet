@@ -1,8 +1,8 @@
 import { Matrix4, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
 import { SectorTransform } from '../../core/sector-transform';
 
-const density = 16; //must be power of 2
-const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+const density = 8; //must be power of 2
+const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 export class Sector {
   _address = null;
@@ -44,6 +44,10 @@ export class Sector {
     let transformationMatrix = new Matrix4().set(...rawMatrix);
     this._mesh.geometry.applyMatrix4(transformationMatrix);
     this._spherize();
+    
+    if (this.address.length > 1) {
+      this._glueEdges();
+    }
   }
   
   detach(attractor) {
@@ -72,5 +76,43 @@ export class Sector {
       vertices[i + 1] *= factor;
       vertices[i + 2] *= factor;
     }
+  }
+
+  _glueEdges() {
+    //matrix grig dimension
+    let n = this._density + 1;
+    let subsectorNumber = this.address[this.address.length - 1];
+
+    if (subsectorNumber == 0 || subsectorNumber == 1) {
+      for (let x = 1, y = 0; x < n; x += 2) {
+        this._mergeVertices(n * y + x, n * y + x - 1);
+      }
+    }
+
+    if (subsectorNumber == 1 || subsectorNumber == 2) {
+      for (let x = n - 1, y = 1; y < n; y += 2) {
+        this._mergeVertices(n * y + x, n * (y + 1) + x);
+      }
+    }
+
+    if (subsectorNumber == 2 || subsectorNumber == 3) {
+      for (let x = n - 2, y = n - 1; x >= 0; x -= 2) {
+        this._mergeVertices(n * y + x, n * y + x + 1);
+      }
+    }
+
+    if (subsectorNumber == 3 || subsectorNumber == 0) {
+      for (let x = 0, y = n - 2; y >= 0; y -= 2) {
+        this._mergeVertices(n * y + x, n * (y - 1) + x);
+      }
+    }
+  }
+
+  _mergeVertices(v1Number, v2Number) {
+    let vertices = this._mesh.geometry.attributes.position.array;
+
+    vertices[v1Number * 3] = vertices[v2Number * 3];
+    vertices[v1Number * 3 + 1] = vertices[v2Number * 3 + 1];
+    vertices[v1Number * 3 + 2] = vertices[v2Number * 3 + 2];
   }
 }

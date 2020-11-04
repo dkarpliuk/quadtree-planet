@@ -31,7 +31,7 @@ export class TreeNode {
       for (let child of this.children) {
         child.traverseLeaves(callback);
       }
-    } else if (!this.isOrphan()) {
+    } else {
       callback(this);
     }
   }

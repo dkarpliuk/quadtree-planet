@@ -45,6 +45,12 @@ export class Engine {
   }
 
   _work(leafNode) {
+    if (leafNode.isOrphan()) {
+      leafNode.obj.visible = false;
+      leafNode.obj.detach(this.attractor);
+      return;
+    }
+
     let spectatorLocalPosition = this.attractor.worldToLocal(this._spectatorRef.position.clone());
     let distance = CalcMisc.calcDistance(spectatorLocalPosition, leafNode.obj.center);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
