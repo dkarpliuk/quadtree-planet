@@ -1,31 +1,40 @@
 import { AxisEnum } from '../enums/axis-enum';
 
+/**
+ * transformation matrices (rotation only) for each side of the cube for better performance
+ */
 const AxisRotationMatrixBase = [
+  //abscissaPositive
   0, 0, -1, 0,
   0, 1, 0, 0,
   1, 0, 0, 0,
   0, 0, 0, 1,
 
+  //abscissaNegative
   0, 0, 1, 0,
   0, 1, 0, 0,
   -1, 0, 0, 0,
   0, 0, 0, 1,
 
+  //ordinatePositive
   1, 0, 0, 0,
   0, 0, -1, 0,
   0, 1, 0, 0,
   0, 0, 0, 1,
 
+  //ordinateNegative
   1, 0, 0, 0,
   0, 0, 1, 0,
   0, -1, 0, 0,
   0, 0, 0, 1,
 
+  //applicataPositive
   1, 0, 0, 0,
   0, 1, 0, 0,
   0, 0, 1, 0,
   0, 0, 0, 1,
 
+  //applicataNegative
   1, 0, 0, 0,
   0, -1, 0, 0,
   0, 0, -1, 0,
@@ -34,6 +43,10 @@ const AxisRotationMatrixBase = [
 
 Object.freeze(AxisRotationMatrixBase);
 
+/**
+ * Class used to calculate initial transformation matrix
+ * used to properly place sector on the cube
+ */
 export class SectorTransform {
   static calculateTransformationMatrix(address, sphereRadius) {
     let matrix = AxisRotationMatrixBase.slice(address[0] * 16, (address[0] + 1) * 16);
@@ -58,6 +71,7 @@ export class SectorTransform {
   }
 
   static calculateTranslation(address, sphereRadius) {
+    //first calculates relative translation
     let a = 0;
     let b = 0;
     for (let i = 1; i < address.length; i++) {
@@ -84,6 +98,7 @@ export class SectorTransform {
       }
     }
 
+    //then turns relative translation to absolute (for particular side of the cube)
     switch (address[0]) {
       case AxisEnum.abscissaPositive:
         return { x: sphereRadius, y: b, z: a };

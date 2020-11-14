@@ -1,4 +1,4 @@
-import { Matrix4, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
 import { SectorTransform } from '../../core/sector-transform';
 
 const density = 8; //must be power of 2
@@ -13,7 +13,14 @@ export class Sector {
   get _density() { return density; }
   get _material() { return material; }
 
+  /**
+   * @type {number[]}
+   */
   get address() { return this._address; }
+
+  /**
+   * @type {Vector3}
+   */
   get center() {
     if (!this._center) {
       this._center = this._calculateCenter();
@@ -22,6 +29,9 @@ export class Sector {
     return this._center;
   }
 
+  /**
+   * @type {boolean}
+   */
   get visible() { return this._mesh?.visible; }
   set visible(value) {
     if (this._mesh) {
@@ -29,31 +39,46 @@ export class Sector {
     }
   }
 
+  /**
+   * @param {number[]} address 
+   * @param {number} sphereRadius 
+   */
   constructor(address, sphereRadius) {
     this._address = address;
     this._sphereRadius = sphereRadius;
   }
 
+  /**
+   * instantiates the sector in 3D space and performs the initial transformation
+   * @param {Object3D} attractor 
+   */
   instantiate(attractor) {
     let geometry = new PlaneBufferGeometry(2, 2, this._density, this._density);
     this._mesh = new Mesh(geometry, this._material);
 
     attractor.add(this._mesh);
 
+    //place sector on the cube
     let rawMatrix = SectorTransform.calculateTransformationMatrix(this.address, this._sphereRadius);
     let transformationMatrix = new Matrix4().set(...rawMatrix);
     this._mesh.geometry.applyMatrix4(transformationMatrix);
-    this._spherize();
     
+    //then spherize
+    this._spherize();
+
     if (this.address.length > 1) {
       this._glueEdges();
     }
   }
-  
+
+  /**
+   * removes this sector from attractor
+   * @param {Object3D} attractor 
+   */
   detach(attractor) {
     attractor.remove(this._mesh);
   }
-  
+
   _calculateCenter() {
     let vertices = this._mesh.geometry.attributes.position.array;
     let mid = Math.round((vertices.length - 1) / 2);
@@ -62,6 +87,10 @@ export class Sector {
       .multiplyScalar(this._sphereRadius);
   }
 
+  /**
+   * key method that turns a cube into a sphere
+   * (moves each vertex to be the same distance from the center)
+   */
   _spherize() {
     let vertices = this._mesh.geometry.attributes.position.array;
 
@@ -78,36 +107,44 @@ export class Sector {
     }
   }
 
+  /**
+   * makes sector suitable for docking with higher-level sectors
+   * i.e. decreases density on edges
+   */
   _glueEdges() {
-    //matrix grig dimension
-    let n = this._density + 1;
-    let subsectorNumber = this.address[this.address.length - 1];
+    let n = this._density + 1; //sector grid dimension
+    let quadrantNumber = this.address[this.address.length - 1];
 
-    if (subsectorNumber == 0 || subsectorNumber == 1) {
+    if (quadrantNumber == 0 || quadrantNumber == 1) {
       for (let x = 1, y = 0; x < n; x += 2) {
         this._mergeVertices(n * y + x, n * y + x - 1);
       }
     }
 
-    if (subsectorNumber == 1 || subsectorNumber == 2) {
+    if (quadrantNumber == 1 || quadrantNumber == 2) {
       for (let x = n - 1, y = 1; y < n; y += 2) {
         this._mergeVertices(n * y + x, n * (y + 1) + x);
       }
     }
 
-    if (subsectorNumber == 2 || subsectorNumber == 3) {
+    if (quadrantNumber == 2 || quadrantNumber == 3) {
       for (let x = n - 2, y = n - 1; x >= 0; x -= 2) {
         this._mergeVertices(n * y + x, n * y + x + 1);
       }
     }
 
-    if (subsectorNumber == 3 || subsectorNumber == 0) {
+    if (quadrantNumber == 3 || quadrantNumber == 0) {
       for (let x = 0, y = n - 2; y >= 0; y -= 2) {
         this._mergeVertices(n * y + x, n * (y - 1) + x);
       }
     }
   }
 
+  /**
+   * set vertex1 position same as vertex2 position
+   * @param {number} v1Number
+   * @param {number} v2Number
+   */
   _mergeVertices(v1Number, v2Number) {
     let vertices = this._mesh.geometry.attributes.position.array;
 

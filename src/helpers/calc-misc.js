@@ -1,3 +1,6 @@
+/**
+ * Helper class for miscellaneous calculations
+ */
 export class CalcMisc {
   static calcDistance(fromVector, toVector) {
     let a = fromVector.x - toVector.x;

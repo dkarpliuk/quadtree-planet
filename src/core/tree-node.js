@@ -1,9 +1,25 @@
 export class TreeNode {
+  /**
+   * @type {TreeNode}
+   */
   parent = null;
+  
+  /**
+   * @type {TreeNode[]}
+   */
   children = null;
+  
   obj = null;
+
+  /**
+   * @type {number}
+   */
   level = 0;
 
+  /**
+   * @param {any} obj 
+   * @param {TreeNode} parent 
+   */
   constructor(obj, parent) {
     if (parent) {
       this.parent = parent;
@@ -13,10 +29,13 @@ export class TreeNode {
     this.obj = obj;
   }
 
-  setChildren(children) {
+  /**
+   * @param {any[]} childrenObjects 
+   */
+  setChildren(childrenObjects) {
     this.children = new Array();
 
-    for (let child of children) {
+    for (let child of childrenObjects) {
       this.children.push(new TreeNode(child, this));
     }
   }
@@ -26,6 +45,14 @@ export class TreeNode {
     this.children = null;
   }
 
+  /**
+   * @callback TraverseCallback
+   */
+
+  /**
+   * executes callback for each leaf 
+   * @param {TraverseCallback} callback
+   */
   traverseLeaves(callback) {
     if (this.children) {
       for (let child of this.children) {
@@ -36,6 +63,9 @@ export class TreeNode {
     }
   }
 
+  /**
+   * @returns {boolean}
+   */
   isOrphan() {
     return this.parent == null && this.level > 0;
   }

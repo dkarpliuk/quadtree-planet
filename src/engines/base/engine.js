@@ -11,13 +11,32 @@ export class Engine {
   _spectatorRef = null;
   _sphereRadius = null;
   _tree = null;
-  
+
+  /**
+   * @type {Object3D}
+   */
   get attractor() { return this._tree?.obj; }
+
+  /**
+   * @type {number}
+   */
   get depthLevel() { return this._depthLevel; }
+
+  /**
+   * @type {number}
+   */
   get executionDebounce() { return this._executionDebounceMs; }
+
+  /**
+   * @type {Object3D}
+   */
   get spectatorRef() { return this._spectatorRef; }
+
+  /**
+   * @type {number}
+   */
   get sphereRadius() { return this._sphereRadius; }
-  
+
   constructor() {
     this._tree = new TreeNode(new Object3D(), null);
   }
@@ -51,10 +70,12 @@ export class Engine {
       return;
     }
 
+    //calc distance between spectator and sector
     let spectatorLocalPosition = this.attractor.worldToLocal(this._spectatorRef.position.clone());
     let distance = CalcMisc.calcDistance(spectatorLocalPosition, leafNode.obj.center);
+    
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
-
+    
     if (distance < splitDistanceBoundary && leafNode.level < this.depthLevel) {
       leafNode.obj.visible = false;
       leafNode.setChildren(this._splitSector(leafNode.obj));
@@ -76,6 +97,9 @@ export class Engine {
     ];
   }
 
+  /**
+   * @param {number[]} address 
+   */
   _createSector(address) {
     return new Sector(address, this.sphereRadius);
   }
