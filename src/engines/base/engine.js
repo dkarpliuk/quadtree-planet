@@ -11,6 +11,7 @@ export class Engine {
   _spectatorRef = null;
   _sphereRadius = null;
   _tree = null;
+  _sectorPool = null;
 
   /**
    * @type {Object3D}
@@ -39,6 +40,7 @@ export class Engine {
 
   constructor() {
     this._tree = new TreeNode(new Object3D(), null);
+    this._sectorPool = new Map();
   }
 
   initialize() {
@@ -63,46 +65,77 @@ export class Engine {
     this._tree.traverseLeaves(this._work.bind(this));
   }
 
+  /**
+   * @param {TreeNode} leafNode 
+   */
   _work(leafNode) {
-    if (leafNode.isOrphan()) {
-      leafNode.obj.visible = false;
-      leafNode.obj.detach(this.attractor);
-      return;
-    }
-
-    //calc distance between spectator and sector
-    let spectatorLocalPosition = this.attractor.worldToLocal(this._spectatorRef.position.clone());
-    let distance = CalcMisc.calcDistance(spectatorLocalPosition, leafNode.obj.center);
-    
+    let distanceToSpectator = this._getDistanceToSpectator(leafNode.obj);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
-    
-    if (distance < splitDistanceBoundary && leafNode.level < this.depthLevel) {
-      leafNode.obj.visible = false;
-      leafNode.setChildren(this._splitSector(leafNode.obj));
-      leafNode.children.forEach(childNode => childNode.obj.instantiate(this.attractor));
-    } else if (distance > splitDistanceBoundary * 3 && leafNode.level > 1) {
-      let parent = leafNode.parent;
-      parent.children.forEach(childNode => childNode.obj.detach(this.attractor));
-      parent.removeChildren();
-      parent.obj.visible = true;
+ 
+    if (distanceToSpectator < splitDistanceBoundary && leafNode.level < this.depthLevel) {
+      this._increaseLOD(leafNode);
+    } else if (distanceToSpectator > splitDistanceBoundary * 3 && leafNode.level > 1) {
+      this._decreaseLOD(leafNode.parent);
     }
   }
 
   /**
-   * find neighbours
-   * @param {number[]} address 
+   * computes distance between spectator and center of sector
+   * @param {Sector} sector 
+   * @returns {number}
    */
-  _getNeighbours(address) {
-    
+  _getDistanceToSpectator(sector) {
+    let spectatorLocalPosition = this.attractor.worldToLocal(this._spectatorRef.position.clone());
+    let distance = CalcMisc.calcDistance(spectatorLocalPosition, sector.center);
+    return distance;
   }
 
-  _splitSector(sector) {
-    return [
+  /**
+   * gets neighbor of the same level in orthodonal direction
+   * @param {number[]} address 
+   * @param {string} direction 
+   */
+  _getNeighbour(address, direction) {
+    let neighborAddress = [...address];
+    let level = address.length - 1;
+
+    let replace = QuadtreeOrthogonalNeighboursFSM[direction][address[level]];
+    while (!replace.halt || level > 0) {
+      neighborAddress[level] = replace.quadrant;
+      level--;
+    }
+
+    return this._sectorPool.get(neighborAddress.join());
+  }
+
+  /**
+   * @param {TreeNode} leafNode 
+   */
+  _increaseLOD(leafNode) {
+    let sector = leafNode.obj;
+    sector.visible = false;
+
+    leafNode.setChildren([
       this._createSector([...sector.address, 0]),
       this._createSector([...sector.address, 1]),
       this._createSector([...sector.address, 2]),
       this._createSector([...sector.address, 3])
-    ];
+    ]);
+
+    leafNode.children.forEach(childNode => childNode.obj.instantiate(this.attractor));
+  }
+
+  /**
+   * @param {TreeNode} leafNode 
+   */
+  _decreaseLOD(leafNode) {
+    for (let childNode of leafNode.children) {
+      childNode.obj.detach(this.attractor);
+      childNode.obj.visible = false;
+    }
+
+    leafNode.removeChildren();
+    leafNode.obj.visible = true;
   }
 
   /**

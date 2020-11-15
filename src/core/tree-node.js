@@ -58,7 +58,7 @@ export class TreeNode {
       for (let child of this.children) {
         child.traverseLeaves(callback);
       }
-    } else {
+    } else if (!this._isOrphan()) {
       callback(this);
     }
   }
@@ -66,7 +66,7 @@ export class TreeNode {
   /**
    * @returns {boolean}
    */
-  isOrphan() {
+  _isOrphan() {
     return this.parent == null && this.level > 0;
   }
 }
