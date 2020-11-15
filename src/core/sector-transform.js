@@ -5,27 +5,27 @@ import { AxisEnum } from '../enums/axis-enum';
  */
 const AxisRotationMatrixBase = [
   //abscissaPositive
-  0, 0, -1, 0,
-  0, 1, 0, 0,
-  1, 0, 0, 0,
-  0, 0, 0, 1,
-
-  //abscissaNegative
   0, 0, 1, 0,
   0, 1, 0, 0,
   -1, 0, 0, 0,
   0, 0, 0, 1,
 
-  //ordinatePositive
-  1, 0, 0, 0,
+  //abscissaNegative
   0, 0, -1, 0,
   0, 1, 0, 0,
+  1, 0, 0, 0,
+  0, 0, 0, 1,
+
+  //ordinatePositive
+  1, 0, 0, 0,
+  0, 0, 1, 0,
+  0, -1, 0, 0,
   0, 0, 0, 1,
 
   //ordinateNegative
   1, 0, 0, 0,
-  0, 0, 1, 0,
-  0, -1, 0, 0,
+  0, 0, -1, 0,
+  0, 1, 0, 0,
   0, 0, 0, 1,
 
   //applicataPositive
@@ -102,17 +102,17 @@ export class SectorTransform {
     //then turns relative translation to absolute (for particular side of the cube)
     switch (address[0]) {
       case AxisEnum.abscissaPositive:
-        return { x: sphereRadius, y: b, z: a };
+        return { x: sphereRadius, y: b, z: -a };
       case AxisEnum.abscissaNegative:
-        return { x: -sphereRadius, y: -b, z: -a };
+        return { x: -sphereRadius, y: b, z: a };
       case AxisEnum.ordinatePositive:
-        return { x: a, y: sphereRadius, z: b };
+        return { x: a, y: sphereRadius, z: -b };
       case AxisEnum.ordinateNegative:
-        return { x: -a, y: -sphereRadius, z: -b };
+        return { x: a, y: -sphereRadius, z: b };
       case AxisEnum.applicataPositive:
         return { x: a, y: b, z: sphereRadius };
       case AxisEnum.applicataNegative:
-        return { x: -a, y: -b, z: -sphereRadius };
+        return { x: a, y: -b, z: -sphereRadius };
       default:
         throw `Invalid sector address: ${address.toString()}`;
     }
