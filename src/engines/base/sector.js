@@ -121,19 +121,19 @@ export class Sector {
       }
     }
 
-    if (quadrantNumber == 1 || quadrantNumber == 2) {
+    if (quadrantNumber == 1 || quadrantNumber == 3) {
       for (let x = n - 1, y = 1; y < n; y += 2) {
         this._mergeVertices(n * y + x, n * (y + 1) + x);
       }
     }
 
-    if (quadrantNumber == 2 || quadrantNumber == 3) {
+    if (quadrantNumber == 3 || quadrantNumber == 2) {
       for (let x = n - 2, y = n - 1; x >= 0; x -= 2) {
         this._mergeVertices(n * y + x, n * y + x + 1);
       }
     }
 
-    if (quadrantNumber == 3 || quadrantNumber == 0) {
+    if (quadrantNumber == 2 || quadrantNumber == 0) {
       for (let x = 0, y = n - 2; y >= 0; y -= 2) {
         this._mergeVertices(n * y + x, n * (y - 1) + x);
       }

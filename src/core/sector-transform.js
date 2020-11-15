@@ -71,9 +71,10 @@ export class SectorTransform {
   }
 
   static calculateTranslation(address, sphereRadius) {
-    //first calculates relative translation
     let a = 0;
     let b = 0;
+    //first calculates relative translation
+    //sum of translation of the quadrant on each level
     for (let i = 1; i < address.length; i++) {
       let factor = Math.pow(2, i);
       switch (address[i]) {
@@ -86,11 +87,11 @@ export class SectorTransform {
           b += sphereRadius / factor;
           break;
         case 2:
-          a += sphereRadius / factor;
+          a -= sphereRadius / factor;
           b -= sphereRadius / factor;
           break;
         case 3:
-          a -= sphereRadius / factor;
+          a += sphereRadius / factor;
           b -= sphereRadius / factor;
           break;
         default:

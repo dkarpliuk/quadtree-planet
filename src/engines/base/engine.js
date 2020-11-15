@@ -88,6 +88,14 @@ export class Engine {
     }
   }
 
+  /**
+   * find neighbours
+   * @param {number[]} address 
+   */
+  _getNeighbours(address) {
+    
+  }
+
   _splitSector(sector) {
     return [
       this._createSector([...sector.address, 0]),
