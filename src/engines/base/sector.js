@@ -1,5 +1,6 @@
 import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
 import { SectorTransform } from '../../core/sector-transform';
+import { Direction } from '../../enums/direction';
 
 const density = 8; //must be power of 2
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
@@ -65,10 +66,6 @@ export class Sector {
     
     //then spherize
     this._spherize();
-
-    if (this.address.length > 1) {
-      this._glueEdges();
-    }
   }
 
   /**
@@ -77,6 +74,33 @@ export class Sector {
    */
   detach(attractor) {
     attractor.remove(this._mesh);
+  }
+
+  /**
+   * makes sector suitable for docking with higher-level sectors
+   * i.e. makes a smooth transition to a lower grid density
+   * @param {Direction} direction
+   */
+  stich(direction) {
+    let n = this._density + 1; //sector grid dimension
+
+    if (direction == Direction.up) {
+      for (let x = 1, y = 0; x < n; x += 2) {
+        this._mergeVertices(n * y + x, n * y + x - 1);
+      }
+    } else if (direction == Direction.right) {
+      for (let x = n - 1, y = 1; y < n; y += 2) {
+        this._mergeVertices(n * y + x, n * (y + 1) + x);
+      }
+    } else if (direction == Direction.down) {
+      for (let x = n - 2, y = n - 1; x >= 0; x -= 2) {
+        this._mergeVertices(n * y + x, n * y + x + 1);
+      }
+    } else if (direction == Direction.left) {
+      for (let x = 0, y = n - 2; y >= 0; y -= 2) {
+        this._mergeVertices(n * y + x, n * (y - 1) + x);
+      }
+    }
   }
 
   _calculateCenter() {
@@ -104,39 +128,6 @@ export class Sector {
       vertices[i] *= factor;
       vertices[i + 1] *= factor;
       vertices[i + 2] *= factor;
-    }
-  }
-
-  /**
-   * makes sector suitable for docking with higher-level sectors
-   * i.e. decreases density on edges
-   */
-  _glueEdges() {
-    let n = this._density + 1; //sector grid dimension
-    let quadrantNumber = this.address[this.address.length - 1];
-
-    if (quadrantNumber == 0 || quadrantNumber == 1) {
-      for (let x = 1, y = 0; x < n; x += 2) {
-        this._mergeVertices(n * y + x, n * y + x - 1);
-      }
-    }
-
-    if (quadrantNumber == 1 || quadrantNumber == 3) {
-      for (let x = n - 1, y = 1; y < n; y += 2) {
-        this._mergeVertices(n * y + x, n * (y + 1) + x);
-      }
-    }
-
-    if (quadrantNumber == 3 || quadrantNumber == 2) {
-      for (let x = n - 2, y = n - 1; x >= 0; x -= 2) {
-        this._mergeVertices(n * y + x, n * y + x + 1);
-      }
-    }
-
-    if (quadrantNumber == 2 || quadrantNumber == 0) {
-      for (let x = 0, y = n - 2; y >= 0; y -= 2) {
-        this._mergeVertices(n * y + x, n * (y - 1) + x);
-      }
     }
   }
 

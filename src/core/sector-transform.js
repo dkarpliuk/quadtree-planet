@@ -95,7 +95,7 @@ export class SectorTransform {
           b -= sphereRadius / factor;
           break;
         default:
-          throw `Invalid sector address: ${address.toString()}`;
+          throw `Invalid sector address: ${address.join('')}`;
       }
     }
 
@@ -114,7 +114,7 @@ export class SectorTransform {
       case AxisEnum.applicataNegative:
         return { x: a, y: -b, z: -sphereRadius };
       default:
-        throw `Invalid sector address: ${address.toString()}`;
+        throw `Invalid sector address: ${address.join('')}`;
     }
   }
 }
