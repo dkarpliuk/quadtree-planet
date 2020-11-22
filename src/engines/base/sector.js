@@ -6,18 +6,12 @@ const density = 8; //must be power of 2
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 export class Sector {
-  _address = null;
   _center = null;
   _mesh = null;
   _sphereRadius = null;
 
   get _density() { return density; }
   get _material() { return material; }
-
-  /**
-   * @type {number[]}
-   */
-  get address() { return this._address; }
 
   /**
    * @type {Vector3}
@@ -41,29 +35,28 @@ export class Sector {
   }
 
   /**
-   * @param {number[]} address 
    * @param {number} sphereRadius 
    */
-  constructor(address, sphereRadius) {
-    this._address = address;
+  constructor(sphereRadius) {
     this._sphereRadius = sphereRadius;
   }
 
   /**
    * instantiates the sector in 3D space and performs the initial transformation
    * @param {Object3D} attractor 
+   * @param {number[]} address 
    */
-  instantiate(attractor) {
+  instantiate(attractor, address) {
     let geometry = new PlaneBufferGeometry(2, 2, this._density, this._density);
     this._mesh = new Mesh(geometry, this._material);
 
     attractor.add(this._mesh);
 
     //place sector on the cube
-    let rawMatrix = SectorTransform.calculateTransformationMatrix(this.address, this._sphereRadius);
+    let rawMatrix = SectorTransform.calculateTransformationMatrix(address, this._sphereRadius);
     let transformationMatrix = new Matrix4().set(...rawMatrix);
     this._mesh.geometry.applyMatrix4(transformationMatrix);
-    
+
     //then spherize
     this._spherize();
   }

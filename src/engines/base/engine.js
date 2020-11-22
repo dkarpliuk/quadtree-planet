@@ -1,7 +1,5 @@
 import { Object3D } from 'three';
-import { QuadtreeNeighborsFSM } from '../../core/quadtree-neighbours';
 import { TreeNode } from '../../core/tree-node';
-import { AxisEnum } from '../../enums/axis-enum';
 import { Direction } from '../../enums/direction';
 import { CalcMisc } from '../../helpers/calc-misc';
 import { debounce } from '../../helpers/debounce';
@@ -12,8 +10,11 @@ export class Engine {
   _executionDebounceMs = null;
   _spectatorRef = null;
   _sphereRadius = null;
+
+  /**
+   * @type {TreeNode<Sector}
+   */
   _tree = null;
-  _sectorPool = new Map();
 
   /**
    * @type {Object3D}
@@ -50,16 +51,16 @@ export class Engine {
     }
 
     let sectors = [
-      this._createSector([AxisEnum.abscissaPositive]),
-      this._createSector([AxisEnum.abscissaNegative]),
-      this._createSector([AxisEnum.ordinatePositive]),
-      this._createSector([AxisEnum.ordinateNegative]),
-      this._createSector([AxisEnum.applicataPositive]),
-      this._createSector([AxisEnum.applicataNegative])
+      this._createSector(),
+      this._createSector(),
+      this._createSector(),
+      this._createSector(),
+      this._createSector(),
+      this._createSector()
     ];
 
     this._tree.setChildren(sectors);
-    sectors.forEach(sector => sector.instantiate(this.attractor));
+    this._tree.children.forEach(c => c.obj.instantiate(this.attractor, c.address));
   }
 
   execute() {
@@ -67,12 +68,12 @@ export class Engine {
   }
 
   /**
-   * @param {TreeNode} leafNode 
+   * @param {TreeNode<Sector>} leafNode 
    */
   _preprocess(leafNode) {
     let distanceToSpectator = this._getDistanceToSpectator(leafNode.obj);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
- 
+
     if (distanceToSpectator < splitDistanceBoundary && leafNode.level < this.depthLevel) {
       this._increaseLOD(leafNode);
     } else if (distanceToSpectator > splitDistanceBoundary * 3 && leafNode.level > 1) {
@@ -92,33 +93,31 @@ export class Engine {
   }
 
   /**
-   * @param {TreeNode} leafNode 
+   * @param {TreeNode<Sector>} leafNode 
    */
   _increaseLOD(leafNode) {
     let sector = leafNode.obj;
     sector.visible = false;
 
     leafNode.setChildren([
-      this._createSector([...sector.address, 0]),
-      this._createSector([...sector.address, 1]),
-      this._createSector([...sector.address, 2]),
-      this._createSector([...sector.address, 3])
+      this._createSector(),
+      this._createSector(),
+      this._createSector(),
+      this._createSector()
     ]);
 
     for (let childNode of leafNode.children) {
-      childNode.obj.instantiate(this.attractor);
-      this._sectorPool.set(childNode.obj.address.join(''), childNode.obj);
+      childNode.obj.instantiate(this.attractor, childNode.address);
     }
   }
 
   /**
-   * @param {TreeNode} leafNode 
+   * @param {TreeNode<Sector>} leafNode 
    */
   _decreaseLOD(leafNode) {
     for (let childNode of leafNode.children) {
       childNode.obj.detach(this.attractor);
       childNode.obj.visible = false;
-      this._sectorPool.delete(childNode.obj.address.join(''));
     }
 
     leafNode.removeChildren();
@@ -127,57 +126,29 @@ export class Engine {
 
   /**
    * perform correct docking with adjacent sectors
-   * @param {Sector} sector 
+   * @param {TreeNode<Sector>} node 
    */
-  _dock(sector) {
-    let level = sector.address.length - 1;
-    if (level < 2) {
+  _dock(node) {
+    if (node.level < 2) {
       return;
     }
 
-    if (!this._findNeighbor(sector, Direction.right)) {
-      sector.stich(Direction.right);
+    let quadrantNumber = node.address[node.address.length - 1];
+    if ((quadrantNumber == 0 || quadrantNumber == 1) && !node.findNeighbor(Direction.up)) {
+      node.obj.stich(Direction.up);
     }
-    if (!this._findNeighbor(sector, Direction.left)) {
-      sector.stich(Direction.left);
+    if ((quadrantNumber == 1 || quadrantNumber == 3) && !node.findNeighbor(Direction.right)) {
+      node.obj.stich(Direction.right);
     }
-    if (!this._findNeighbor(sector, Direction.down)) {
-      sector.stich(Direction.down);
+    if ((quadrantNumber == 3 || quadrantNumber == 2) && !node.findNeighbor(Direction.down)) {
+      node.obj.stich(Direction.down);
     }
-    if (!this._findNeighbor(sector, Direction.up)) {
-      sector.stich(Direction.up);
+    if ((quadrantNumber == 2 || quadrantNumber == 0) && !node.findNeighbor(Direction.left)) {
+      node.obj.stich(Direction.left);
     }
   }
 
-  /**
-   * finds adjacent sector of the same level in the orthogonal direction
-   * @param {Sector} sector 
-   * @param {Direction} direction 
-   * @returns {Sector}
-   */
-  _findNeighbor(sector, direction) {
-    let neighborAddress = [...sector.address];
-    let level = neighborAddress.length - 1;
-
-    while (level > 0) {
-      let quadrant = neighborAddress[level];
-      let state = QuadtreeNeighborsFSM.get(direction)[quadrant];
-      neighborAddress[level] = state.quadrant;
-
-      if (state.halt) {
-        break;
-      } else {
-        level--;
-      }
-    }
-
-    return this._sectorPool.get(neighborAddress.join(''));
-  }
-
-  /**
-   * @param {number[]} address 
-   */
-  _createSector(address) {
-    return new Sector(address, this.sphereRadius);
+  _createSector() {
+    return new Sector(this.sphereRadius);
   }
 }
