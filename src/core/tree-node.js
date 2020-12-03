@@ -1,12 +1,5 @@
-import { QuadtreeNeighborsFSM } from '../core/quadtree-neighbours';
-
 /** @template T */
 export class TreeNode {
-  /**
-   * @type {Map<string, TreeNode<T>>}
-   */
-  _pool = null;
-
   /**
    * @type {number[]}
    */
@@ -40,9 +33,6 @@ export class TreeNode {
     if (parent) {
       this.parent = parent;
       this.level = parent.level + 1;
-      this._pool = parent._pool;
-    } else {
-      this._pool = new Map();
     }
 
     this.obj = obj;
@@ -59,16 +49,15 @@ export class TreeNode {
       let address = this.address ? [...this.address, i] : [i];
       childNode.address = address;
       this.children.push(childNode);
-      this._pool.set(address.join(''), childNode);
     }
   }
 
   removeChildren() {
     for (let child of this.children) {
       child.parent = null;
-      this.children = null;
-      this._pool.delete(child.address);
     }
+
+    this.children = null;
   }
 
   /**
@@ -87,38 +76,6 @@ export class TreeNode {
     } else if (!this._isOrphan()) {
       callback(this);
     }
-  }
-
-  /**
-   * @param {number[]} address
-   * @returns {TreeNode<T>}
-   */
-  find(address) {
-    return this._pool.get(address.join(''));
-  }
-
-  /**
-   * finds adjacent node of the same level in the orthogonal direction
-   * @param {Direction} direction 
-   * @returns {TreeNode<T>}
-   */
-  findNeighbor(direction) {
-    let neighborAddress = [...this.address];
-    let level = this.level;
-
-    while (level > 0) {
-      let quadrant = neighborAddress[level];
-      let state = QuadtreeNeighborsFSM.get(direction)[quadrant];
-      neighborAddress[level] = state.quadrant;
-
-      if (state.halt) {
-        break;
-      } else {
-        level--;
-      }
-    }
-
-    return this._pool.find(neighborAddress.join(''));
   }
 
   /**

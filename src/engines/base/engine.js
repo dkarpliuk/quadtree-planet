@@ -10,9 +10,14 @@ export class Engine {
   _executionDebounceMs = null;
   _spectatorRef = null;
   _sphereRadius = null;
+  
+  /**
+   * @type {Array<TreeNode<Sector>>}
+   */
+  _processStack = null;
 
   /**
-   * @type {TreeNode<Sector}
+   * @type {TreeNode<Sector>}
    */
   _tree = null;
 
@@ -43,6 +48,7 @@ export class Engine {
 
   constructor() {
     this._tree = new TreeNode(new Object3D(), null);
+    this._processStack = new Array();
   }
 
   initialize() {
@@ -64,13 +70,22 @@ export class Engine {
   }
 
   execute() {
-    this._tree.traverseLeaves(this._preprocess.bind(this));
+    this._tree.traverseLeaves(this._processLOD.bind(this));
+
+    //TODO: implement intelligent terrain stitching based on orthogonal neighbors level
+    while (this._processStack.length) {
+      let node = this._processStack.pop();
+      node.obj.stich(Direction.up);
+      node.obj.stich(Direction.down);
+      node.obj.stich(Direction.left);
+      node.obj.stich(Direction.right);
+    }
   }
 
   /**
    * @param {TreeNode<Sector>} leafNode 
    */
-  _preprocess(leafNode) {
+  _processLOD(leafNode) {
     let distanceToSpectator = this._getDistanceToSpectator(leafNode.obj);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
 
@@ -108,6 +123,7 @@ export class Engine {
 
     for (let childNode of leafNode.children) {
       childNode.obj.instantiate(this.attractor, childNode.address);
+      this._processStack.push(childNode);
     }
   }
 
@@ -117,35 +133,10 @@ export class Engine {
   _decreaseLOD(leafNode) {
     for (let childNode of leafNode.children) {
       childNode.obj.detach(this.attractor);
-      childNode.obj.visible = false;
     }
 
     leafNode.removeChildren();
     leafNode.obj.visible = true;
-  }
-
-  /**
-   * perform correct docking with adjacent sectors
-   * @param {TreeNode<Sector>} node 
-   */
-  _dock(node) {
-    if (node.level < 2) {
-      return;
-    }
-
-    let quadrantNumber = node.address[node.address.length - 1];
-    if ((quadrantNumber == 0 || quadrantNumber == 1) && !node.findNeighbor(Direction.up)) {
-      node.obj.stich(Direction.up);
-    }
-    if ((quadrantNumber == 1 || quadrantNumber == 3) && !node.findNeighbor(Direction.right)) {
-      node.obj.stich(Direction.right);
-    }
-    if ((quadrantNumber == 3 || quadrantNumber == 2) && !node.findNeighbor(Direction.down)) {
-      node.obj.stich(Direction.down);
-    }
-    if ((quadrantNumber == 2 || quadrantNumber == 0) && !node.findNeighbor(Direction.left)) {
-      node.obj.stich(Direction.left);
-    }
   }
 
   _createSector() {

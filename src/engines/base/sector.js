@@ -2,7 +2,7 @@ import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector
 import { SectorTransform } from '../../core/sector-transform';
 import { Direction } from '../../enums/direction';
 
-const density = 8; //must be power of 2
+const density = 32; //must be power of 2
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 export class Sector {
