@@ -1,6 +1,6 @@
 import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
-import { SectorTransform } from '../../core/sector-transform';
-import { Direction } from '../../enums/direction';
+import { SectorTransform } from '../../core';
+import { Direction } from '../../enums';
 
 const density = 32; //must be power of 2
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
@@ -59,6 +59,7 @@ export class Sector {
 
     //then spherize
     this._spherize();
+    this._mesh.geometry.computeVertexNormals();
   }
 
   /**

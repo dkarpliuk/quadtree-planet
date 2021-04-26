@@ -1,16 +1,16 @@
 import * as STATS from 'stats.js';
-import { AmbientLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
-import { LOD } from './enums/lod';
-import { ProcessFrequency } from './enums/process-frequency';
+import { LOD } from './enums';
+import { ProcessFrequency } from './enums';
 import './styles.css';
 
 var stats, scene, camera, renderer, controls, planetProcessor;
 
 //temporary for development
 var radiusTest = 3000;
-var planetPositionTest = new Vector3(3000, 0, 0);
+var planetPositionTest = new Vector3(0, 0, 0);
 
 init();
 animate();
@@ -53,17 +53,19 @@ function initPlanet() {
   let tmpBlackSphere = new Mesh(new SphereGeometry(radiusTest * .98, 64, 64), new MeshBasicMaterial({ color: 0x000000 }));
   tmpBlackSphere.position.copy(planetPositionTest);
 
-  scene.add(tmpBlackSphere);
+  //scene.add(tmpBlackSphere);
   scene.add(planetProcessor.object3d);
 }
 
 function initLight() {
-  let light = new AmbientLight(0xFFF8CA, 0.2);
+  let light = new DirectionalLight(0xffffff, 0.8);
+  light.position.set(0, 0, radiusTest * 20);
   scene.add(light);
 }
 
 function initRenderer() {
   renderer = new WebGLRenderer({ antialias: true });
+  renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 }

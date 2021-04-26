@@ -1,8 +1,7 @@
 import { Object3D } from 'three';
-import { TreeNode } from '../../core/tree-node';
-import { Direction } from '../../enums/direction';
-import { CalcMisc } from '../../helpers/calc-misc';
-import { debounce } from '../../helpers/debounce';
+import { TreeNode } from '../../core';
+import { Direction } from '../../enums';
+import { CalcMisc, debounce } from '../../helpers';
 import { Sector } from './sector';
 
 export class Engine {

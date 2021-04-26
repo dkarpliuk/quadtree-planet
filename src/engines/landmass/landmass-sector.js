@@ -1,11 +1,16 @@
-import { NoiseProcessor } from '../../noise/noise-processor';
+import { MeshStandardMaterial } from 'three';
+import { NoiseProcessor } from '../../noise';
 import { Sector } from '../base/sector';
+
+const material = new MeshStandardMaterial({ color: 0xffffff, wireframe: false });
 
 export class LandmassSector extends Sector {
   /**
    * @type {NoiseProcessor}
    */
   _noiseProcessor = null;
+
+  get _material() { return material; }
 
   constructor(sphereRadius, noiseProcessor) {
     super(sphereRadius);
