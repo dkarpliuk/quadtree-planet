@@ -1,6 +1,6 @@
 import { LOD, ProcessFrequency } from '@enums';
 import * as STATS from 'stats.js';
-import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -45,14 +45,10 @@ function initScene() {
 }
 
 function initPlanet() {
-  planetProcessor = new PlanetProcessor(camera, planetPositionTest, radiusTest);
+  let seed = Math.random();
+  planetProcessor = new PlanetProcessor(camera, planetPositionTest, radiusTest, seed);
   planetProcessor.createLandmass(LOD.high, ProcessFrequency.medium);
   planetProcessor.initialize();
-
-  let tmpBlackSphere = new Mesh(new SphereGeometry(radiusTest * .98, 64, 64), new MeshBasicMaterial({ color: 0x000000 }));
-  tmpBlackSphere.position.copy(planetPositionTest);
-
-  //scene.add(tmpBlackSphere);
   scene.add(planetProcessor.object3d);
 }
 
