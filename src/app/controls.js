@@ -2,7 +2,7 @@ export class Controls {
   _keyboard = {};
   _previousTimeStamp = 0;
   _controlledObject = null;
-  _speedMetersPerSecond = 0;
+  _speedMetersPerSecond = 1000;
   _turnDegreesPerSecond = 45;
   _acceleration = 10;
 

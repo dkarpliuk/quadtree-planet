@@ -18,7 +18,7 @@ export class LandmassSector extends Sector {
   }
 
   _computeHeightCalibrationValue(vx, vy, vz) {
-    let res = this._noiseProcessor.getOctaveNoise(vx, vy, vz, 8);
-    return res * this._sphereRadius * 0.003;
+    let noise = this._noiseProcessor.getOctaveNoise(vx, vy, vz, 8, 0.7, 0.001);
+    return noise * noise * this._sphereRadius * 0.03;
   }
 }

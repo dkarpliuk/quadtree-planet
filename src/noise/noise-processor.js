@@ -1,12 +1,9 @@
 export class NoiseProcessor {
-  defaultFrequency = 0.02;
-  defaultPersistence = 0.4;
-  
   constructor(noiseFn) {
     this.noise = noiseFn;
   }
 
-  getOctaveNoise(x, y, z, octaves, persistence = this.defaultPersistence, frequency = this.defaultFrequency) {
+  getOctaveNoise(x, y, z, octaves, persistence, frequency) {
     let total = 0;
     let amplitude = 1;
     let maxValue = 0;
