@@ -1,11 +1,11 @@
 import { TreeNode } from '@core';
-import { Direction } from '@enums';
+import { Direction, LOD } from '@enums';
 import { CalcMisc, debounce } from '@helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
 
 export class Engine {
-  _depthLevel = null;
+  _lod = null;
   _executionDebounceMs = null;
   _spectatorRef = null;
   _sphereRadius = null;
@@ -28,7 +28,7 @@ export class Engine {
   /**
    * @type {number}
    */
-  get depthLevel() { return this._depthLevel; }
+  get lod() { return this._lod; }
 
   /**
    * @type {number}
@@ -88,9 +88,12 @@ export class Engine {
     let distanceToSpectator = this._getDistanceToSpectator(leafNode.obj);
     let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
 
-    if (distanceToSpectator < splitDistanceBoundary && leafNode.level < this.depthLevel) {
+    let isCloseDistance = distanceToSpectator < splitDistanceBoundary;
+    let isMaxLODReached = leafNode.level >= this.lod;
+    let isMinLODReached = leafNode.level >= LOD.ultraLow;
+    if (!isMinLODReached || isCloseDistance && !isMaxLODReached) {
       this._increaseLOD(leafNode);
-    } else if (distanceToSpectator > splitDistanceBoundary * 3 && leafNode.level > 1) {
+    } else if (distanceToSpectator >= splitDistanceBoundary * 3 && leafNode.level > 1) {
       this._decreaseLOD(leafNode.parent);
     }
   }

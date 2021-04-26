@@ -1,10 +1,9 @@
 const LOD = {
-  flat: 1,
-  ultraLow: 4,
-  low: 6,
+  ultraLow: 2,
+  low: 4,
   medium: 8,
-  high: 10,
-  ultraHigh: 12,
+  high: 12,
+  ultraHigh: 16,
 };
 
 Object.freeze(LOD);

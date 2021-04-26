@@ -30,7 +30,7 @@ export class PlanetProcessor {
     let engine = new LandmassEngineBuilder()
       .setSpectatorRef(this._spectatorRef)
       .setSphereRadius(this._radius)
-      .setDepthLevel(lod)
+      .setLOD(lod)
       .setExecutionDebounce(processFrequency)
       .seed(this._seed)
       .getResult();
