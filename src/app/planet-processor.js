@@ -30,6 +30,7 @@ export class PlanetProcessor {
       .setSphereRadius(this._radius)
       .setDepthLevel(lod)
       .setExecutionDebounce(processFrequency)
+      .seed(2)
       .getResult();
 
     this._engines.push(engine);

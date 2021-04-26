@@ -3,6 +3,19 @@ import { Engine } from './engine';
 export class EngineBuilder {
   _obj = null;
 
+  /**
+   * @type {boolean}
+   */
+  get allPropertiesSet() {
+    let result =
+      this._obj._depthLevel &&
+      this._obj._executionDebounceMs &&
+      this._obj._spectatorRef &&
+      this._obj._sphereRadius;
+
+    return result;
+  }
+
   constructor() {
     this.reset();
   }
@@ -53,13 +66,7 @@ export class EngineBuilder {
   }
 
   _validate() {
-    let allPropertiesSet =
-      this._obj._depthLevel &&
-      this._obj._executionDebounceMs &&
-      this._obj._spectatorRef &&
-      this._obj._sphereRadius;
-
-    if (!allPropertiesSet) {
+    if (!this.allPropertiesSet) {
       throw 'Some of engine properties did not set!';
     }
   }

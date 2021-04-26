@@ -1,4 +1,4 @@
-import { RandomLCG } from './random_lcg.js'
+import { RandomLCG } from './random-lcg'
 
 export class Perlin3D {
   p = new Array(256);

@@ -116,7 +116,8 @@ export class Sector {
       let vy = vertices[i + 1];
       let vz = vertices[i + 2];
 
-      let factor = this._sphereRadius / Math.sqrt(vx * vx + vy * vy + vz * vz);
+      let heightCalibrationValue = this._computeHeightCalibrationValue(vx, vy, vz);
+      let factor = (this._sphereRadius + heightCalibrationValue) / Math.sqrt(vx * vx + vy * vy + vz * vz);
 
       vertices[i] *= factor;
       vertices[i + 1] *= factor;
@@ -135,5 +136,14 @@ export class Sector {
     vertices[v1Number * 3] = vertices[v2Number * 3];
     vertices[v1Number * 3 + 1] = vertices[v2Number * 3 + 1];
     vertices[v1Number * 3 + 2] = vertices[v2Number * 3 + 2];
+  }
+
+  /**
+   * @param {number} vx 
+   * @param {number} vy 
+   * @param {number} vz 
+   */
+  _computeHeightCalibrationValue(vx, vy, vz) {
+    return 0;
   }
 }
