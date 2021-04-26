@@ -13,6 +13,14 @@ module.exports = {
   entry: {
     index: './src/index.js'
   },
+  resolve: {
+    alias: {
+      '@core': path.resolve(__dirname, 'src/core'),
+      '@enums': path.resolve(__dirname, 'src/enums'),
+      '@helpers': path.resolve(__dirname, 'src/helpers'),
+      '@noise': path.resolve(__dirname, 'src/noise')
+    },
+  },
   output: {
     filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist')

@@ -1,4 +1,4 @@
-import { NoiseProcessor } from '../../noise';
+import { NoiseProcessor } from '@noise';
 import { Engine } from '../base/engine';
 import { LandmassSector } from './landmass-sector';
 

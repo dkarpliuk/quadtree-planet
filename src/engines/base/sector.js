@@ -1,6 +1,6 @@
+import { SectorTransform } from '@core';
+import { Direction } from '@enums';
 import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
-import { SectorTransform } from '../../core';
-import { Direction } from '../../enums';
 
 const density = 32; //must be power of 2
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });

@@ -1,7 +1,7 @@
+import { TreeNode } from '@core';
+import { Direction } from '@enums';
+import { CalcMisc, debounce } from '@helpers';
 import { Object3D } from 'three';
-import { TreeNode } from '../../core';
-import { Direction } from '../../enums';
-import { CalcMisc, debounce } from '../../helpers';
 import { Sector } from './sector';
 
 export class Engine {
@@ -9,7 +9,7 @@ export class Engine {
   _executionDebounceMs = null;
   _spectatorRef = null;
   _sphereRadius = null;
-  
+
   /**
    * @type {Array<TreeNode<Sector>>}
    */

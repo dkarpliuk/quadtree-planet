@@ -1,9 +1,8 @@
+import { LOD, ProcessFrequency } from '@enums';
 import * as STATS from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
-import { LOD } from './enums';
-import { ProcessFrequency } from './enums';
 import './styles.css';
 
 var stats, scene, camera, renderer, controls, planetProcessor;

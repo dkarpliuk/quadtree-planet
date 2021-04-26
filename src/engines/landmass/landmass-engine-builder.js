@@ -1,4 +1,4 @@
-import { NoiseProcessor, Perlin3D } from "../../noise";
+import { NoiseProcessor, Perlin3D } from "@noise";
 import { EngineBuilder } from "../base/engine-builder";
 import { LandmassEngine } from "./landmass-engine";
 
