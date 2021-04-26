@@ -3,17 +3,16 @@ export class Controls {
   _previousTimeStamp = 0;
   _controlledObject = null;
   _speedMetersPerSecond = 0;
-  _turnDegreesPerSecond = 0;
+  _turnDegreesPerSecond = 45;
+  _acceleration = 10;
 
   get controlledObject() { return this._controlledObject; }
   set controlledObject(value) { this._controlledObject = value; }
 
-  constructor(speedMetersPerSecond, turnDegreesPerSecond) {
-    this._speedMetersPerSecond = speedMetersPerSecond;
-    this._turnDegreesPerSecond = turnDegreesPerSecond;
-
+  constructor() {
     window.addEventListener('keydown', this._keyDown.bind(this));
     window.addEventListener('keyup', this._keyUp.bind(this));
+    window.addEventListener('wheel', this._scroll.bind(this));
   }
 
   control() {
@@ -70,5 +69,13 @@ export class Controls {
 
   _keyUp(event) {
     this._keyboard[event.keyCode] = false;
+  }
+
+  _scroll(e) {
+    if (e.deltaY > 0 && this._speedMetersPerSecond - this._acceleration >= 0) {
+      this._speedMetersPerSecond -= this._acceleration;
+    } else if (e.deltaY < 0) {
+      this._speedMetersPerSecond += this._acceleration;
+    }
   }
 }

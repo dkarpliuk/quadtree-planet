@@ -36,7 +36,7 @@ function initCamera() {
 }
 
 function initControls() {
-  controls = new Controls(1000, 45);
+  controls = new Controls();
   controls.controlledObject = camera;
 }
 
