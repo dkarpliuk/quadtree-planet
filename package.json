@@ -1,0 +1,39 @@
+{
+  "name": "quadtreeplanet",
+  "version": "1.0.0",
+  "description": "The procedural planet with a very high level of detail just in the browser window",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config ./webpack.config.prod.js",
+    "start": "webpack-dev-server --config ./webpack.config.dev.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyberwyvern/QuadtreePlanet.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cyberwyvern/QuadtreePlanet/issues"
+  },
+  "homepage": "https://github.com/cyberwyvern/QuadtreePlanet#readme",
+  "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "optimize-css-assets-webpack-plugin": "^5.0.4",
+    "stats.js": "^0.17.0",
+    "three": "^0.120.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/preset-env": "^7.12.1",
+    "babel-loader": "^8.1.0",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^4.2.2",
+    "html-webpack-plugin": "^4.4.1",
+    "mini-css-extract-plugin": "^0.11.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
