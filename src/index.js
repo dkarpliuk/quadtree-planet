@@ -42,6 +42,7 @@ function initControls() {
 
 function initScene() {
   scene = new Scene();
+  window.scene = scene;
 }
 
 function initPlanet() {

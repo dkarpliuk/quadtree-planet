@@ -1,19 +1,14 @@
 import { TreeNode } from '@core';
-import { Direction, LOD } from '@enums';
+import { LOD } from '@enums';
 import { CalcMisc, debounce } from '@helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
 
 export class Engine {
-  _lod = null;
+  _maxLod = null;
   _executionDebounceMs = null;
   _spectatorRef = null;
   _sphereRadius = null;
-
-  /**
-   * @type {Array<TreeNode<Sector>>}
-   */
-  _processStack = null;
 
   /**
    * @type {TreeNode<Sector>}
@@ -28,7 +23,7 @@ export class Engine {
   /**
    * @type {number}
    */
-  get lod() { return this._lod; }
+  get maxLod() { return this._maxLod; }
 
   /**
    * @type {number}
@@ -47,7 +42,6 @@ export class Engine {
 
   constructor() {
     this._tree = new TreeNode(new Object3D(), null);
-    this._processStack = new Array();
   }
 
   initialize() {
@@ -70,30 +64,24 @@ export class Engine {
 
   execute() {
     this._tree.traverseLeaves(this._processLOD.bind(this));
-
-    //TODO: implement intelligent terrain stitching based on orthogonal neighbors level
-    while (this._processStack.length) {
-      let node = this._processStack.pop();
-      node.obj.stich(Direction.up);
-      node.obj.stich(Direction.down);
-      node.obj.stich(Direction.left);
-      node.obj.stich(Direction.right);
-    }
   }
 
   /**
    * @param {TreeNode<Sector>} leafNode 
    */
   _processLOD(leafNode) {
-    let distanceToSpectator = this._getDistanceToSpectator(leafNode.obj);
-    let splitDistanceBoundary = this.sphereRadius / Math.pow(2, leafNode.level - 1) * 2;
+    let splitDistance = this.sphereRadius / Math.pow(2, leafNode.level - 2);
+    let minLod = LOD.ultraLow;
 
-    let isCloseDistance = distanceToSpectator < splitDistanceBoundary;
-    let isMaxLODReached = leafNode.level >= this.lod;
-    let isMinLODReached = leafNode.level >= LOD.ultraLow;
-    if (!isMinLODReached || isCloseDistance && !isMaxLODReached) {
+    if (leafNode.level < minLod
+      || leafNode.level < this.maxLod
+      && this._getDistanceToSpectator(leafNode.obj) < splitDistance) {
+      
       this._increaseLOD(leafNode);
-    } else if (distanceToSpectator >= splitDistanceBoundary * 3 && leafNode.level > 1) {
+    } else if (leafNode.parent.level > minLod
+      && !leafNode.parent.children.some(x => x.children)
+      && this._getDistanceToSpectator(leafNode.parent.obj) >= splitDistance * 2) {
+      
       this._decreaseLOD(leafNode.parent);
     }
   }
@@ -113,9 +101,7 @@ export class Engine {
    * @param {TreeNode<Sector>} leafNode 
    */
   _increaseLOD(leafNode) {
-    let sector = leafNode.obj;
-    sector.visible = false;
-
+    leafNode.obj.clear(this.attractor);
     leafNode.setChildren([
       this._createSector(),
       this._createSector(),
@@ -125,7 +111,6 @@ export class Engine {
 
     for (let childNode of leafNode.children) {
       childNode.obj.instantiate(this.attractor, childNode.address);
-      this._processStack.push(childNode);
     }
   }
 
@@ -134,11 +119,11 @@ export class Engine {
    */
   _decreaseLOD(leafNode) {
     for (let childNode of leafNode.children) {
-      childNode.obj.detach(this.attractor);
+      childNode.obj.clear(this.attractor);
     }
 
     leafNode.removeChildren();
-    leafNode.obj.visible = true;
+    leafNode.obj.instantiate(this.attractor, leafNode.address)
   }
 
   _createSector() {

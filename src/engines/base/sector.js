@@ -63,11 +63,18 @@ export class Sector {
   }
 
   /**
-   * removes this sector from attractor
+   * Removes mesh from render
    * @param {Object3D} attractor 
    */
-  detach(attractor) {
+  clear(attractor) {
+    if (!this._mesh) {
+      return;
+    }
+
     attractor.remove(this._mesh);
+    scene.remove(this._mesh);
+    this._mesh.geometry.dispose();
+    this._mesh = null;
   }
 
   /**

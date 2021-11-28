@@ -8,7 +8,7 @@ export class EngineBuilder {
    */
   get allPropertiesSet() {
     let result =
-      this._obj._lod &&
+      this._obj._maxLod &&
       this._obj._executionDebounceMs &&
       this._obj._spectatorRef &&
       this._obj._sphereRadius;
@@ -24,7 +24,7 @@ export class EngineBuilder {
     if (val < 1) {
       throw 'Depth level out of range. Must be greater than 1.';
     } else {
-      this._obj._lod = val;
+      this._obj._maxLod = val;
       return this;
     }
   }
