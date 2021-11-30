@@ -2,7 +2,8 @@ const Direction = {
   right: "R",
   left: "L",
   down: "D",
-  up: "U"
+  up: "U",
+  halt: "halt"
 };
 
 Object.freeze(Direction);
