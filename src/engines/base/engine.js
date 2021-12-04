@@ -16,6 +16,11 @@ export class Engine {
   _tree = null;
 
   /**
+   * @type {Set<string>}
+   */
+  _addresses = null;
+
+  /**
    * @type {Object3D}
    */
   get attractor() { return this._tree?.obj; }
@@ -42,6 +47,7 @@ export class Engine {
 
   constructor() {
     this._tree = new TreeNode(new Object3D(), null);
+    this._addresses = new Set();
   }
 
   initialize() {
@@ -59,7 +65,10 @@ export class Engine {
     ];
 
     this._tree.setChildren(sectors);
-    this._tree.children.forEach(c => c.obj.instantiate(this.attractor, c.address));
+    this._tree.children.forEach(c => {
+      this._addresses.add(c.address.join(''));
+      c.obj.instantiate(this.attractor, c.address);
+    });
   }
 
   execute() {
@@ -110,6 +119,7 @@ export class Engine {
     ]);
 
     for (let childNode of leafNode.children) {
+      this._addresses.add(childNode.address.join(''));
       childNode.obj.instantiate(this.attractor, childNode.address);
     }
   }
@@ -122,6 +132,7 @@ export class Engine {
       childNode.obj.clear(this.attractor);
     }
 
+    leafNode.children.forEach(x => this._addresses.delete(x.address.join('')));
     leafNode.removeChildren();
     leafNode.obj.instantiate(this.attractor, leafNode.address)
   }
