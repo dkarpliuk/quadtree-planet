@@ -8,26 +8,26 @@ const addressConversionMatrix = new Map([
       //key - direction relative to corresponding axis
       //value[0] - neighbor axis laying on corresponding direction
       //value[1] - quadrant number conversion
-      [Direction.right, [AxisEnum.applicataNegative, [2, 3, 0, 1]]],
+      [Direction.right, [AxisEnum.applicataNegative, [3, 2, 1, 0]]],
       [Direction.left, [AxisEnum.applicataPositive, null]],
-      [Direction.down, [AxisEnum.ordinateNegative, [1, 2, 3, 0]]],
-      [Direction.up, [AxisEnum.ordinatePositive, [3, 0, 1, 2]]],
+      [Direction.down, [AxisEnum.ordinateNegative, [1, 3, 0, 2]]],
+      [Direction.up, [AxisEnum.ordinatePositive, [2, 0, 3, 1]]],
     ]),
   ],
   [
     AxisEnum.abscissaNegative,
     new Map([
       [Direction.right, [AxisEnum.applicataPositive, null]],
-      [Direction.left, [AxisEnum.applicataNegative, [2, 3, 0, 1]]],
-      [Direction.down, [AxisEnum.ordinateNegative, [3, 0, 1, 2]]],
-      [Direction.up, [AxisEnum.ordinatePositive, [1, 2, 3, 0]]],
+      [Direction.left, [AxisEnum.applicataNegative, [3, 2, 1, 0]]],
+      [Direction.down, [AxisEnum.ordinateNegative, [2, 0, 3, 1]]],
+      [Direction.up, [AxisEnum.ordinatePositive, [1, 3, 0, 2]]],
     ]),
   ],
   [
     AxisEnum.ordinatePositive,
     new Map([
-      [Direction.right, [AxisEnum.abscissaPositive, [1, 2, 3, 0]]],
-      [Direction.left, [AxisEnum.abscissaNegative, [3, 0, 1, 2]]],
+      [Direction.right, [AxisEnum.abscissaPositive, [1, 3, 0, 2]]],
+      [Direction.left, [AxisEnum.abscissaNegative, [2, 0, 3, 1]]],
       [Direction.down, [AxisEnum.applicataPositive, null]],
       [Direction.up, [AxisEnum.applicataNegative, null]],
     ]),
@@ -35,8 +35,8 @@ const addressConversionMatrix = new Map([
   [
     AxisEnum.ordinateNegative,
     new Map([
-      [Direction.right, [AxisEnum.abscissaPositive, [3, 0, 1, 2]]],
-      [Direction.left, [AxisEnum.abscissaNegative, [1, 2, 3, 0]]],
+      [Direction.right, [AxisEnum.abscissaPositive, [2, 0, 3, 1]]],
+      [Direction.left, [AxisEnum.abscissaNegative, [1, 3, 0, 2]]],
       [Direction.down, [AxisEnum.applicataNegative, null]],
       [Direction.up, [AxisEnum.applicataPositive, null]],
     ]),
@@ -53,8 +53,8 @@ const addressConversionMatrix = new Map([
   [
     AxisEnum.applicataNegative,
     new Map([
-      [Direction.right, [AxisEnum.abscissaPositive, [2, 3, 0, 1]]],
-      [Direction.left, [AxisEnum.abscissaNegative, [2, 3, 0, 1]]],
+      [Direction.right, [AxisEnum.abscissaPositive, [3, 2, 1, 0]]],
+      [Direction.left, [AxisEnum.abscissaNegative, [3, 2, 1, 0]]],
       [Direction.down, [AxisEnum.ordinatePositive, null]],
       [Direction.up, [AxisEnum.ordinateNegative, null]],
     ]),
@@ -69,26 +69,26 @@ const neighboursFSM = [
   new Map([
     [Direction.right, [1, Direction.halt]],
     [Direction.left, [1, Direction.left]],
-    [Direction.down, [3, Direction.halt]],
-    [Direction.up, [3, Direction.up]],
-  ]),
-  new Map([
-    [Direction.right, [0, Direction.right]],
-    [Direction.left, [0, Direction.halt]],
     [Direction.down, [2, Direction.halt]],
     [Direction.up, [2, Direction.up]],
   ]),
   new Map([
-    [Direction.right, [3, Direction.right]],
-    [Direction.left, [3, Direction.halt]],
-    [Direction.down, [1, Direction.down]],
-    [Direction.up, [1, Direction.halt]],
+    [Direction.right, [0, Direction.right]],
+    [Direction.left, [0, Direction.halt]],
+    [Direction.down, [3, Direction.halt]],
+    [Direction.up, [3, Direction.up]],
   ]),
   new Map([
-    [Direction.right, [2, Direction.halt]],
-    [Direction.left, [2, Direction.left]],
+    [Direction.right, [3, Direction.halt]],
+    [Direction.left, [3, Direction.left]],
     [Direction.down, [0, Direction.down]],
     [Direction.up, [0, Direction.halt]],
+  ]),
+  new Map([
+    [Direction.right, [2, Direction.right]],
+    [Direction.left, [2, Direction.halt]],
+    [Direction.down, [1, Direction.down]],
+    [Direction.up, [1, Direction.halt]],
   ]),
 ];
 
