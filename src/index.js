@@ -1,6 +1,6 @@
 import { LOD, ProcessFrequency } from '@enums';
 import * as STATS from 'stats.js';
-import { DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -20,6 +20,7 @@ function init() {
   initControls();
   initScene();
   initPlanet();
+  initInnerSphere();
   initLight();
   initRenderer();
 }
@@ -51,6 +52,16 @@ function initPlanet() {
   planetProcessor.createLandmass(LOD.high, ProcessFrequency.medium);
   planetProcessor.initialize();
   scene.add(planetProcessor.object3d);
+}
+
+function initInnerSphere() {
+  //black occluder just below the surface so the far side of the planet
+  //doesn't show through the wireframe
+  let geometry = new SphereBufferGeometry(radiusTest * 0.98, 64, 64);
+  let material = new MeshBasicMaterial({ color: 0x000000 });
+  let sphere = new Mesh(geometry, material);
+  sphere.position.copy(planetPositionTest);
+  scene.add(sphere);
 }
 
 function initLight() {

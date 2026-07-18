@@ -1,8 +1,16 @@
 import { NoiseProcessor } from '@noise';
-import { MeshStandardMaterial } from 'three';
+import { MeshBasicMaterial, MeshStandardMaterial } from 'three';
 import { Sector } from '../base/sector';
 
-const material = new MeshStandardMaterial({ color: 0xffffff, wireframe: false });
+//debug toggle: true = green wireframe + sparse grid to inspect the grid/LOD
+//stitching, false = ordinary solid surface at full density
+const WIREFRAME = false;
+
+const material = WIREFRAME
+  ? new MeshBasicMaterial({ color: 0x00ff00, wireframe: true })
+  : new MeshStandardMaterial({ color: 0xffffff, wireframe: false });
+
+const density = WIREFRAME ? 12 : 32; //must be even so edges halve cleanly when stitching
 
 export class LandmassSector extends Sector {
   /**
@@ -11,6 +19,7 @@ export class LandmassSector extends Sector {
   _noiseProcessor = null;
 
   get _material() { return material; }
+  get _density() { return density; }
 
   constructor(sphereRadius, noiseProcessor) {
     super(sphereRadius);

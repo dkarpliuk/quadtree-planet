@@ -2,13 +2,26 @@ import { SectorTransform } from '@core';
 import { Direction } from '@enums';
 import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
 
-const density = 32; //must be power of 2
+const density = 32; //must be even so edges halve cleanly when stitching
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 export class Sector {
   _center = null;
   _mesh = null;
   _sphereRadius = null;
+
+  /**
+   * pristine full-resolution vertex positions, captured before the first stitch
+   * so that edges can be restored and re-stitched when neighbor LOD changes
+   * @type {Float32Array}
+   */
+  _pristinePositions = null;
+
+  /**
+   * set of directions currently stitched (joined), to skip redundant work
+   * @type {string}
+   */
+  _stitchedKey = null;
 
   get _density() { return density; }
   get _material() { return material; }
@@ -60,6 +73,10 @@ export class Sector {
     //then spherize
     this._spherize();
     this._mesh.geometry.computeVertexNormals();
+
+    //fresh geometry: drop any stitching state from a previous instantiation
+    this._pristinePositions = null;
+    this._stitchedKey = null;
   }
 
   /**
@@ -78,11 +95,46 @@ export class Sector {
   }
 
   /**
-   * makes sector suitable for docking with higher-level sectors
-   * i.e. makes a smooth transition to a lower grid density
+   * Docks this sector with lower-LOD neighbors on the given sides, closing the
+   * seams. Non-destructive across passes: full resolution is restored before
+   * re-applying, so the sector unstitches cleanly when a neighbor refines.
+   * @param {Direction[]} directions
+   */
+  stitch(directions) {
+    let key = directions.join('');
+    if (key === this._stitchedKey) {
+      return;
+    }
+
+    let position = this._mesh.geometry.attributes.position;
+
+    //restore full-resolution edges captured before the first stitch
+    if (this._pristinePositions) {
+      position.array.set(this._pristinePositions);
+    }
+
+    if (directions.length > 0) {
+      if (!this._pristinePositions) {
+        this._pristinePositions = Float32Array.from(position.array);
+      }
+
+      for (let direction of directions) {
+        this._stitchEdge(direction);
+      }
+    }
+
+    this._stitchedKey = key;
+    position.needsUpdate = true;
+    this._mesh.geometry.computeVertexNormals();
+  }
+
+  /**
+   * collapses every other vertex along one edge onto its neighbor, degenerating
+   * the in-between triangles so the edge matches a neighbor of half the density
+   * (i.e. a 2:1 / one-level-coarser neighbor)
    * @param {Direction} direction
    */
-  stich(direction) {
+  _stitchEdge(direction) {
     let n = this._density + 1; //sector grid dimension
 
     if (direction == Direction.up) {

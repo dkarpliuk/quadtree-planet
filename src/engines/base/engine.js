@@ -1,5 +1,5 @@
-import { TreeNode } from '@core';
-import { LOD } from '@enums';
+import { AddressUtility, TreeNode } from '@core';
+import { Direction, LOD } from '@enums';
 import { CalcMisc, debounce } from '@helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
@@ -19,6 +19,18 @@ export class Engine {
    * @type {Set<string>}
    */
   _addresses = null;
+
+  /**
+   * @type {AddressUtility}
+   */
+  _addressUtility = null;
+
+  /**
+   * set when a split/merge changes the tree this tick, so the stitch pass runs
+   * only when neighbor relationships could have changed
+   * @type {boolean}
+   */
+  _topologyDirty = false;
 
   /**
    * @type {Object3D}
@@ -48,6 +60,7 @@ export class Engine {
   constructor() {
     this._tree = new TreeNode(new Object3D(), null);
     this._addresses = new Set();
+    this._addressUtility = new AddressUtility();
   }
 
   initialize() {
@@ -72,7 +85,40 @@ export class Engine {
   }
 
   execute() {
+    this._topologyDirty = false;
     this._tree.traverseLeaves(this._processLOD.bind(this));
+
+    //re-stitch only when the tree actually changed this tick; otherwise every
+    //leaf keeps the same neighbors and the previous stitching still holds
+    if (this._topologyDirty) {
+      this._tree.traverseLeaves(this._stitchLeaf.bind(this));
+    }
+  }
+
+  /**
+   * Second pass over the settled leaves: stitches each leaf edge that faces a
+   * coarser neighbor, closing the LOD seams.
+   *
+   * Assumes a 2:1 (restricted quadtree) invariant - a coarser neighbor is at
+   * most one level below. This invariant will be guaranteed by the upcoming
+   * split/merge balancing step; until then, boundaries steeper than 2:1 may
+   * leave a residual crack.
+   * @param {TreeNode<Sector>} leafNode
+   */
+  _stitchLeaf(leafNode) {
+    let directions = [];
+
+    for (let direction of [Direction.up, Direction.right, Direction.down, Direction.left]) {
+      let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
+
+      //absence from the address set means no node exists at the neighbor's level,
+      //i.e. that side is covered by a coarser (lower-LOD) sector -> needs stitching
+      if (!this._addresses.has(neighbor.join(''))) {
+        directions.push(direction);
+      }
+    }
+
+    leafNode.obj.stitch(directions);
   }
 
   /**
@@ -110,6 +156,7 @@ export class Engine {
    * @param {TreeNode<Sector>} leafNode 
    */
   _increaseLOD(leafNode) {
+    this._topologyDirty = true;
     leafNode.obj.clear(this.attractor);
     leafNode.setChildren([
       this._createSector(),
@@ -128,6 +175,8 @@ export class Engine {
    * @param {TreeNode<Sector>} leafNode 
    */
   _decreaseLOD(leafNode) {
+    this._topologyDirty = true;
+
     for (let childNode of leafNode.children) {
       childNode.obj.clear(this.attractor);
     }
