@@ -20,6 +20,7 @@
   "homepage": "https://github.com/cyberwyvern/QuadtreePlanet#readme",
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "chokidar": "^3.6.0",
     "optimize-css-assets-webpack-plugin": "^5.0.4",
     "stats.js": "^0.17.0",
     "three": "^0.120.1"
