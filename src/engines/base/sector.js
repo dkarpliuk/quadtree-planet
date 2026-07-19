@@ -5,6 +5,12 @@ import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector
 const density = 32; //must be even so edges halve cleanly when stitching
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
+//every sector shares the same padded grid, so it is built once and only
+//re-transformed per sector; scratch, alive within a single instantiate
+let workGridTemplate = null;
+let workGrid = null;
+const workVertex = new Vector3();
+
 export class Sector {
   _center = null;
   _boundingRadius = null;
@@ -198,12 +204,21 @@ export class Sector {
    * @returns {Float32Array}
    */
   _buildWorkGrid(transformationMatrix) {
-    let segments = this._density + 2;
-    let size = 2 + 4 / this._density;
-    let geometry = new PlaneBufferGeometry(size, size, segments, segments);
-    geometry.applyMatrix4(transformationMatrix);
+    let vertexCount = Math.pow(this._density + 3, 2);
+    if (!workGridTemplate || workGridTemplate.count !== vertexCount) {
+      let segments = this._density + 2;
+      let size = 2 + 4 / this._density;
+      workGridTemplate = new PlaneBufferGeometry(size, size, segments, segments).attributes.position;
+      workGrid = new Float32Array(workGridTemplate.array.length);
+    }
 
-    return geometry.attributes.position.array;
+    for (let i = 0; i < workGridTemplate.count; i++) {
+      workVertex.fromBufferAttribute(workGridTemplate, i)
+        .applyMatrix4(transformationMatrix)
+        .toArray(workGrid, i * 3);
+    }
+
+    return workGrid;
   }
 
   /**
