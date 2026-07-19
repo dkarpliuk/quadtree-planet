@@ -1,6 +1,6 @@
 import { SectorTransform } from '@core';
 import { Direction } from '@enums';
-import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
+import { BufferAttribute, Color, Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
 
 const density = 32; //must be even so edges halve cleanly when stitching
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
@@ -10,6 +10,7 @@ const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 let workGeometry = null;
 let workGridTemplate = null;
 const workVertex = new Vector3();
+const workColor = new Color();
 
 export class Sector {
   _center = null;
@@ -105,6 +106,7 @@ export class Sector {
 
     this._copyInnerGrid(workGrid.attributes.position.array, geometry.attributes.position.array);
     this._copyInnerGrid(workGrid.attributes.normal.array, geometry.attributes.normal.array);
+    this._applyVertexColors(geometry);
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
@@ -241,6 +243,33 @@ export class Sector {
         target[to + 2] = source[from + 2];
       }
     }
+  }
+
+  /**
+   * @param {PlaneBufferGeometry} geometry
+   */
+  _applyVertexColors(geometry) {
+    let positions = geometry.attributes.position.array;
+    let colors = new Float32Array(positions.length);
+
+    for (let i = 0; i < positions.length; i += 3) {
+      let x = positions[i];
+      let y = positions[i + 1];
+      let z = positions[i + 2];
+
+      this._computeVertexColor(Math.sqrt(x * x + y * y + z * z) - this._sphereRadius, workColor);
+      workColor.toArray(colors, i);
+    }
+
+    geometry.setAttribute('color', new BufferAttribute(colors, 3));
+  }
+
+  /**
+   * @param {number} height distance above the base sphere
+   * @param {Color} target
+   */
+  _computeVertexColor(height, target) {
+    target.setRGB(1, 1, 1);
   }
 
   /**
