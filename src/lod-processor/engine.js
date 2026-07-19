@@ -2,7 +2,6 @@ import { AddressUtility } from './address-utility';
 import { TreeNode } from './tree-node';
 import { Direction } from './direction';
 import { CalcMisc } from './calc-misc';
-import { throttle } from './throttle';
 import { Object3D } from 'three';
 import { Sector } from './sector';
 
@@ -81,10 +80,6 @@ export class Engine {
   }
 
   initialize() {
-    if (this.executionDebounce > 0) {
-      this.execute = throttle(this.execute, this.executionDebounce);
-    }
-
     let sectors = [
       this._createSector(),
       this._createSector(),

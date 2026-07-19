@@ -1,5 +1,6 @@
 import { Group } from 'three';
 import { LandmassEngineBuilder } from './landmass-engine-builder';
+import { throttle } from './throttle';
 
 export class PlanetProcessor {
   _radius = 0;
@@ -7,16 +8,22 @@ export class PlanetProcessor {
   _engines = new Array();
   _engineGroup = null;
   _seed = 0;
+  _processFrequency = 0;
 
   get object3d() { return this._engineGroup; }
 
-  constructor(spectatorRef, position, radius, seed) {
+  constructor(spectatorRef, position, radius, seed, processFrequency) {
     this._spectatorRef = spectatorRef;
     this._radius = radius;
 
     this._engineGroup = new Group();
     this._engineGroup.position.copy(position);
     this._seed = seed;
+    this._processFrequency = processFrequency;
+
+    if (processFrequency > 0) {
+      this.process = throttle(this.process.bind(this), processFrequency);
+    }
   }
 
   initialize() {
@@ -26,12 +33,12 @@ export class PlanetProcessor {
     }
   }
 
-  createLandmass(lod, processFrequency) {
+  createLandmass(lod) {
     let engine = new LandmassEngineBuilder()
       .setSpectatorRef(this._spectatorRef)
       .setSphereRadius(this._radius)
       .setLOD(lod)
-      .setExecutionDebounce(processFrequency)
+      .setExecutionDebounce(this._processFrequency)
       .seed(this._seed)
       .getResult();
 
