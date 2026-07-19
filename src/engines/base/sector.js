@@ -19,6 +19,11 @@ export class Sector {
   _pristinePositions = null;
 
   /**
+   * @type {Float32Array}
+   */
+  _pristineNormals = null;
+
+  /**
    * set of directions currently stitched (joined), to skip redundant work
    * @type {string}
    */
@@ -91,13 +96,13 @@ export class Sector {
     this._applyTangentWarp(workGrid, this._density + 3);
     this._spherize(workGrid);
     this._copyInnerGrid(workGrid, geometry.attributes.position.array);
-
-    geometry.computeVertexNormals();
+    this._computeNormals(workGrid, geometry.attributes.normal.array);
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
     this._boundingRadius = null;
     this._pristinePositions = null;
+    this._pristineNormals = null;
     this._stitchedKey = null;
   }
 
@@ -116,6 +121,7 @@ export class Sector {
     this._mesh = null;
 
     this._pristinePositions = null;
+    this._pristineNormals = null;
     this._stitchedKey = null;
   }
 
@@ -132,15 +138,18 @@ export class Sector {
     }
 
     let position = this._mesh.geometry.attributes.position;
+    let normal = this._mesh.geometry.attributes.normal;
 
     //restore full-resolution edges captured before the first stitch
     if (this._pristinePositions) {
       position.array.set(this._pristinePositions);
+      normal.array.set(this._pristineNormals);
     }
 
     if (directions.length > 0) {
       if (!this._pristinePositions) {
         this._pristinePositions = Float32Array.from(position.array);
+        this._pristineNormals = Float32Array.from(normal.array);
       }
 
       for (let direction of directions) {
@@ -150,7 +159,7 @@ export class Sector {
 
     this._stitchedKey = key;
     position.needsUpdate = true;
-    this._mesh.geometry.computeVertexNormals();
+    normal.needsUpdate = true;
   }
 
   /**
@@ -212,6 +221,54 @@ export class Sector {
         target[to] = source[from];
         target[to + 1] = source[from + 1];
         target[to + 2] = source[from + 2];
+      }
+    }
+  }
+
+  /**
+   * Normal of every rendered vertex, from central differences over its four
+   * neighbours in the work grid. Because it depends only on position, two
+   * sectors meeting at a shared vertex derive the same normal and the lighting
+   * runs seamlessly across the boundary.
+   * @param {Float32Array} source work grid, padded by one cell on every side
+   * @param {Float32Array} target rendered grid normals
+   */
+  _computeNormals(source, target) {
+    let n = this._density + 1;
+    let stride = n + 2;
+
+    for (let row = 0; row < n; row++) {
+      for (let column = 0; column < n; column++) {
+        let left = ((row + 1) * stride + column) * 3;
+        let right = left + 6;
+        let up = (row * stride + column + 1) * 3;
+        let down = up + stride * 6;
+
+        let ax = source[right] - source[left];
+        let ay = source[right + 1] - source[left + 1];
+        let az = source[right + 2] - source[left + 2];
+
+        let bx = source[down] - source[up];
+        let by = source[down + 1] - source[up + 1];
+        let bz = source[down + 2] - source[up + 2];
+
+        let nx = by * az - bz * ay;
+        let ny = bz * ax - bx * az;
+        let nz = bx * ay - by * ax;
+
+        //the planet sits at the origin, so an outward normal points away from it
+        let center = up + stride * 3;
+        if (nx * source[center] + ny * source[center + 1] + nz * source[center + 2] < 0) {
+          nx = -nx;
+          ny = -ny;
+          nz = -nz;
+        }
+
+        let length = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        let to = (row * n + column) * 3;
+        target[to] = nx / length;
+        target[to + 1] = ny / length;
+        target[to + 2] = nz / length;
       }
     }
   }
@@ -287,16 +344,20 @@ export class Sector {
   }
 
   /**
-   * set vertex1 position same as vertex2 position
+   * moves vertex1 onto vertex2, normal included
    * @param {number} v1Number
    * @param {number} v2Number
    */
   _mergeVertices(v1Number, v2Number) {
-    let vertices = this._mesh.geometry.attributes.position.array;
+    let positions = this._mesh.geometry.attributes.position.array;
+    let normals = this._mesh.geometry.attributes.normal.array;
+    let i1 = v1Number * 3;
+    let i2 = v2Number * 3;
 
-    vertices[v1Number * 3] = vertices[v2Number * 3];
-    vertices[v1Number * 3 + 1] = vertices[v2Number * 3 + 1];
-    vertices[v1Number * 3 + 2] = vertices[v2Number * 3 + 2];
+    for (let axis = 0; axis < 3; axis++) {
+      positions[i1 + axis] = positions[i2 + axis];
+      normals[i1 + axis] = normals[i2 + axis];
+    }
   }
 
   /**
