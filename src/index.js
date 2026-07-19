@@ -135,7 +135,7 @@ function initSun() {
 }
 
 function initRenderer() {
-  renderer = new WebGLRenderer({ antialias: true });
+  renderer = new WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
