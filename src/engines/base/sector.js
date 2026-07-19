@@ -5,6 +5,12 @@ import { Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector
 const density = 32; //must be even so edges halve cleanly when stitching
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
+//every sector shares the same padded grid, so it is built once and only
+//re-transformed per sector; scratch, alive within a single instantiate
+let workGeometry = null;
+let workGridTemplate = null;
+const workVertex = new Vector3();
+
 export class Sector {
   _center = null;
   _boundingRadius = null;
@@ -17,6 +23,11 @@ export class Sector {
    * @type {Float32Array}
    */
   _pristinePositions = null;
+
+  /**
+   * @type {Float32Array}
+   */
+  _pristineNormals = null;
 
   /**
    * set of directions currently stitched (joined), to skip redundant work
@@ -85,17 +96,21 @@ export class Sector {
     //place sector on the cube
     let rawMatrix = SectorTransform.calculateTransformationMatrix(address, this._sphereRadius);
     let transformationMatrix = new Matrix4().set(...rawMatrix);
-    this._mesh.geometry.applyMatrix4(transformationMatrix);
 
     //then spherize
-    this._applyTangentWarp();
-    this._spherize();
-    this._mesh.geometry.computeVertexNormals();
+    let workGrid = this._buildWorkGrid(transformationMatrix);
+    this._applyTangentWarp(workGrid.attributes.position.array, this._density + 3);
+    this._spherize(workGrid.attributes.position.array);
+    workGrid.computeVertexNormals();
+
+    this._copyInnerGrid(workGrid.attributes.position.array, geometry.attributes.position.array);
+    this._copyInnerGrid(workGrid.attributes.normal.array, geometry.attributes.normal.array);
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
     this._boundingRadius = null;
     this._pristinePositions = null;
+    this._pristineNormals = null;
     this._stitchedKey = null;
   }
 
@@ -114,6 +129,7 @@ export class Sector {
     this._mesh = null;
 
     this._pristinePositions = null;
+    this._pristineNormals = null;
     this._stitchedKey = null;
   }
 
@@ -130,15 +146,18 @@ export class Sector {
     }
 
     let position = this._mesh.geometry.attributes.position;
+    let normal = this._mesh.geometry.attributes.normal;
 
     //restore full-resolution edges captured before the first stitch
     if (this._pristinePositions) {
       position.array.set(this._pristinePositions);
+      normal.array.set(this._pristineNormals);
     }
 
     if (directions.length > 0) {
       if (!this._pristinePositions) {
         this._pristinePositions = Float32Array.from(position.array);
+        this._pristineNormals = Float32Array.from(normal.array);
       }
 
       for (let direction of directions) {
@@ -148,7 +167,7 @@ export class Sector {
 
     this._stitchedKey = key;
     position.needsUpdate = true;
-    this._mesh.geometry.computeVertexNormals();
+    normal.needsUpdate = true;
   }
 
   /**
@@ -180,6 +199,51 @@ export class Sector {
   }
 
   /**
+   * Grid covering the sector plus one cell of padding on every side, placed on
+   * the cube by the same transform. The padding gives the sector's edge vertices
+   * neighbours on all sides, which the rendered grid alone cannot provide.
+   * @param {Matrix4} transformationMatrix
+   * @returns {PlaneBufferGeometry}
+   */
+  _buildWorkGrid(transformationMatrix) {
+    let segments = this._density + 2;
+    if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
+      let size = 2 + 4 / this._density;
+      workGeometry = new PlaneBufferGeometry(size, size, segments, segments);
+      workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
+    }
+
+    let positions = workGeometry.attributes.position.array;
+    for (let i = 0; i < workGridTemplate.length; i += 3) {
+      workVertex
+        .set(workGridTemplate[i], workGridTemplate[i + 1], workGridTemplate[i + 2])
+        .applyMatrix4(transformationMatrix)
+        .toArray(positions, i);
+    }
+
+    return workGeometry;
+  }
+
+  /**
+   * @param {Float32Array} source work grid, padded by one cell on every side
+   * @param {Float32Array} target rendered grid
+   */
+  _copyInnerGrid(source, target) {
+    let n = this._density + 1;
+    let stride = n + 2;
+
+    for (let row = 0; row < n; row++) {
+      for (let column = 0; column < n; column++) {
+        let from = ((row + 1) * stride + column + 1) * 3;
+        let to = (row * n + column) * 3;
+        target[to] = source[from];
+        target[to + 1] = source[from + 1];
+        target[to + 2] = source[from + 2];
+      }
+    }
+  }
+
+  /**
    * @param {number} index
    * @returns {Vector3}
    */
@@ -194,12 +258,11 @@ export class Sector {
    * cells of near-equal angular size.
    *
    * The grid stays axis-aligned after the face transform, so each tangential
-   * axis only holds (density + 1) distinct coordinates, warped once and reused.
+   * axis only holds n distinct coordinates, warped once and reused.
+   * @param {Float32Array} vertices
+   * @param {number} n grid dimension in vertices
    */
-  _applyTangentWarp() {
-    let vertices = this._mesh.geometry.attributes.position.array;
-    let n = this._density + 1;
-
+  _applyTangentWarp(vertices, n) {
     //the axis that stays constant is the face axis; the other two are tangential
     let columnAxis = -1;
     let rowAxis = -1;
@@ -230,10 +293,9 @@ export class Sector {
   /**
    * key method that turns a cube into a sphere
    * (moves each vertex to be the same distance from the center)
+   * @param {Float32Array} vertices
    */
-  _spherize() {
-    let vertices = this._mesh.geometry.attributes.position.array;
-
+  _spherize(vertices) {
     for (let i = 0; i < vertices.length; i += 3) {
       let vx = vertices[i];
       let vy = vertices[i + 1];
@@ -252,16 +314,20 @@ export class Sector {
   }
 
   /**
-   * set vertex1 position same as vertex2 position
+   * moves vertex1 onto vertex2, normal included
    * @param {number} v1Number
    * @param {number} v2Number
    */
   _mergeVertices(v1Number, v2Number) {
-    let vertices = this._mesh.geometry.attributes.position.array;
+    let positions = this._mesh.geometry.attributes.position.array;
+    let normals = this._mesh.geometry.attributes.normal.array;
+    let i1 = v1Number * 3;
+    let i2 = v2Number * 3;
 
-    vertices[v1Number * 3] = vertices[v2Number * 3];
-    vertices[v1Number * 3 + 1] = vertices[v2Number * 3 + 1];
-    vertices[v1Number * 3 + 2] = vertices[v2Number * 3 + 2];
+    for (let axis = 0; axis < 3; axis++) {
+      positions[i1 + axis] = positions[i2 + axis];
+      normals[i1 + axis] = normals[i2 + axis];
+    }
   }
 
   /**
