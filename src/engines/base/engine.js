@@ -1,6 +1,6 @@
-import { AddressUtility, TreeNode } from '@core';
-import { Direction } from '@enums';
-import { CalcMisc, throttle } from '@helpers';
+import { AddressUtility, TreeNode } from '../../core';
+import { Direction } from '../../enums';
+import { CalcMisc, throttle } from '../../helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
 

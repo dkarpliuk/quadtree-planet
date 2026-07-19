@@ -1,4 +1,4 @@
-import { NoiseProcessor } from '@noise';
+import { NoiseProcessor } from '../../noise';
 import { MeshStandardMaterial } from 'three';
 import { Sector } from '../base/sector';
 

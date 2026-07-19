@@ -1,4 +1,4 @@
-import { AxisEnum, Direction } from "@enums";
+import { AxisEnum, Direction } from "../enums";
 
 //Designed for node address conversion between specific sides of the cube
 const addressConversionMatrix = new Map([

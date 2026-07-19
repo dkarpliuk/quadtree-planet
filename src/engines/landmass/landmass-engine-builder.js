@@ -1,4 +1,4 @@
-import { NoiseProcessor, RandomLCG } from "@noise";
+import { NoiseProcessor, RandomLCG } from "../../noise";
 import { createNoise3D } from "simplex-noise";
 import { EngineBuilder } from "../base/engine-builder";
 import { LandmassEngine } from "./landmass-engine";
