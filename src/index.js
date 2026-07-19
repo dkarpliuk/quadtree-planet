@@ -1,4 +1,5 @@
 import { LOD, ProcessFrequency } from '@enums';
+import { debounce } from '@helpers';
 import * as STATS from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
@@ -23,6 +24,7 @@ function init() {
   initInnerSphere();
   initLight();
   initRenderer();
+  initResizeHandler();
 }
 
 function initStats() {
@@ -75,6 +77,14 @@ function initRenderer() {
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
+}
+
+function initResizeHandler() {
+  window.addEventListener('resize', debounce(() => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }, 500));
 }
 
 function animate() {

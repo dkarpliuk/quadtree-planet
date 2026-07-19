@@ -1,6 +1,6 @@
 import { AddressUtility, TreeNode } from '@core';
 import { Direction, LOD } from '@enums';
-import { CalcMisc, debounce } from '@helpers';
+import { CalcMisc, throttle } from '@helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
 
@@ -77,7 +77,7 @@ export class Engine {
 
   initialize() {
     if (this.executionDebounce > 0) {
-      this.execute = debounce(this.execute, this.executionDebounce);
+      this.execute = throttle(this.execute, this.executionDebounce);
     }
 
     let sectors = [
