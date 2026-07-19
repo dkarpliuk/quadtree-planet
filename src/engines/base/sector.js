@@ -1,6 +1,6 @@
 import { SectorTransform } from '@core';
 import { Direction } from '@enums';
-import { BufferAttribute, Color, Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
+import { BufferAttribute, Color, Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3 } from 'three';
 
 const density = 32; //must be even so edges halve cleanly when stitching
 const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
@@ -89,7 +89,7 @@ export class Sector {
    * @param {number[]} address 
    */
   instantiate(attractor, address) {
-    let geometry = new PlaneBufferGeometry(2, 2, this._density, this._density);
+    let geometry = new PlaneGeometry(2, 2, this._density, this._density);
     this._mesh = new Mesh(geometry, this._material);
 
     attractor.add(this._mesh);
@@ -205,13 +205,13 @@ export class Sector {
    * the cube by the same transform. The padding gives the sector's edge vertices
    * neighbours on all sides, which the rendered grid alone cannot provide.
    * @param {Matrix4} transformationMatrix
-   * @returns {PlaneBufferGeometry}
+   * @returns {PlaneGeometry}
    */
   _buildWorkGrid(transformationMatrix) {
     let segments = this._density + 2;
     if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
       let size = 2 + 4 / this._density;
-      workGeometry = new PlaneBufferGeometry(size, size, segments, segments);
+      workGeometry = new PlaneGeometry(size, size, segments, segments);
       workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
     }
 
@@ -246,7 +246,7 @@ export class Sector {
   }
 
   /**
-   * @param {PlaneBufferGeometry} geometry
+   * @param {PlaneGeometry} geometry
    */
   _applyVertexColors(geometry) {
     let positions = geometry.attributes.position.array;
