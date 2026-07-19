@@ -1,7 +1,8 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
 import * as STATS from 'stats.js';
-import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, DirectionalLight, DoubleSide, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereBufferGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import cloudTexture from './assets/clouds.jpg';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -12,6 +13,11 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
 var seedTest = 1234;
+var waterLevelTest = 1;
+var atmosphereHeightTest = 150;
+var cloudHeightTest = 100;
+var sunPositionTest = new Vector3(0.6, 0.5, 0.6).multiplyScalar(radiusTest * 20);
+var sunRadiusTest = 1000;
 
 init();
 animate();
@@ -22,8 +28,11 @@ function init() {
   initControls();
   initScene();
   initPlanet();
-  initInnerSphere();
+  initWater();
+  initClouds();
+  initAtmosphere();
   initLight();
+  initSun();
   initRenderer();
   initResizeHandler();
 }
@@ -66,24 +75,67 @@ function initPlanet() {
   scene.add(planetProcessor.object3d);
 }
 
-function initInnerSphere() {
-  //black occluder just below the surface so the far side of the planet
-  //doesn't show through the wireframe
-  let geometry = new SphereBufferGeometry(radiusTest * 0.95, 64, 64);
-  let material = new MeshBasicMaterial({ color: 0x000000 });
-  let sphere = new Mesh(geometry, material);
-  sphere.position.copy(planetPositionTest);
-  scene.add(sphere);
+function initWater() {
+  let geometry = new SphereBufferGeometry(radiusTest + waterLevelTest, 128, 128);
+  let material = new MeshStandardMaterial({ color: 0x2b6fa8, transparent: true, opacity: 0.65 });
+  let water = new Mesh(geometry, material);
+  water.position.copy(planetPositionTest);
+  scene.add(water);
+}
+
+function initClouds() {
+  //square tile, so repeat it twice as often around as pole to pole to keep it square
+  let texture = new TextureLoader().load(cloudTexture);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.repeat.set(4, 2);
+
+  let geometry = new SphereBufferGeometry(radiusTest + cloudHeightTest, 64, 64);
+  let material = new MeshStandardMaterial({
+    color: 0xffffff,
+    alphaMap: texture,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide
+  });
+  let clouds = new Mesh(geometry, material);
+  clouds.position.copy(planetPositionTest);
+  scene.add(clouds);
+}
+
+function initAtmosphere() {
+  let geometry = new SphereBufferGeometry(radiusTest + atmosphereHeightTest, 128, 128);
+  let material = new MeshStandardMaterial({
+    color: 0x8ec5ff,
+    transparent: true,
+    opacity: 0.15,
+    depthWrite: false,
+    side: DoubleSide
+  });
+  let atmosphere = new Mesh(geometry, material);
+  atmosphere.position.copy(planetPositionTest);
+  scene.add(atmosphere);
 }
 
 function initLight() {
   let light = new DirectionalLight(0xffffff, 0.8);
-  light.position.set(0, 0, radiusTest * 20);
+  light.position.copy(sunPositionTest);
   scene.add(light);
+
+  //keeps the night side from collapsing into pure black
+  scene.add(new AmbientLight(0xffffff, 0.075));
+}
+
+function initSun() {
+  let geometry = new SphereBufferGeometry(sunRadiusTest, 32, 32);
+  let material = new MeshBasicMaterial({ color: 0xfff4d6 });
+  let sun = new Mesh(geometry, material);
+  sun.position.copy(sunPositionTest);
+  scene.add(sun);
 }
 
 function initRenderer() {
-  renderer = new WebGLRenderer({ antialias: true });
+  renderer = new WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
