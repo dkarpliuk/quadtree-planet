@@ -1,4 +1,5 @@
-import { NoiseProcessor, Perlin3D } from "@noise";
+import { NoiseProcessor, RandomLCG } from "@noise";
+import { createNoise3D } from "simplex-noise";
 import { EngineBuilder } from "../base/engine-builder";
 import { LandmassEngine } from "./landmass-engine";
 
@@ -8,8 +9,8 @@ export class LandmassEngineBuilder extends EngineBuilder {
   }
   
   seed(seed) {
-    let noiseFn = new Perlin3D(seed);
-    this._obj.noiseProcessor = new NoiseProcessor(noiseFn);
+    let random = new RandomLCG(seed);
+    this._obj.noiseProcessor = new NoiseProcessor(createNoise3D(() => random.next()));
     return this;
   }
 

@@ -1,13 +1,8 @@
 export function debounce(f, ms) {
-  let isCooldown = false;
+  let timeout = null;
 
-  return function () {
-    this.original = f;
-
-    if (!isCooldown) {
-      f.apply(this, arguments);
-      isCooldown = true;
-      setTimeout(() => isCooldown = false, ms);
-    }
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => f.apply(this, args), ms);
   };
 }
