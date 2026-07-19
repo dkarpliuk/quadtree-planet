@@ -4,6 +4,18 @@ import { CalcMisc, debounce } from '@helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
 
+//edge directions, in a fixed order, used for neighbor lookups
+const DIRECTIONS = [Direction.up, Direction.right, Direction.down, Direction.left];
+
+//for each Z-order quadrant (0 1 / 2 3), the two sides lying on the parent's
+//outer edge; the other two sides face siblings inside the parent
+const OUTWARD_DIRECTIONS = [
+  [Direction.up, Direction.left],    //0 - top-left
+  [Direction.up, Direction.right],   //1 - top-right
+  [Direction.down, Direction.left],  //2 - bottom-left
+  [Direction.down, Direction.right], //3 - bottom-right
+];
+
 export class Engine {
   _maxLod = null;
   _executionDebounceMs = null;
@@ -99,16 +111,15 @@ export class Engine {
    * Second pass over the settled leaves: stitches each leaf edge that faces a
    * coarser neighbor, closing the LOD seams.
    *
-   * Assumes a 2:1 (restricted quadtree) invariant - a coarser neighbor is at
-   * most one level below. This invariant will be guaranteed by the upcoming
-   * split/merge balancing step; until then, boundaries steeper than 2:1 may
-   * leave a residual crack.
+   * Relies on the 2:1 (restricted quadtree) invariant kept by the _canSplit /
+   * _canMerge balance guards: a coarser neighbor is at most one level below,
+   * which is exactly what collapsing every other edge vertex fixes.
    * @param {TreeNode<Sector>} leafNode
    */
   _stitchLeaf(leafNode) {
     let directions = [];
 
-    for (let direction of [Direction.up, Direction.right, Direction.down, Direction.left]) {
+    for (let direction of DIRECTIONS) {
       let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
 
       //absence from the address set means no node exists at the neighbor's level,
@@ -128,17 +139,56 @@ export class Engine {
     let splitDistance = this.sphereRadius / Math.pow(2, leafNode.level - 2);
     let minLod = LOD.ultraLow;
 
-    if (leafNode.level < minLod
+    let wantsSplit = leafNode.level < minLod
       || leafNode.level < this.maxLod
-      && this._getDistanceToSpectator(leafNode.obj) < splitDistance) {
-      
+      && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
+
+    if (wantsSplit && this._canSplit(leafNode)) {
       this._increaseLOD(leafNode);
-    } else if (leafNode.parent.level > minLod
+    } else if (!wantsSplit
+      && leafNode.parent.level > minLod
       && !leafNode.parent.children.some(x => x.children)
-      && this._getDistanceToSpectator(leafNode.parent.obj) >= splitDistance * 2) {
-      
+      && this._getDistanceToSpectator(leafNode.parent.obj) >= splitDistance * 2
+      && this._canMerge(leafNode.parent)) {
+
       this._decreaseLOD(leafNode.parent);
     }
+  }
+
+  /**
+   * 2:1 balance guard for splitting: a leaf may split only if no edge-neighbor
+   * is coarser than it. Otherwise the new children would sit two levels below
+   * that neighbor and break the stitch invariant (we simply wait until the
+   * neighbor refines on its own).
+   *
+   * A same-level neighbor address is present in the set exactly when a node
+   * exists there at that level or finer; its absence means a coarser neighbor.
+   * This is the same primitive the stitch pass uses.
+   * @param {TreeNode<Sector>} leafNode
+   * @returns {boolean}
+   */
+  _canSplit(leafNode) {
+    return DIRECTIONS.every(direction => {
+      let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
+      return this._addresses.has(neighbor.join(''));
+    });
+  }
+
+  /**
+   * 2:1 balance guard for merging: collapsing the parent is safe only if no cell
+   * touching its outer edge is two levels finer. For each child quadrant we test
+   * just its two outward sides (those on the parent's boundary) and check whether
+   * that same-level neighbor is itself subdivided - a '0' child in the address
+   * set means a level ℓ+2 cell is pressed against the edge.
+   * @param {TreeNode<Sector>} parent
+   * @returns {boolean}
+   */
+  _canMerge(parent) {
+    return parent.children.every((child, quadrant) =>
+      OUTWARD_DIRECTIONS[quadrant].every(direction => {
+        let neighbor = this._addressUtility.getNeighborAddress(child.address, direction);
+        return !this._addresses.has(neighbor.join('') + '0');
+      }));
   }
 
   /**
