@@ -71,6 +71,7 @@ export class Sector {
     this._mesh.geometry.applyMatrix4(transformationMatrix);
 
     //then spherize
+    this._applyTangentWarp();
     this._spherize();
     this._mesh.geometry.computeVertexNormals();
 
@@ -166,6 +167,46 @@ export class Sector {
     return new Vector3(vertices[mid - 1], vertices[mid], vertices[mid + 1])
       .normalize()
       .multiplyScalar(this._sphereRadius);
+  }
+
+  /**
+   * Redistributes the grid across the cube face so that spherizing it yields
+   * cells of near-equal angular size, instead of cells shrinking towards the
+   * face edges.
+   *
+   * The grid stays axis-aligned after the face transform, so each tangential
+   * axis only holds (density + 1) distinct coordinates - they are warped once
+   * and reused, rather than calling tan per vertex.
+   */
+  _applyTangentWarp() {
+    let vertices = this._mesh.geometry.attributes.position.array;
+    let n = this._density + 1;
+
+    //the axis that stays constant is the face axis; the other two are tangential
+    let columnAxis = -1;
+    let rowAxis = -1;
+    for (let axis = 0; axis < 3; axis++) {
+      if (vertices[3 + axis] !== vertices[axis]) columnAxis = axis;
+      if (vertices[n * 3 + axis] !== vertices[axis]) rowAxis = axis;
+    }
+
+    let warp = (coordinate) =>
+      Math.tan(coordinate / this._sphereRadius * Math.PI / 4) * this._sphereRadius;
+
+    let columnValues = new Float64Array(n);
+    let rowValues = new Float64Array(n);
+    for (let k = 0; k < n; k++) {
+      columnValues[k] = warp(vertices[k * 3 + columnAxis]);
+      rowValues[k] = warp(vertices[k * n * 3 + rowAxis]);
+    }
+
+    for (let row = 0; row < n; row++) {
+      for (let column = 0; column < n; column++) {
+        let i = (row * n + column) * 3;
+        vertices[i + columnAxis] = columnValues[column];
+        vertices[i + rowAxis] = rowValues[row];
+      }
+    }
   }
 
   /**
