@@ -1,8 +1,7 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
 import Stats from 'stats.js';
-import { AmbientLight, DirectionalLight, DoubleSide, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
-import cloudTexture from './assets/clouds.jpg';
+import { AmbientLight, DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -13,9 +12,6 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
 var seedTest = 1234;
-var waterLevelTest = 1;
-var atmosphereHeightTest = 150;
-var cloudHeightTest = 100;
 var sunPositionTest = new Vector3(0.6, 0.5, 0.6).multiplyScalar(radiusTest * 20);
 var sunRadiusTest = 1000;
 
@@ -28,9 +24,6 @@ function init() {
   initControls();
   initScene();
   initPlanet();
-  initWater();
-  initClouds();
-  initAtmosphere();
   initLight();
   initSun();
   initRenderer();
@@ -73,48 +66,6 @@ function initPlanet() {
   planetProcessor.createLandmass(LOD.high, ProcessFrequency.medium);
   planetProcessor.initialize();
   scene.add(planetProcessor.object3d);
-}
-
-function initWater() {
-  let geometry = new SphereGeometry(radiusTest + waterLevelTest, 128, 128);
-  let material = new MeshStandardMaterial({ color: 0x2b6fa8, transparent: true, opacity: 0.65 });
-  let water = new Mesh(geometry, material);
-  water.position.copy(planetPositionTest);
-  scene.add(water);
-}
-
-function initClouds() {
-  //square tile, so repeat it twice as often around as pole to pole to keep it square
-  let texture = new TextureLoader().load(cloudTexture);
-  texture.wrapS = RepeatWrapping;
-  texture.wrapT = RepeatWrapping;
-  texture.repeat.set(4, 2);
-
-  let geometry = new SphereGeometry(radiusTest + cloudHeightTest, 64, 64);
-  let material = new MeshStandardMaterial({
-    color: 0xffffff,
-    alphaMap: texture,
-    transparent: true,
-    depthWrite: false,
-    side: DoubleSide
-  });
-  let clouds = new Mesh(geometry, material);
-  clouds.position.copy(planetPositionTest);
-  scene.add(clouds);
-}
-
-function initAtmosphere() {
-  let geometry = new SphereGeometry(radiusTest + atmosphereHeightTest, 128, 128);
-  let material = new MeshStandardMaterial({
-    color: 0x8ec5ff,
-    transparent: true,
-    opacity: 0.15,
-    depthWrite: false,
-    side: DoubleSide
-  });
-  let atmosphere = new Mesh(geometry, material);
-  atmosphere.position.copy(planetPositionTest);
-  scene.add(atmosphere);
 }
 
 function initLight() {
