@@ -1,7 +1,7 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
 import * as STATS from 'stats.js';
-import { DirectionalLight, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, DoubleSide, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -13,6 +13,7 @@ var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
 var seedTest = 1234;
 var waterLevelTest = 1;
+var atmosphereHeightTest = 150;
 
 init();
 animate();
@@ -24,6 +25,7 @@ function init() {
   initScene();
   initPlanet();
   initWater();
+  initAtmosphere();
   initLight();
   initRenderer();
   initResizeHandler();
@@ -73,6 +75,20 @@ function initWater() {
   let water = new Mesh(geometry, material);
   water.position.copy(planetPositionTest);
   scene.add(water);
+}
+
+function initAtmosphere() {
+  let geometry = new SphereBufferGeometry(radiusTest + atmosphereHeightTest, 128, 128);
+  let material = new MeshStandardMaterial({
+    color: 0x8ec5ff,
+    transparent: true,
+    opacity: 0.2,
+    depthWrite: false,
+    side: DoubleSide
+  });
+  let atmosphere = new Mesh(geometry, material);
+  atmosphere.position.copy(planetPositionTest);
+  scene.add(atmosphere);
 }
 
 function initLight() {
