@@ -1,4 +1,7 @@
 export class NoiseProcessor {
+  /**
+   * @param {(x: number, y: number, z: number) => number} noiseFn
+   */
   constructor(noiseFn) {
     this.noise = noiseFn;
   }
@@ -9,7 +12,7 @@ export class NoiseProcessor {
     let maxValue = 0;
 
     for (let i = 0; i < octaves; i++) {
-      let value = this.noise.eval(x * frequency, y * frequency, z * frequency);
+      let value = this.noise(x * frequency, y * frequency, z * frequency);
       total += value * amplitude;
       maxValue += amplitude;
       amplitude *= persistence;
