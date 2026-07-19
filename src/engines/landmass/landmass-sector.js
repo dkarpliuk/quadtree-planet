@@ -27,7 +27,7 @@ export class LandmassSector extends Sector {
   }
 
   _computeHeightOffset(vx, vy, vz) {
-    let noise = this._noiseProcessor.getOctaveNoise(vx, vy, vz, 8, 0.7, 0.001);
-    return noise * noise * this._sphereRadius * 0.03;
+    let noise = this._noiseProcessor.getOctaveNoise(vx, vy, vz, 12, 0.5, 0.00025);
+    return Math.max(0, noise) * this._sphereRadius * 0.03;
   }
 }

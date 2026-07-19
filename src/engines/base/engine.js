@@ -1,8 +1,11 @@
 import { AddressUtility, TreeNode } from '@core';
-import { Direction, LOD } from '@enums';
+import { Direction } from '@enums';
 import { CalcMisc, throttle } from '@helpers';
 import { Object3D } from 'three';
 import { Sector } from './sector';
+
+//depth every sector is split to regardless of distance
+const MIN_LOD = 4;
 
 //edge directions, in a fixed order, used for neighbor lookups
 const DIRECTIONS = [Direction.up, Direction.right, Direction.down, Direction.left];
@@ -137,16 +140,15 @@ export class Engine {
    */
   _processLOD(leafNode) {
     let splitDistance = this.sphereRadius / Math.pow(2, leafNode.level - 2);
-    let minLod = LOD.ultraLow;
 
-    let wantsSplit = leafNode.level < minLod
+    let wantsSplit = leafNode.level < MIN_LOD
       || leafNode.level < this.maxLod
       && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
 
     if (wantsSplit && this._canSplit(leafNode)) {
       this._increaseLOD(leafNode);
     } else if (!wantsSplit
-      && leafNode.parent.level > minLod
+      && leafNode.parent.level > MIN_LOD
       && !leafNode.parent.children.some(x => x.children)
       && this._getDistanceToSpectator(leafNode.parent.obj) >= splitDistance * 2
       && this._canMerge(leafNode.parent)) {

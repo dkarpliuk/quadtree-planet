@@ -11,7 +11,7 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 //temporary for development
 var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
-var seedTest = 12345;
+var seedTest = 1234;
 
 init();
 animate();
@@ -29,9 +29,19 @@ function init() {
 }
 
 function initStats() {
-  stats = new STATS();
-  stats.showPanel(0);
-  document.body.appendChild(stats.dom);
+  //one instance per panel, stats.js shows only one at a time
+  let offset = 0;
+
+  stats = [0, 1].map(panel => {
+    let instance = new STATS();
+    instance.showPanel(panel);
+    document.body.appendChild(instance.dom);
+
+    instance.dom.style.top = `${offset}px`;
+    offset += instance.dom.offsetHeight;
+
+    return instance;
+  });
 }
 
 function initCamera() {
@@ -59,7 +69,7 @@ function initPlanet() {
 function initInnerSphere() {
   //black occluder just below the surface so the far side of the planet
   //doesn't show through the wireframe
-  let geometry = new SphereBufferGeometry(radiusTest * 0.98, 64, 64);
+  let geometry = new SphereBufferGeometry(radiusTest * 0.95, 64, 64);
   let material = new MeshBasicMaterial({ color: 0x000000 });
   let sphere = new Mesh(geometry, material);
   sphere.position.copy(planetPositionTest);
@@ -88,13 +98,13 @@ function initResizeHandler() {
 }
 
 function animate() {
-  stats.begin();
+  stats.forEach(x => x.begin());
 
   planetProcessor.process();
   controls.control();
   renderer.render(scene, camera);
-  
-  stats.end();
+
+  stats.forEach(x => x.end());
 
   requestAnimationFrame(animate);
 }
