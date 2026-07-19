@@ -85,12 +85,14 @@ export class Sector {
     //place sector on the cube
     let rawMatrix = SectorTransform.calculateTransformationMatrix(address, this._sphereRadius);
     let transformationMatrix = new Matrix4().set(...rawMatrix);
-    this._mesh.geometry.applyMatrix4(transformationMatrix);
 
     //then spherize
-    this._applyTangentWarp();
-    this._spherize();
-    this._mesh.geometry.computeVertexNormals();
+    let workGrid = this._buildWorkGrid(transformationMatrix);
+    this._applyTangentWarp(workGrid, this._density + 3);
+    this._spherize(workGrid);
+    this._copyInnerGrid(workGrid, geometry.attributes.position.array);
+
+    geometry.computeVertexNormals();
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
@@ -180,6 +182,41 @@ export class Sector {
   }
 
   /**
+   * Grid covering the sector plus one cell of padding on every side, placed on
+   * the cube by the same transform. The padding gives the sector's edge vertices
+   * neighbours on all sides, which the rendered grid alone cannot provide.
+   * @param {Matrix4} transformationMatrix
+   * @returns {Float32Array}
+   */
+  _buildWorkGrid(transformationMatrix) {
+    let segments = this._density + 2;
+    let size = 2 + 4 / this._density;
+    let geometry = new PlaneBufferGeometry(size, size, segments, segments);
+    geometry.applyMatrix4(transformationMatrix);
+
+    return geometry.attributes.position.array;
+  }
+
+  /**
+   * @param {Float32Array} source work grid, padded by one cell on every side
+   * @param {Float32Array} target rendered grid
+   */
+  _copyInnerGrid(source, target) {
+    let n = this._density + 1;
+    let stride = n + 2;
+
+    for (let row = 0; row < n; row++) {
+      for (let column = 0; column < n; column++) {
+        let from = ((row + 1) * stride + column + 1) * 3;
+        let to = (row * n + column) * 3;
+        target[to] = source[from];
+        target[to + 1] = source[from + 1];
+        target[to + 2] = source[from + 2];
+      }
+    }
+  }
+
+  /**
    * @param {number} index
    * @returns {Vector3}
    */
@@ -194,12 +231,11 @@ export class Sector {
    * cells of near-equal angular size.
    *
    * The grid stays axis-aligned after the face transform, so each tangential
-   * axis only holds (density + 1) distinct coordinates, warped once and reused.
+   * axis only holds n distinct coordinates, warped once and reused.
+   * @param {Float32Array} vertices
+   * @param {number} n grid dimension in vertices
    */
-  _applyTangentWarp() {
-    let vertices = this._mesh.geometry.attributes.position.array;
-    let n = this._density + 1;
-
+  _applyTangentWarp(vertices, n) {
     //the axis that stays constant is the face axis; the other two are tangential
     let columnAxis = -1;
     let rowAxis = -1;
@@ -230,10 +266,9 @@ export class Sector {
   /**
    * key method that turns a cube into a sphere
    * (moves each vertex to be the same distance from the center)
+   * @param {Float32Array} vertices
    */
-  _spherize() {
-    let vertices = this._mesh.geometry.attributes.position.array;
-
+  _spherize(vertices) {
     for (let i = 0; i < vertices.length; i += 3) {
       let vx = vertices[i];
       let vy = vertices[i + 1];
