@@ -192,14 +192,14 @@ export class Engine {
   }
 
   /**
-   * computes distance between spectator and center of sector
-   * @param {Sector} sector 
+   * distance from the spectator to the nearest point of the sector
+   * @param {Sector} sector
    * @returns {number}
    */
   _getDistanceToSpectator(sector) {
     let spectatorLocalPosition = this.attractor.worldToLocal(this._spectatorRef.position.clone());
     let distance = CalcMisc.calcDistance(spectatorLocalPosition, sector.center);
-    return distance;
+    return Math.max(0, distance - sector.boundingRadius);
   }
 
   /**

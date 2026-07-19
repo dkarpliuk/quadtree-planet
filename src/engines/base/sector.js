@@ -7,6 +7,7 @@ const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 export class Sector {
   _center = null;
+  _boundingRadius = null;
   _mesh = null;
   _sphereRadius = null;
 
@@ -31,10 +32,26 @@ export class Sector {
    */
   get center() {
     if (!this._center) {
-      this._center = this._calculateCenter();
+      let n = this._density + 1;
+      this._center = this._readVertex((n * n - 1) / 2);
     }
 
     return this._center;
+  }
+
+  /**
+   * approximated from the four corners - the patch is convex, so they are its
+   * farthest points apart from terrain bulging in the middle
+   * @type {number}
+   */
+  get boundingRadius() {
+    if (this._boundingRadius === null) {
+      let n = this._density + 1;
+      let corners = [0, n - 1, n * (n - 1), n * n - 1];
+      this._boundingRadius = Math.max(...corners.map(v => this._readVertex(v).distanceTo(this.center)));
+    }
+
+    return this._boundingRadius;
   }
 
   /**
@@ -75,7 +92,9 @@ export class Sector {
     this._spherize();
     this._mesh.geometry.computeVertexNormals();
 
-    //fresh geometry: drop any stitching state from a previous instantiation
+    //fresh geometry: drop everything cached from a previous instantiation
+    this._center = null;
+    this._boundingRadius = null;
     this._pristinePositions = null;
     this._stitchedKey = null;
   }
@@ -94,7 +113,6 @@ export class Sector {
     this._mesh.geometry.dispose();
     this._mesh = null;
 
-    //release the stitch snapshot right away instead of waiting for GC/reinstance
     this._pristinePositions = null;
     this._stitchedKey = null;
   }
@@ -161,22 +179,22 @@ export class Sector {
     }
   }
 
-  _calculateCenter() {
+  /**
+   * @param {number} index
+   * @returns {Vector3}
+   */
+  _readVertex(index) {
     let vertices = this._mesh.geometry.attributes.position.array;
-    let mid = Math.round((vertices.length - 1) / 2);
-    return new Vector3(vertices[mid - 1], vertices[mid], vertices[mid + 1])
-      .normalize()
-      .multiplyScalar(this._sphereRadius);
+    let i = index * 3;
+    return new Vector3(vertices[i], vertices[i + 1], vertices[i + 2]);
   }
 
   /**
    * Redistributes the grid across the cube face so that spherizing it yields
-   * cells of near-equal angular size, instead of cells shrinking towards the
-   * face edges.
+   * cells of near-equal angular size.
    *
    * The grid stays axis-aligned after the face transform, so each tangential
-   * axis only holds (density + 1) distinct coordinates - they are warped once
-   * and reused, rather than calling tan per vertex.
+   * axis only holds (density + 1) distinct coordinates, warped once and reused.
    */
   _applyTangentWarp() {
     let vertices = this._mesh.geometry.attributes.position.array;
