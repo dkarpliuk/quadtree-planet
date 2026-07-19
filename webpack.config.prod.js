@@ -32,6 +32,13 @@ module.exports = {
       use: [MiniCssExtractPlugin.loader, 'css-loader']
     },
     {
+      test: /\.(png|jpe?g)$/,
+      use: {
+        loader: 'file-loader',
+        options: { name: 'assets/[name].[ext]' }
+      }
+    },
+    {
       test: /\.m?js$/,
       exclude: /(node_modules|bower_components)/,
       use: {

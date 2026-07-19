@@ -1,7 +1,8 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
 import * as STATS from 'stats.js';
-import { DirectionalLight, DoubleSide, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, DoubleSide, Mesh, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereBufferGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import cloudTexture from './assets/clouds.jpg';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -14,6 +15,7 @@ var planetPositionTest = new Vector3(0, 0, 0);
 var seedTest = 1234;
 var waterLevelTest = 1;
 var atmosphereHeightTest = 150;
+var cloudHeightTest = 100;
 
 init();
 animate();
@@ -25,6 +27,7 @@ function init() {
   initScene();
   initPlanet();
   initWater();
+  initClouds();
   initAtmosphere();
   initLight();
   initRenderer();
@@ -75,6 +78,26 @@ function initWater() {
   let water = new Mesh(geometry, material);
   water.position.copy(planetPositionTest);
   scene.add(water);
+}
+
+function initClouds() {
+  //square tile, so repeat it twice as often around as pole to pole to keep it square
+  let texture = new TextureLoader().load(cloudTexture);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.repeat.set(4, 2);
+
+  let geometry = new SphereBufferGeometry(radiusTest + cloudHeightTest, 64, 64);
+  let material = new MeshStandardMaterial({
+    color: 0xffffff,
+    alphaMap: texture,
+    transparent: true,
+    depthWrite: false,
+    side: DoubleSide
+  });
+  let clouds = new Mesh(geometry, material);
+  clouds.position.copy(planetPositionTest);
+  scene.add(clouds);
 }
 
 function initAtmosphere() {
