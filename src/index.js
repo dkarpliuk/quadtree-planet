@@ -78,7 +78,9 @@ function initInnerSphere() {
 
 function initLight() {
   let light = new DirectionalLight(0xffffff, 0.8);
-  light.position.set(0, 0, radiusTest * 20);
+  let distance = radiusTest * 20;
+
+  light.position.set(distance * 0.6, distance * 0.5, distance * 0.6);
   scene.add(light);
 }
 
