@@ -92,6 +92,10 @@ export class Sector {
     scene.remove(this._mesh);
     this._mesh.geometry.dispose();
     this._mesh = null;
+
+    //release the stitch snapshot right away instead of waiting for GC/reinstance
+    this._pristinePositions = null;
+    this._stitchedKey = null;
   }
 
   /**
