@@ -7,8 +7,8 @@ const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 //every sector shares the same padded grid, so it is built once and only
 //re-transformed per sector; scratch, alive within a single instantiate
+let workGeometry = null;
 let workGridTemplate = null;
-let workGrid = null;
 const workVertex = new Vector3();
 
 export class Sector {
@@ -99,10 +99,12 @@ export class Sector {
 
     //then spherize
     let workGrid = this._buildWorkGrid(transformationMatrix);
-    this._applyTangentWarp(workGrid, this._density + 3);
-    this._spherize(workGrid);
-    this._copyInnerGrid(workGrid, geometry.attributes.position.array);
-    this._computeNormals(workGrid, geometry.attributes.normal.array);
+    this._applyTangentWarp(workGrid.attributes.position.array, this._density + 3);
+    this._spherize(workGrid.attributes.position.array);
+    workGrid.computeVertexNormals();
+
+    this._copyInnerGrid(workGrid.attributes.position.array, geometry.attributes.position.array);
+    this._copyInnerGrid(workGrid.attributes.normal.array, geometry.attributes.normal.array);
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
@@ -201,24 +203,25 @@ export class Sector {
    * the cube by the same transform. The padding gives the sector's edge vertices
    * neighbours on all sides, which the rendered grid alone cannot provide.
    * @param {Matrix4} transformationMatrix
-   * @returns {Float32Array}
+   * @returns {PlaneBufferGeometry}
    */
   _buildWorkGrid(transformationMatrix) {
-    let vertexCount = Math.pow(this._density + 3, 2);
-    if (!workGridTemplate || workGridTemplate.count !== vertexCount) {
-      let segments = this._density + 2;
+    let segments = this._density + 2;
+    if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
       let size = 2 + 4 / this._density;
-      workGridTemplate = new PlaneBufferGeometry(size, size, segments, segments).attributes.position;
-      workGrid = new Float32Array(workGridTemplate.array.length);
+      workGeometry = new PlaneBufferGeometry(size, size, segments, segments);
+      workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
     }
 
-    for (let i = 0; i < workGridTemplate.count; i++) {
-      workVertex.fromBufferAttribute(workGridTemplate, i)
+    let positions = workGeometry.attributes.position.array;
+    for (let i = 0; i < workGridTemplate.length; i += 3) {
+      workVertex
+        .set(workGridTemplate[i], workGridTemplate[i + 1], workGridTemplate[i + 2])
         .applyMatrix4(transformationMatrix)
-        .toArray(workGrid, i * 3);
+        .toArray(positions, i);
     }
 
-    return workGrid;
+    return workGeometry;
   }
 
   /**
@@ -236,54 +239,6 @@ export class Sector {
         target[to] = source[from];
         target[to + 1] = source[from + 1];
         target[to + 2] = source[from + 2];
-      }
-    }
-  }
-
-  /**
-   * Normal of every rendered vertex, from central differences over its four
-   * neighbours in the work grid. Because it depends only on position, two
-   * sectors meeting at a shared vertex derive the same normal and the lighting
-   * runs seamlessly across the boundary.
-   * @param {Float32Array} source work grid, padded by one cell on every side
-   * @param {Float32Array} target rendered grid normals
-   */
-  _computeNormals(source, target) {
-    let n = this._density + 1;
-    let stride = n + 2;
-
-    for (let row = 0; row < n; row++) {
-      for (let column = 0; column < n; column++) {
-        let left = ((row + 1) * stride + column) * 3;
-        let right = left + 6;
-        let up = (row * stride + column + 1) * 3;
-        let down = up + stride * 6;
-
-        let ax = source[right] - source[left];
-        let ay = source[right + 1] - source[left + 1];
-        let az = source[right + 2] - source[left + 2];
-
-        let bx = source[down] - source[up];
-        let by = source[down + 1] - source[up + 1];
-        let bz = source[down + 2] - source[up + 2];
-
-        let nx = by * az - bz * ay;
-        let ny = bz * ax - bx * az;
-        let nz = bx * ay - by * ax;
-
-        //the planet sits at the origin, so an outward normal points away from it
-        let center = up + stride * 3;
-        if (nx * source[center] + ny * source[center + 1] + nz * source[center + 2] < 0) {
-          nx = -nx;
-          ny = -ny;
-          nz = -nz;
-        }
-
-        let length = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-        let to = (row * n + column) * 3;
-        target[to] = nx / length;
-        target[to + 1] = ny / length;
-        target[to + 2] = nz / length;
       }
     }
   }
