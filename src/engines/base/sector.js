@@ -180,8 +180,11 @@ export class Sector {
       let vy = vertices[i + 1];
       let vz = vertices[i + 2];
 
-      let heightOffset = this._computeHeightOffset(vx, vy, vz);
-      let factor = (this._sphereRadius + heightOffset) / Math.sqrt(vx * vx + vy * vy + vz * vz);
+      let length = Math.sqrt(vx * vx + vy * vy + vz * vz);
+      let scale = this._sphereRadius / length;
+
+      let heightOffset = this._computeHeightOffset(vx * scale, vy * scale, vz * scale);
+      let factor = (this._sphereRadius + heightOffset) / length;
 
       vertices[i] *= factor;
       vertices[i + 1] *= factor;
