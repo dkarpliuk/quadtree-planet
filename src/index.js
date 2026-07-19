@@ -1,7 +1,7 @@
 import { LOD, ProcessFrequency } from './enums';
 import { debounce } from './helpers';
 import Stats from 'stats.js';
-import { AmbientLight, DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -12,7 +12,7 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
 var seedTest = 1234;
-var sunPositionTest = new Vector3(0.6, 0.5, 0.6).multiplyScalar(radiusTest * 20);
+var sunPositionTest = new Vector3(0, 0, 1).multiplyScalar(radiusTest * 20);
 var sunRadiusTest = 1000;
 
 init();
@@ -69,17 +69,14 @@ function initPlanet() {
 }
 
 function initLight() {
-  let light = new DirectionalLight(0xffffff, 0.8);
+  let light = new DirectionalLight(0xffffff, Math.PI);
   light.position.copy(sunPositionTest);
   scene.add(light);
-
-  //keeps the night side from collapsing into pure black
-  scene.add(new AmbientLight(0xffffff, 0.075));
 }
 
 function initSun() {
   let geometry = new SphereGeometry(sunRadiusTest, 32, 32);
-  let material = new MeshBasicMaterial({ color: 0xfff4d6 });
+  let material = new MeshBasicMaterial({ color: 0xffffff });
   let sun = new Mesh(geometry, material);
   sun.position.copy(sunPositionTest);
   scene.add(sun);
