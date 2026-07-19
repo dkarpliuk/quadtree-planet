@@ -1,7 +1,7 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
 import * as STATS from 'stats.js';
-import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
+import { DirectionalLight, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
 import './styles.css';
@@ -12,6 +12,7 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
 var seedTest = 1234;
+var waterLevelTest = 1;
 
 init();
 animate();
@@ -22,7 +23,7 @@ function init() {
   initControls();
   initScene();
   initPlanet();
-  initInnerSphere();
+  initWater();
   initLight();
   initRenderer();
   initResizeHandler();
@@ -66,14 +67,12 @@ function initPlanet() {
   scene.add(planetProcessor.object3d);
 }
 
-function initInnerSphere() {
-  //black occluder just below the surface so the far side of the planet
-  //doesn't show through the wireframe
-  let geometry = new SphereBufferGeometry(radiusTest * 0.95, 64, 64);
-  let material = new MeshBasicMaterial({ color: 0x000000 });
-  let sphere = new Mesh(geometry, material);
-  sphere.position.copy(planetPositionTest);
-  scene.add(sphere);
+function initWater() {
+  let geometry = new SphereBufferGeometry(radiusTest + waterLevelTest, 128, 128);
+  let material = new MeshStandardMaterial({ color: 0x2b6fa8, transparent: true, opacity: 0.65 });
+  let water = new Mesh(geometry, material);
+  water.position.copy(planetPositionTest);
+  scene.add(water);
 }
 
 function initLight() {
