@@ -1,9 +1,8 @@
-import { LOD, ProcessFrequency } from './enums';
-import { debounce } from './helpers';
 import Stats from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './app/controls';
-import { PlanetProcessor } from './app/planet-processor';
+import { debounce } from './app/debounce';
+import { PlanetProcessor, LOD, ProcessFrequency } from './planet';
 import './styles.css';
 
 var stats, scene, camera, renderer, controls, planetProcessor;

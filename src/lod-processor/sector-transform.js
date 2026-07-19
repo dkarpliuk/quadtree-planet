@@ -1,4 +1,4 @@
-import { AxisEnum } from '../enums';
+import { AxisEnum } from './axis-enum';
 
 /**
  * transformation matrices (rotation only) for each side of the cube for better performance

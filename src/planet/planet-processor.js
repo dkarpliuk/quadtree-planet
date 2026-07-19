@@ -1,5 +1,5 @@
 import { Group } from 'three';
-import { LandmassEngineBuilder } from '../engines/landmass/landmass-engine-builder';
+import { LandmassEngineBuilder } from './landmass-engine-builder';
 
 export class PlanetProcessor {
   _radius = 0;

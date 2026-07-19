@@ -1,5 +1,5 @@
-import { SectorTransform } from '../../core';
-import { Direction } from '../../enums';
+import { SectorTransform } from './sector-transform';
+import { Direction } from './direction';
 import { BufferAttribute, Color, Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3 } from 'three';
 
 const density = 32; //must be even so edges halve cleanly when stitching

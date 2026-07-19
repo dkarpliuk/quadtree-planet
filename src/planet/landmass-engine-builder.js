@@ -1,6 +1,7 @@
-import { NoiseProcessor, RandomLCG } from "../../noise";
+import { NoiseProcessor } from "./noise-processor";
+import { RandomLCG } from "./random-lcg";
 import { createNoise3D } from "simplex-noise";
-import { EngineBuilder } from "../base/engine-builder";
+import { EngineBuilder } from "../lod-processor";
 import { LandmassEngine } from "./landmass-engine";
 
 export class LandmassEngineBuilder extends EngineBuilder {

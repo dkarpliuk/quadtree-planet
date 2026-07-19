@@ -1,6 +1,6 @@
-import { NoiseProcessor } from '../../noise';
+import { NoiseProcessor } from './noise-processor';
 import { MeshStandardMaterial } from 'three';
-import { Sector } from '../base/sector';
+import { Sector } from '../lod-processor';
 
 const material = new MeshStandardMaterial({ color: 0xffffff });
 

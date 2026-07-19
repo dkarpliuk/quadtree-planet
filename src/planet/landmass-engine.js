@@ -1,5 +1,5 @@
-import { NoiseProcessor } from '../../noise';
-import { Engine } from '../base/engine';
+import { NoiseProcessor } from './noise-processor';
+import { Engine } from '../lod-processor';
 import { LandmassSector } from './landmass-sector';
 
 export class LandmassEngine extends Engine {
