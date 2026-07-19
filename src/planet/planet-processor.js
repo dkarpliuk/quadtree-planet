@@ -1,6 +1,6 @@
 import { Group } from 'three';
 import { LandmassEngineBuilder } from './landmass-engine-builder';
-import { throttle } from './throttle';
+import { throttle } from 'lodash-es';
 
 export class PlanetProcessor {
   _radius = 0;
@@ -22,7 +22,7 @@ export class PlanetProcessor {
     this._processFrequency = processFrequency;
 
     if (processFrequency > 0) {
-      this.process = throttle(this.process.bind(this), processFrequency);
+      this.process = throttle(this.process.bind(this), processFrequency, { trailing: false });
     }
   }
 
