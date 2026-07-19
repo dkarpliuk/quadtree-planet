@@ -1,7 +1,7 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
-import * as STATS from 'stats.js';
-import { AmbientLight, DirectionalLight, DoubleSide, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereBufferGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import Stats from 'stats.js';
+import { AmbientLight, DirectionalLight, DoubleSide, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
 import cloudTexture from './assets/clouds.jpg';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
@@ -42,7 +42,7 @@ function initStats() {
   let offset = 0;
 
   stats = [0, 1].map(panel => {
-    let instance = new STATS();
+    let instance = new Stats();
     instance.showPanel(panel);
     document.body.appendChild(instance.dom);
 
@@ -76,7 +76,7 @@ function initPlanet() {
 }
 
 function initWater() {
-  let geometry = new SphereBufferGeometry(radiusTest + waterLevelTest, 128, 128);
+  let geometry = new SphereGeometry(radiusTest + waterLevelTest, 128, 128);
   let material = new MeshStandardMaterial({ color: 0x2b6fa8, transparent: true, opacity: 0.65 });
   let water = new Mesh(geometry, material);
   water.position.copy(planetPositionTest);
@@ -90,7 +90,7 @@ function initClouds() {
   texture.wrapT = RepeatWrapping;
   texture.repeat.set(4, 2);
 
-  let geometry = new SphereBufferGeometry(radiusTest + cloudHeightTest, 64, 64);
+  let geometry = new SphereGeometry(radiusTest + cloudHeightTest, 64, 64);
   let material = new MeshStandardMaterial({
     color: 0xffffff,
     alphaMap: texture,
@@ -104,7 +104,7 @@ function initClouds() {
 }
 
 function initAtmosphere() {
-  let geometry = new SphereBufferGeometry(radiusTest + atmosphereHeightTest, 128, 128);
+  let geometry = new SphereGeometry(radiusTest + atmosphereHeightTest, 128, 128);
   let material = new MeshStandardMaterial({
     color: 0x8ec5ff,
     transparent: true,
@@ -127,7 +127,7 @@ function initLight() {
 }
 
 function initSun() {
-  let geometry = new SphereBufferGeometry(sunRadiusTest, 32, 32);
+  let geometry = new SphereGeometry(sunRadiusTest, 32, 32);
   let material = new MeshBasicMaterial({ color: 0xfff4d6 });
   let sun = new Mesh(geometry, material);
   sun.position.copy(sunPositionTest);
