@@ -1,4 +1,4 @@
-import { Perlin3D } from './perlin-3d';
 import { NoiseProcessor } from './noise-processor';
+import { RandomLCG } from './random-lcg';
 
-export { Perlin3D, NoiseProcessor };
+export { NoiseProcessor, RandomLCG };

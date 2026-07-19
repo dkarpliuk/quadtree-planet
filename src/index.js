@@ -11,6 +11,7 @@ var stats, scene, camera, renderer, controls, planetProcessor;
 //temporary for development
 var radiusTest = 3000;
 var planetPositionTest = new Vector3(0, 0, 0);
+var seedTest = 12345;
 
 init();
 animate();
@@ -49,8 +50,7 @@ function initScene() {
 }
 
 function initPlanet() {
-  let seed = Math.random();
-  planetProcessor = new PlanetProcessor(camera, planetPositionTest, radiusTest, seed);
+  planetProcessor = new PlanetProcessor(camera, planetPositionTest, radiusTest, seedTest);
   planetProcessor.createLandmass(LOD.high, ProcessFrequency.medium);
   planetProcessor.initialize();
   scene.add(planetProcessor.object3d);
