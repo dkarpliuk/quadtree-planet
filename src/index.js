@@ -1,7 +1,7 @@
 import { LOD, ProcessFrequency } from '@enums';
 import { debounce } from '@helpers';
 import * as STATS from 'stats.js';
-import { DirectionalLight, DoubleSide, Mesh, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereBufferGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, DirectionalLight, DoubleSide, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, RepeatWrapping, Scene, SphereBufferGeometry, TextureLoader, Vector3, WebGLRenderer } from 'three';
 import cloudTexture from './assets/clouds.jpg';
 import { Controls } from './app/controls';
 import { PlanetProcessor } from './app/planet-processor';
@@ -16,6 +16,8 @@ var seedTest = 1234;
 var waterLevelTest = 1;
 var atmosphereHeightTest = 150;
 var cloudHeightTest = 100;
+var sunPositionTest = new Vector3(0.6, 0.5, 0.6).multiplyScalar(radiusTest * 20);
+var sunRadiusTest = 1000;
 
 init();
 animate();
@@ -30,6 +32,7 @@ function init() {
   initClouds();
   initAtmosphere();
   initLight();
+  initSun();
   initRenderer();
   initResizeHandler();
 }
@@ -105,7 +108,7 @@ function initAtmosphere() {
   let material = new MeshStandardMaterial({
     color: 0x8ec5ff,
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.15,
     depthWrite: false,
     side: DoubleSide
   });
@@ -116,10 +119,19 @@ function initAtmosphere() {
 
 function initLight() {
   let light = new DirectionalLight(0xffffff, 0.8);
-  let distance = radiusTest * 20;
-
-  light.position.set(distance * 0.6, distance * 0.5, distance * 0.6);
+  light.position.copy(sunPositionTest);
   scene.add(light);
+
+  //keeps the night side from collapsing into pure black
+  scene.add(new AmbientLight(0xffffff, 0.075));
+}
+
+function initSun() {
+  let geometry = new SphereBufferGeometry(sunRadiusTest, 32, 32);
+  let material = new MeshBasicMaterial({ color: 0xfff4d6 });
+  let sun = new Mesh(geometry, material);
+  sun.position.copy(sunPositionTest);
+  scene.add(sun);
 }
 
 function initRenderer() {
