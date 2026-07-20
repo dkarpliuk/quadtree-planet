@@ -9,7 +9,6 @@ export class EngineBuilder {
   get allPropertiesSet() {
     let result =
       this._obj._maxLod &&
-      this._obj._executionDebounceMs &&
       this._obj._sphereRadius;
 
     return result;
@@ -24,15 +23,6 @@ export class EngineBuilder {
       throw 'Depth level out of range. Must be greater than 1.';
     } else {
       this._obj._maxLod = val;
-      return this;
-    }
-  }
-
-  setExecutionDebounce(val) {
-    if (val < 0) {
-      throw 'Execution debounce out of range. Must be greater than 0.';
-    } else {
-      this._obj._executionDebounceMs = val;
       return this;
     }
   }

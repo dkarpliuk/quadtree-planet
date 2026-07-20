@@ -22,7 +22,6 @@ const OUTWARD_DIRECTIONS = [
 
 export class Engine {
   _maxLod = null;
-  _executionDebounceMs = null;
   _spectatorLocalPosition = null;
   _sphereRadius = null;
 
@@ -67,11 +66,6 @@ export class Engine {
    * @type {number}
    */
   get maxLod() { return this._maxLod; }
-
-  /**
-   * @type {number}
-   */
-  get executionDebounce() { return this._executionDebounceMs; }
 
   /**
    * @type {number}
@@ -215,8 +209,8 @@ export class Engine {
    */
   _increaseLOD(leafNode) {
     this._topologyDirty = true;
-    leafNode.obj.clear();
     this.onSectorRemoved(leafNode.obj);
+    leafNode.obj.clear();
     leafNode.setChildren([
       this._createSector(),
       this._createSector(),
@@ -238,8 +232,8 @@ export class Engine {
     this._topologyDirty = true;
 
     for (let childNode of leafNode.children) {
-      childNode.obj.clear();
       this.onSectorRemoved(childNode.obj);
+      childNode.obj.clear();
     }
 
     leafNode.children.forEach(x => this._addresses.delete(x.address.join('')));

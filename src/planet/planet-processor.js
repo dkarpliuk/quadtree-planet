@@ -1,6 +1,10 @@
-import { Group, Vector3 } from 'three';
-import { LandmassEngineBuilder } from './landmass-engine-builder';
+import { Group } from 'three';
 import { throttle } from 'lodash-es';
+import seedrandom from 'seedrandom';
+import { createNoise3D } from 'simplex-noise';
+import { EngineBuilder } from '../lod-processor';
+import { NoiseProcessor } from './noise-processor';
+import { LandmassSectorMesh } from './landmass-sector-mesh';
 
 export class PlanetProcessor {
   _radius = 0;
@@ -29,17 +33,20 @@ export class PlanetProcessor {
   initialize() {
     for (let engine of this._engines) {
       engine.initialize();
-      this._engineGroup.add(engine.attractor);
     }
   }
 
   createLandmass(lod) {
-    let engine = new LandmassEngineBuilder()
+    let noiseProcessor = this._createNoiseProcessor();
+
+    let engine = new EngineBuilder()
       .setSphereRadius(this._radius)
       .setLOD(lod)
-      .setExecutionDebounce(this._processFrequency)
-      .seed(this._seed)
+      .setSectorMeshFactory(() => new LandmassSectorMesh(this._radius, noiseProcessor))
       .getResult();
+
+    engine.onSectorCreated = sector => this._engineGroup.add(sector.mesh);
+    engine.onSectorRemoved = sector => this._engineGroup.remove(sector.mesh);
 
     this._engines.push(engine);
   }
@@ -52,5 +59,10 @@ export class PlanetProcessor {
 
   _getSpectatorLocalPosition() {
     return this._engineGroup.worldToLocal(this._spectatorRef.position.clone());
+  }
+
+  _createNoiseProcessor() {
+    let random = seedrandom(this._seed);
+    return new NoiseProcessor(createNoise3D(random));
   }
 }
