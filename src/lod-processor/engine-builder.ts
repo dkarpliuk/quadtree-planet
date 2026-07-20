@@ -1,24 +1,18 @@
 import { Engine } from './engine';
+import type { SectorMesh } from './sector-mesh';
 
 export class EngineBuilder {
-  _obj = null;
+  _obj!: Engine;
 
-  /**
-   * @type {boolean}
-   */
-  get allPropertiesSet() {
-    let result =
-      this._obj._maxLod &&
-      this._obj._sphereRadius;
-
-    return result;
+  get allPropertiesSet(): boolean {
+    return !!(this._obj._maxLod && this._obj._sphereRadius);
   }
 
   constructor() {
     this.reset();
   }
 
-  setLOD(val) {
+  setLOD(val: number): this {
     if (val < 1) {
       throw 'Depth level out of range. Must be greater than 1.';
     } else {
@@ -27,7 +21,7 @@ export class EngineBuilder {
     }
   }
 
-  setSphereRadius(val) {
+  setSphereRadius(val: number): this {
     if (val < 0) {
       throw 'Sphere radius out of range. Must be greater than 0.';
     } else {
@@ -36,10 +30,7 @@ export class EngineBuilder {
     }
   }
 
-  /**
-   * @param {() => import('./sector-mesh').SectorMesh} factory
-   */
-  setSectorMeshFactory(factory) {
+  setSectorMeshFactory(factory: () => SectorMesh): this {
     if (!factory) {
       throw 'Argument is out of range';
     } else {
@@ -48,7 +39,7 @@ export class EngineBuilder {
     }
   }
 
-  getResult() {
+  getResult(): Engine {
     this._validate();
     return this._obj;
   }

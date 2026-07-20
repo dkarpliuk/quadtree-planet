@@ -1,84 +1,65 @@
 import { SectorTransform } from './sector-transform';
 import { Direction } from './direction';
-import { SectorMesh } from './sector-mesh';
 import { GeometryMath } from './geometry-math';
-import { CalcMisc } from './calc-misc';
+import { CalcMisc, type Vector3Like } from './calc-misc';
+import type { SectorMesh } from './sector-mesh';
 
 const density = 32; //must be even so edges halve cleanly when stitching
 
 export class Sector {
-  _center = null;
-  _boundingRadius = null;
-  _sphereRadius = null;
-
-  /**
-   * @type {SectorMesh}
-   */
-  _sectorMesh = null;
+  _center: Vector3Like | null = null;
+  _boundingRadius: number | null = null;
+  _sphereRadius: number;
+  _sectorMesh: SectorMesh;
 
   /**
    * pristine full-resolution vertex positions, captured before the first stitch
    * so that edges can be restored and re-stitched when neighbor LOD changes
-   * @type {Float32Array}
    */
-  _pristinePositions = null;
-
-  /**
-   * @type {Float32Array}
-   */
-  _pristineNormals = null;
+  _pristinePositions: Float32Array | null = null;
+  _pristineNormals: Float32Array | null = null;
 
   /**
    * set of directions currently stitched (joined), to skip redundant work
-   * @type {string}
    */
-  _stitchedKey = null;
+  _stitchedKey: string | null = null;
 
   get _density() { return density; }
 
   get mesh() { return this._sectorMesh.mesh; }
 
-  /**
-   * @type {{x: number, y: number, z: number}}
-   */
-  get center() {
+  get center(): Vector3Like {
     if (!this._center) {
       let n = this._density + 1;
       this._center = this._readVertex((n * n - 1) / 2);
     }
 
-    return this._center;
+    return this._center!;
   }
 
   /**
    * approximated from the four corners - the patch is convex, so they are its
    * farthest points apart from terrain bulging in the middle
-   * @type {number}
    */
-  get boundingRadius() {
+  get boundingRadius(): number {
     if (this._boundingRadius === null) {
       let n = this._density + 1;
       let corners = [0, n - 1, n * (n - 1), n * n - 1];
       this._boundingRadius = Math.max(...corners.map(v => CalcMisc.calcDistance(this._readVertex(v), this.center)));
     }
 
-    return this._boundingRadius;
+    return this._boundingRadius!;
   }
 
-  /**
-   * @param {number} sphereRadius
-   * @param {SectorMesh} sectorMesh
-   */
-  constructor(sphereRadius, sectorMesh) {
+  constructor(sphereRadius: number, sectorMesh: SectorMesh) {
     this._sphereRadius = sphereRadius;
     this._sectorMesh = sectorMesh;
   }
 
   /**
    * builds the sector geometry and performs the initial transformation
-   * @param {number[]} address
    */
-  instantiate(address) {
+  instantiate(address: number[]) {
     this._sectorMesh.allocate(this._density);
 
     //place sector on the cube
@@ -114,9 +95,8 @@ export class Sector {
    * Docks this sector with lower-LOD neighbors on the given sides, closing the
    * seams. Non-destructive across passes: full resolution is restored before
    * re-applying, so the sector unstitches cleanly when a neighbor refines.
-   * @param {Direction[]} directions
    */
-  stitch(directions) {
+  stitch(directions: Direction[]) {
     let key = directions.join('');
     if (key === this._stitchedKey) {
       return;
@@ -128,7 +108,7 @@ export class Sector {
     //restore full-resolution edges captured before the first stitch
     if (this._pristinePositions) {
       positions.set(this._pristinePositions);
-      normals.set(this._pristineNormals);
+      normals.set(this._pristineNormals!);
     }
 
     if (directions.length > 0) {
@@ -150,9 +130,8 @@ export class Sector {
    * collapses every other vertex along one edge onto its neighbor, degenerating
    * the in-between triangles so the edge matches a neighbor of half the density
    * (i.e. a 2:1 / one-level-coarser neighbor)
-   * @param {Direction} direction
    */
-  _stitchEdge(direction) {
+  _stitchEdge(direction: Direction) {
     let n = this._density + 1; //sector grid dimension
 
     if (direction == Direction.up) {
@@ -174,11 +153,7 @@ export class Sector {
     }
   }
 
-  /**
-   * @param {Float32Array} source work grid, padded by one cell on every side
-   * @param {Float32Array} target rendered grid
-   */
-  _copyInnerGrid(source, target) {
+  _copyInnerGrid(source: Float32Array, target: Float32Array) {
     let n = this._density + 1;
     let stride = n + 2;
 
@@ -193,11 +168,7 @@ export class Sector {
     }
   }
 
-  /**
-   * @param {number} index
-   * @returns {{x: number, y: number, z: number}}
-   */
-  _readVertex(index) {
+  _readVertex(index: number): Vector3Like {
     let vertices = this._sectorMesh.positions;
     let i = index * 3;
     return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
@@ -209,10 +180,8 @@ export class Sector {
    *
    * The grid stays axis-aligned after the face transform, so each tangential
    * axis only holds n distinct coordinates, warped once and reused.
-   * @param {Float32Array} vertices
-   * @param {number} n grid dimension in vertices
    */
-  _applyTangentWarp(vertices, n) {
+  _applyTangentWarp(vertices: Float32Array, n: number) {
     //the axis that stays constant is the face axis; the other two are tangential
     let columnAxis = -1;
     let rowAxis = -1;
@@ -221,7 +190,7 @@ export class Sector {
       if (vertices[n * 3 + axis] !== vertices[axis]) rowAxis = axis;
     }
 
-    let warp = (coordinate) =>
+    let warp = (coordinate: number) =>
       Math.tan(coordinate / this._sphereRadius * Math.PI / 4) * this._sphereRadius;
 
     let columnValues = new Float64Array(n);
@@ -243,9 +212,8 @@ export class Sector {
   /**
    * key method that turns a cube into a sphere
    * (moves each vertex to be the same distance from the center)
-   * @param {Float32Array} vertices
    */
-  _spherize(vertices) {
+  _spherize(vertices: Float32Array) {
     for (let i = 0; i < vertices.length; i += 3) {
       let vx = vertices[i];
       let vy = vertices[i + 1];
@@ -265,10 +233,8 @@ export class Sector {
 
   /**
    * moves vertex1 onto vertex2, normal included
-   * @param {number} v1Number
-   * @param {number} v2Number
    */
-  _mergeVertices(v1Number, v2Number) {
+  _mergeVertices(v1Number: number, v2Number: number) {
     let positions = this._sectorMesh.positions;
     let normals = this._sectorMesh.normals;
     let i1 = v1Number * 3;

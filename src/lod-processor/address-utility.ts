@@ -1,11 +1,14 @@
-import { AxisEnum } from "./axis-enum";
-import { Direction } from "./direction";
+import { AxisEnum } from './axis-enum';
+import { Direction } from './direction';
+
+type NeighbourStep = [number, Direction];
+type ConversionEntry = [AxisEnum, number[] | null];
 
 //Designed for node address conversion between specific sides of the cube
-const addressConversionMatrix = new Map([
+const addressConversionMatrix = new Map<AxisEnum, Map<Direction, ConversionEntry>>([
   [
     AxisEnum.abscissaPositive,
-    new Map([
+    new Map<Direction, ConversionEntry>([
       //key - direction relative to corresponding axis
       //value[0] - neighbor axis laying on corresponding direction
       //value[1] - quadrant number conversion
@@ -17,7 +20,7 @@ const addressConversionMatrix = new Map([
   ],
   [
     AxisEnum.abscissaNegative,
-    new Map([
+    new Map<Direction, ConversionEntry>([
       [Direction.right, [AxisEnum.applicataPositive, null]],
       [Direction.left, [AxisEnum.applicataNegative, [3, 2, 1, 0]]],
       [Direction.down, [AxisEnum.ordinateNegative, [2, 0, 3, 1]]],
@@ -26,7 +29,7 @@ const addressConversionMatrix = new Map([
   ],
   [
     AxisEnum.ordinatePositive,
-    new Map([
+    new Map<Direction, ConversionEntry>([
       [Direction.right, [AxisEnum.abscissaPositive, [1, 3, 0, 2]]],
       [Direction.left, [AxisEnum.abscissaNegative, [2, 0, 3, 1]]],
       [Direction.down, [AxisEnum.applicataPositive, null]],
@@ -35,7 +38,7 @@ const addressConversionMatrix = new Map([
   ],
   [
     AxisEnum.ordinateNegative,
-    new Map([
+    new Map<Direction, ConversionEntry>([
       [Direction.right, [AxisEnum.abscissaPositive, [2, 0, 3, 1]]],
       [Direction.left, [AxisEnum.abscissaNegative, [1, 3, 0, 2]]],
       [Direction.down, [AxisEnum.applicataNegative, null]],
@@ -44,7 +47,7 @@ const addressConversionMatrix = new Map([
   ],
   [
     AxisEnum.applicataPositive,
-    new Map([
+    new Map<Direction, ConversionEntry>([
       [Direction.right, [AxisEnum.abscissaPositive, null]],
       [Direction.left, [AxisEnum.abscissaNegative, null]],
       [Direction.down, [AxisEnum.ordinateNegative, null]],
@@ -53,7 +56,7 @@ const addressConversionMatrix = new Map([
   ],
   [
     AxisEnum.applicataNegative,
-    new Map([
+    new Map<Direction, ConversionEntry>([
       [Direction.right, [AxisEnum.abscissaPositive, [3, 2, 1, 0]]],
       [Direction.left, [AxisEnum.abscissaNegative, [3, 2, 1, 0]]],
       [Direction.down, [AxisEnum.ordinatePositive, null]],
@@ -66,26 +69,26 @@ const addressConversionMatrix = new Map([
  * FSM FOR QUADTREE NEIGHBORS IN ANY DIRECTION
  * see http://web.archive.org/web/20120907211934/http://ww1.ucmss.com/books/LFS/CSREA2006/MSV4517.pdf
  */
-const neighboursFSM = [
-  new Map([
+const neighboursFSM: Map<Direction, NeighbourStep>[] = [
+  new Map<Direction, NeighbourStep>([
     [Direction.right, [1, Direction.halt]],
     [Direction.left, [1, Direction.left]],
     [Direction.down, [2, Direction.halt]],
     [Direction.up, [2, Direction.up]],
   ]),
-  new Map([
+  new Map<Direction, NeighbourStep>([
     [Direction.right, [0, Direction.right]],
     [Direction.left, [0, Direction.halt]],
     [Direction.down, [3, Direction.halt]],
     [Direction.up, [3, Direction.up]],
   ]),
-  new Map([
+  new Map<Direction, NeighbourStep>([
     [Direction.right, [3, Direction.halt]],
     [Direction.left, [3, Direction.left]],
     [Direction.down, [0, Direction.down]],
     [Direction.up, [0, Direction.halt]],
   ]),
-  new Map([
+  new Map<Direction, NeighbourStep>([
     [Direction.right, [2, Direction.right]],
     [Direction.left, [2, Direction.halt]],
     [Direction.down, [1, Direction.down]],
@@ -96,21 +99,18 @@ const neighboursFSM = [
 export class AddressUtility {
   /**
    * Computes address of the potential nearest neighbor on the same level in specified direction
-   * @param {number[]} address
-   * @param {Direction} direction
-   * @returns {number[]}
    */
-  getNeighborAddress(address, direction) {
+  getNeighborAddress(address: number[], direction: Direction): number[] {
     let result = [...address];
     for (let i = result.length - 1; i > 0 && direction != Direction.halt; i--) {
-      [result[i], direction] = neighboursFSM[result[i]].get(direction);
+      [result[i], direction] = neighboursFSM[result[i]].get(direction)!;
     }
 
     if (direction != Direction.halt) {
       let conversion;
       [result[0], conversion] = addressConversionMatrix
-        .get(result[0])
-        .get(direction);
+        .get(result[0] as AxisEnum)!
+        .get(direction)!;
 
       if (conversion != null) {
         for (let i = 1; i < result.length; i++) {

@@ -1,4 +1,12 @@
 import { AxisEnum } from './axis-enum';
+import type { Vector3Like } from './calc-misc';
+
+export type Matrix16 = [
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
+];
 
 /**
  * transformation matrices (rotation only) for each side of the cube for better performance
@@ -38,17 +46,14 @@ const AxisRotationMatrixBase = [
   1, 0, 0, 0,
   0, -1, 0, 0,
   0, 0, -1, 0,
-  0, 0, 0, 1
+  0, 0, 0, 1,
 ];
 
-Object.freeze(AxisRotationMatrixBase);
-
 /**
- * Class used to calculate initial transformation matrix
- * used to properly place sector on the cube
+ * Calculates the initial transformation matrix used to place a sector on the cube.
  */
 export class SectorTransform {
-  static calculateTransformationMatrix(address, sphereRadius) {
+  static calculateTransformationMatrix(address: number[], sphereRadius: number): Matrix16 {
     let matrix = AxisRotationMatrixBase.slice(address[0] * 16, (address[0] + 1) * 16);
 
     let scale = sphereRadius / Math.pow(2, address.length - 1);
@@ -67,10 +72,10 @@ export class SectorTransform {
     matrix[7] = translation.y;
     matrix[11] = translation.z;
 
-    return matrix;
+    return matrix as Matrix16;
   }
 
-  static calculateTranslation(address, sphereRadius) {
+  static calculateTranslation(address: number[], sphereRadius: number): Vector3Like {
     let a = 0;
     let b = 0;
     //first calculates relative translation
