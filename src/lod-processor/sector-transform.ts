@@ -1,4 +1,4 @@
-import { AxisEnum } from './axis-enum';
+import { AxisEnum } from './enums';
 import type { Vector3Like } from './calc-misc';
 
 export type Matrix16 = [

@@ -1,5 +1,5 @@
 import { SectorTransform } from './sector-transform';
-import { Direction } from './direction';
+import { Direction } from './enums';
 import { GeometryMath } from './geometry-math';
 import { CalcMisc, type Vector3Like } from './calc-misc';
 import type { SectorMesh } from './sector-mesh';

@@ -1,5 +1,4 @@
-import { AxisEnum } from './axis-enum';
-import { Direction } from './direction';
+import { AxisEnum, Direction } from './enums';
 
 type NeighbourStep = [number, Direction];
 type ConversionEntry = [AxisEnum, number[] | null];

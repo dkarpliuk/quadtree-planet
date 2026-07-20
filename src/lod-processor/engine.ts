@@ -1,6 +1,6 @@
 import { AddressUtility } from './address-utility';
 import { TreeNode } from './tree-node';
-import { Direction } from './direction';
+import { Direction } from './enums';
 import { CalcMisc, type Vector3Like } from './calc-misc';
 import { Sector } from './sector';
 import { SectorMesh } from './sector-mesh';
