@@ -46,6 +46,18 @@ export class EngineBuilder {
     }
   }
 
+  /**
+   * @param {() => import('./sector-mesh').SectorMesh} factory
+   */
+  setSectorMeshFactory(factory) {
+    if (!factory) {
+      throw 'Argument is out of range';
+    } else {
+      this._obj._sectorMeshFactory = factory;
+      return this;
+    }
+  }
+
   getResult() {
     this._validate();
     return this._obj;

@@ -2,8 +2,8 @@ import { AddressUtility } from './address-utility';
 import { TreeNode } from './tree-node';
 import { Direction } from './direction';
 import { CalcMisc } from './calc-misc';
-import { Object3D } from 'three';
 import { Sector } from './sector';
+import { SectorMesh } from './sector-mesh';
 
 //depth every sector is split to regardless of distance
 const MIN_LOD = 4;
@@ -25,6 +25,21 @@ export class Engine {
   _executionDebounceMs = null;
   _spectatorLocalPosition = null;
   _sphereRadius = null;
+
+  /**
+   * makes the three.js adapter injected into every sector; a layer supplies its
+   * own to vary material and height
+   * @type {() => SectorMesh}
+   */
+  _sectorMeshFactory = () => new SectorMesh();
+
+  /**
+   * lifecycle hooks: the client attaches a sector's mesh to the scene on create
+   * and detaches it on remove
+   * @type {(sector: Sector) => void}
+   */
+  onSectorCreated = () => { };
+  onSectorRemoved = () => { };
 
   /**
    * @type {TreeNode<Sector>}
@@ -49,11 +64,6 @@ export class Engine {
   _topologyDirty = false;
 
   /**
-   * @type {Object3D}
-   */
-  get attractor() { return this._tree?.obj; }
-
-  /**
    * @type {number}
    */
   get maxLod() { return this._maxLod; }
@@ -69,7 +79,7 @@ export class Engine {
   get sphereRadius() { return this._sphereRadius; }
 
   constructor() {
-    this._tree = new TreeNode(new Object3D(), null);
+    this._tree = new TreeNode(null, null);
     this._addresses = new Set();
     this._addressUtility = new AddressUtility();
   }
@@ -87,7 +97,8 @@ export class Engine {
     this._tree.setChildren(sectors);
     this._tree.children.forEach(c => {
       this._addresses.add(c.address.join(''));
-      c.obj.instantiate(this.attractor, c.address);
+      c.obj.instantiate(c.address);
+      this.onSectorCreated(c.obj);
     });
   }
 
@@ -204,7 +215,8 @@ export class Engine {
    */
   _increaseLOD(leafNode) {
     this._topologyDirty = true;
-    leafNode.obj.clear(this.attractor);
+    leafNode.obj.clear();
+    this.onSectorRemoved(leafNode.obj);
     leafNode.setChildren([
       this._createSector(),
       this._createSector(),
@@ -214,7 +226,8 @@ export class Engine {
 
     for (let childNode of leafNode.children) {
       this._addresses.add(childNode.address.join(''));
-      childNode.obj.instantiate(this.attractor, childNode.address);
+      childNode.obj.instantiate(childNode.address);
+      this.onSectorCreated(childNode.obj);
     }
   }
 
@@ -225,15 +238,17 @@ export class Engine {
     this._topologyDirty = true;
 
     for (let childNode of leafNode.children) {
-      childNode.obj.clear(this.attractor);
+      childNode.obj.clear();
+      this.onSectorRemoved(childNode.obj);
     }
 
     leafNode.children.forEach(x => this._addresses.delete(x.address.join('')));
     leafNode.removeChildren();
-    leafNode.obj.instantiate(this.attractor, leafNode.address)
+    leafNode.obj.instantiate(leafNode.address);
+    this.onSectorCreated(leafNode.obj);
   }
 
   _createSector() {
-    return new Sector(this.sphereRadius);
+    return new Sector(this.sphereRadius, this._sectorMeshFactory());
   }
 }

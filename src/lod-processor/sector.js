@@ -1,22 +1,20 @@
 import { SectorTransform } from './sector-transform';
 import { Direction } from './direction';
-import { BufferAttribute, Color, Matrix4, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3 } from 'three';
+import { SectorMesh } from './sector-mesh';
+import { GeometryMath } from './geometry-math';
+import { CalcMisc } from './calc-misc';
 
 const density = 32; //must be even so edges halve cleanly when stitching
-const material = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
-
-//every sector shares the same padded grid, so it is built once and only
-//re-transformed per sector; scratch, alive within a single instantiate
-let workGeometry = null;
-let workGridTemplate = null;
-const workVertex = new Vector3();
-const workColor = new Color();
 
 export class Sector {
   _center = null;
   _boundingRadius = null;
-  _mesh = null;
   _sphereRadius = null;
+
+  /**
+   * @type {SectorMesh}
+   */
+  _sectorMesh = null;
 
   /**
    * pristine full-resolution vertex positions, captured before the first stitch
@@ -37,10 +35,11 @@ export class Sector {
   _stitchedKey = null;
 
   get _density() { return density; }
-  get _material() { return material; }
+
+  get mesh() { return this._sectorMesh.mesh; }
 
   /**
-   * @type {Vector3}
+   * @type {{x: number, y: number, z: number}}
    */
   get center() {
     if (!this._center) {
@@ -60,53 +59,40 @@ export class Sector {
     if (this._boundingRadius === null) {
       let n = this._density + 1;
       let corners = [0, n - 1, n * (n - 1), n * n - 1];
-      this._boundingRadius = Math.max(...corners.map(v => this._readVertex(v).distanceTo(this.center)));
+      this._boundingRadius = Math.max(...corners.map(v => CalcMisc.calcDistance(this._readVertex(v), this.center)));
     }
 
     return this._boundingRadius;
   }
 
   /**
-   * @type {boolean}
+   * @param {number} sphereRadius
+   * @param {SectorMesh} sectorMesh
    */
-  get visible() { return this._mesh?.visible; }
-  set visible(value) {
-    if (this._mesh) {
-      this._mesh.visible = value;
-    }
-  }
-
-  /**
-   * @param {number} sphereRadius 
-   */
-  constructor(sphereRadius) {
+  constructor(sphereRadius, sectorMesh) {
     this._sphereRadius = sphereRadius;
+    this._sectorMesh = sectorMesh;
   }
 
   /**
-   * instantiates the sector in 3D space and performs the initial transformation
-   * @param {Object3D} attractor 
-   * @param {number[]} address 
+   * builds the sector geometry and performs the initial transformation
+   * @param {number[]} address
    */
-  instantiate(attractor, address) {
-    let geometry = new PlaneGeometry(2, 2, this._density, this._density);
-    this._mesh = new Mesh(geometry, this._material);
-
-    attractor.add(this._mesh);
+  instantiate(address) {
+    this._sectorMesh.allocate(this._density);
 
     //place sector on the cube
     let rawMatrix = SectorTransform.calculateTransformationMatrix(address, this._sphereRadius);
-    let transformationMatrix = new Matrix4().set(...rawMatrix);
 
     //then spherize
-    let workGrid = this._buildWorkGrid(transformationMatrix);
-    this._applyTangentWarp(workGrid.attributes.position.array, this._density + 3);
-    this._spherize(workGrid.attributes.position.array);
-    workGrid.computeVertexNormals();
+    let workPositions = GeometryMath.buildWorkGrid(this._density, rawMatrix);
+    this._applyTangentWarp(workPositions, this._density + 3);
+    this._spherize(workPositions);
+    let workNormals = GeometryMath.computeNormals();
 
-    this._copyInnerGrid(workGrid.attributes.position.array, geometry.attributes.position.array);
-    this._copyInnerGrid(workGrid.attributes.normal.array, geometry.attributes.normal.array);
-    this._applyVertexColors(geometry);
+    this._copyInnerGrid(workPositions, this._sectorMesh.positions);
+    this._copyInnerGrid(workNormals, this._sectorMesh.normals);
+    this._sectorMesh.commit();
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
@@ -116,19 +102,8 @@ export class Sector {
     this._stitchedKey = null;
   }
 
-  /**
-   * Removes mesh from render
-   * @param {Object3D} attractor 
-   */
-  clear(attractor) {
-    if (!this._mesh) {
-      return;
-    }
-
-    attractor.remove(this._mesh);
-    scene.remove(this._mesh);
-    this._mesh.geometry.dispose();
-    this._mesh = null;
+  clear() {
+    this._sectorMesh.dispose();
 
     this._pristinePositions = null;
     this._pristineNormals = null;
@@ -147,19 +122,19 @@ export class Sector {
       return;
     }
 
-    let position = this._mesh.geometry.attributes.position;
-    let normal = this._mesh.geometry.attributes.normal;
+    let positions = this._sectorMesh.positions;
+    let normals = this._sectorMesh.normals;
 
     //restore full-resolution edges captured before the first stitch
     if (this._pristinePositions) {
-      position.array.set(this._pristinePositions);
-      normal.array.set(this._pristineNormals);
+      positions.set(this._pristinePositions);
+      normals.set(this._pristineNormals);
     }
 
     if (directions.length > 0) {
       if (!this._pristinePositions) {
-        this._pristinePositions = Float32Array.from(position.array);
-        this._pristineNormals = Float32Array.from(normal.array);
+        this._pristinePositions = Float32Array.from(positions);
+        this._pristineNormals = Float32Array.from(normals);
       }
 
       for (let direction of directions) {
@@ -168,8 +143,7 @@ export class Sector {
     }
 
     this._stitchedKey = key;
-    position.needsUpdate = true;
-    normal.needsUpdate = true;
+    this._sectorMesh.commit();
   }
 
   /**
@@ -201,32 +175,6 @@ export class Sector {
   }
 
   /**
-   * Grid covering the sector plus one cell of padding on every side, placed on
-   * the cube by the same transform. The padding gives the sector's edge vertices
-   * neighbours on all sides, which the rendered grid alone cannot provide.
-   * @param {Matrix4} transformationMatrix
-   * @returns {PlaneGeometry}
-   */
-  _buildWorkGrid(transformationMatrix) {
-    let segments = this._density + 2;
-    if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
-      let size = 2 + 4 / this._density;
-      workGeometry = new PlaneGeometry(size, size, segments, segments);
-      workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
-    }
-
-    let positions = workGeometry.attributes.position.array;
-    for (let i = 0; i < workGridTemplate.length; i += 3) {
-      workVertex
-        .set(workGridTemplate[i], workGridTemplate[i + 1], workGridTemplate[i + 2])
-        .applyMatrix4(transformationMatrix)
-        .toArray(positions, i);
-    }
-
-    return workGeometry;
-  }
-
-  /**
    * @param {Float32Array} source work grid, padded by one cell on every side
    * @param {Float32Array} target rendered grid
    */
@@ -246,40 +194,13 @@ export class Sector {
   }
 
   /**
-   * @param {PlaneGeometry} geometry
-   */
-  _applyVertexColors(geometry) {
-    let positions = geometry.attributes.position.array;
-    let colors = new Float32Array(positions.length);
-
-    for (let i = 0; i < positions.length; i += 3) {
-      let x = positions[i];
-      let y = positions[i + 1];
-      let z = positions[i + 2];
-
-      this._computeVertexColor(Math.sqrt(x * x + y * y + z * z) - this._sphereRadius, workColor);
-      workColor.toArray(colors, i);
-    }
-
-    geometry.setAttribute('color', new BufferAttribute(colors, 3));
-  }
-
-  /**
-   * @param {number} height distance above the base sphere
-   * @param {Color} target
-   */
-  _computeVertexColor(height, target) {
-    target.setRGB(1, 1, 1);
-  }
-
-  /**
    * @param {number} index
-   * @returns {Vector3}
+   * @returns {{x: number, y: number, z: number}}
    */
   _readVertex(index) {
-    let vertices = this._mesh.geometry.attributes.position.array;
+    let vertices = this._sectorMesh.positions;
     let i = index * 3;
-    return new Vector3(vertices[i], vertices[i + 1], vertices[i + 2]);
+    return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
   }
 
   /**
@@ -333,7 +254,7 @@ export class Sector {
       let length = Math.sqrt(vx * vx + vy * vy + vz * vz);
       let scale = this._sphereRadius / length;
 
-      let heightOffset = this._computeHeightOffset(vx * scale, vy * scale, vz * scale);
+      let heightOffset = this._sectorMesh.getHeightOffset(vx * scale, vy * scale, vz * scale);
       let factor = (this._sphereRadius + heightOffset) / length;
 
       vertices[i] *= factor;
@@ -348,8 +269,8 @@ export class Sector {
    * @param {number} v2Number
    */
   _mergeVertices(v1Number, v2Number) {
-    let positions = this._mesh.geometry.attributes.position.array;
-    let normals = this._mesh.geometry.attributes.normal.array;
+    let positions = this._sectorMesh.positions;
+    let normals = this._sectorMesh.normals;
     let i1 = v1Number * 3;
     let i2 = v2Number * 3;
 
@@ -357,14 +278,5 @@ export class Sector {
       positions[i1 + axis] = positions[i2 + axis];
       normals[i1 + axis] = normals[i2 + axis];
     }
-  }
-
-  /**
-   * @param {number} vx 
-   * @param {number} vy 
-   * @param {number} vz 
-   */
-  _computeHeightOffset(vx, vy, vz) {
-    return 0;
   }
 }
