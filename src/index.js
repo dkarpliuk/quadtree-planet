@@ -62,7 +62,7 @@ function initScene() {
 
 function initPlanet() {
   planetProcessor = new PlanetProcessor(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
-  planetProcessor.createLandmass(LOD.high);
+  planetProcessor.createLandmass(LOD.low, LOD.high);
   planetProcessor.initialize();
   scene.add(planetProcessor.object3d);
 }

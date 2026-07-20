@@ -5,9 +5,6 @@ import { CalcMisc, type Vector3Like } from './calc-misc';
 import { Sector } from './sector';
 import { SectorMesh } from './sector-mesh';
 
-//depth every sector is split to regardless of distance
-const MIN_LOD = 4;
-
 //for each Z-order quadrant (0 1 / 2 3), the two sides lying on the parent's
 //outer edge; the other two sides face siblings inside the parent
 const OUTWARD_DIRECTIONS: Direction[][] = [
@@ -18,6 +15,7 @@ const OUTWARD_DIRECTIONS: Direction[][] = [
 ];
 
 export class Engine {
+  _minLod!: number;
   _maxLod!: number;
   _spectatorLocalPosition!: Vector3Like;
   _sphereRadius!: number;
@@ -44,6 +42,8 @@ export class Engine {
    * only when neighbor relationships could have changed
    */
   _topologyDirty = false;
+
+  get minLod(): number { return this._minLod; }
 
   get maxLod(): number { return this._maxLod; }
 
@@ -112,7 +112,7 @@ export class Engine {
   _processLOD(leafNode: TreeNode<Sector>) {
     let splitDistance = this.sphereRadius / Math.pow(2, leafNode.level - 2);
 
-    let wantsSplit = leafNode.level < MIN_LOD
+    let wantsSplit = leafNode.level < this.minLod
       || leafNode.level < this.maxLod
       && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
 
@@ -122,7 +122,7 @@ export class Engine {
     if (wantsSplit && this._canSplit(leafNode)) {
       this._increaseLOD(leafNode);
     } else if (!wantsSplit
-      && parent.level > MIN_LOD
+      && parent.level > this.minLod
       && !parent.children.some(x => x.children.length)
       && this._getDistanceToSpectator(parent.obj) >= splitDistance * 2
       && this._canMerge(parent)) {

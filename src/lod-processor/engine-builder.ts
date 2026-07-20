@@ -5,18 +5,19 @@ export class EngineBuilder {
   _obj!: Engine;
 
   get allPropertiesSet(): boolean {
-    return !!(this._obj._maxLod && this._obj._sphereRadius);
+    return !!(this._obj._minLod && this._obj._maxLod && this._obj._sphereRadius);
   }
 
   constructor() {
     this.reset();
   }
 
-  setLOD(val: number): this {
-    if (val < 1) {
-      throw 'Depth level out of range. Must be greater than 1.';
+  setLod(minLod: number, maxLod: number): this {
+    if (minLod < 1 || maxLod < minLod) {
+      throw 'LOD range out of range. Require 1 <= minLod <= maxLod.';
     } else {
-      this._obj._maxLod = val;
+      this._obj._minLod = minLod;
+      this._obj._maxLod = maxLod;
       return this;
     }
   }

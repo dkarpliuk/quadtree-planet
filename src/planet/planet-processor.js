@@ -36,12 +36,12 @@ export class PlanetProcessor {
     }
   }
 
-  createLandmass(lod) {
+  createLandmass(minLod, maxLod) {
     let noiseProcessor = this._createNoiseProcessor();
 
     let engine = new EngineBuilder()
       .setSphereRadius(this._radius)
-      .setLOD(lod)
+      .setLod(minLod, maxLod)
       .setSectorMeshFactory(() => new LandmassSectorMesh(this._radius, noiseProcessor))
       .getResult();
 
