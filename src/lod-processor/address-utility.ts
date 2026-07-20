@@ -1,65 +1,65 @@
-import { AxisEnum, Direction } from './enums';
+import { Axis, Direction } from './enums';
 
 type NeighbourStep = [number, Direction];
-type ConversionEntry = [AxisEnum, number[] | null];
+type ConversionEntry = [Axis, number[] | null];
 
 //Designed for node address conversion between specific sides of the cube
-const addressConversionMatrix = new Map<AxisEnum, Map<Direction, ConversionEntry>>([
+const addressConversionMatrix = new Map<Axis, Map<Direction, ConversionEntry>>([
   [
-    AxisEnum.abscissaPositive,
+    Axis.xPos,
     new Map<Direction, ConversionEntry>([
       //key - direction relative to corresponding axis
       //value[0] - neighbor axis laying on corresponding direction
       //value[1] - quadrant number conversion
-      [Direction.right, [AxisEnum.applicataNegative, [3, 2, 1, 0]]],
-      [Direction.left, [AxisEnum.applicataPositive, null]],
-      [Direction.down, [AxisEnum.ordinateNegative, [1, 3, 0, 2]]],
-      [Direction.up, [AxisEnum.ordinatePositive, [2, 0, 3, 1]]],
+      [Direction.right, [Axis.zNeg, [3, 2, 1, 0]]],
+      [Direction.left, [Axis.zPos, null]],
+      [Direction.down, [Axis.yNeg, [1, 3, 0, 2]]],
+      [Direction.up, [Axis.yPos, [2, 0, 3, 1]]],
     ]),
   ],
   [
-    AxisEnum.abscissaNegative,
+    Axis.xNeg,
     new Map<Direction, ConversionEntry>([
-      [Direction.right, [AxisEnum.applicataPositive, null]],
-      [Direction.left, [AxisEnum.applicataNegative, [3, 2, 1, 0]]],
-      [Direction.down, [AxisEnum.ordinateNegative, [2, 0, 3, 1]]],
-      [Direction.up, [AxisEnum.ordinatePositive, [1, 3, 0, 2]]],
+      [Direction.right, [Axis.zPos, null]],
+      [Direction.left, [Axis.zNeg, [3, 2, 1, 0]]],
+      [Direction.down, [Axis.yNeg, [2, 0, 3, 1]]],
+      [Direction.up, [Axis.yPos, [1, 3, 0, 2]]],
     ]),
   ],
   [
-    AxisEnum.ordinatePositive,
+    Axis.yPos,
     new Map<Direction, ConversionEntry>([
-      [Direction.right, [AxisEnum.abscissaPositive, [1, 3, 0, 2]]],
-      [Direction.left, [AxisEnum.abscissaNegative, [2, 0, 3, 1]]],
-      [Direction.down, [AxisEnum.applicataPositive, null]],
-      [Direction.up, [AxisEnum.applicataNegative, null]],
+      [Direction.right, [Axis.xPos, [1, 3, 0, 2]]],
+      [Direction.left, [Axis.xNeg, [2, 0, 3, 1]]],
+      [Direction.down, [Axis.zPos, null]],
+      [Direction.up, [Axis.zNeg, null]],
     ]),
   ],
   [
-    AxisEnum.ordinateNegative,
+    Axis.yNeg,
     new Map<Direction, ConversionEntry>([
-      [Direction.right, [AxisEnum.abscissaPositive, [2, 0, 3, 1]]],
-      [Direction.left, [AxisEnum.abscissaNegative, [1, 3, 0, 2]]],
-      [Direction.down, [AxisEnum.applicataNegative, null]],
-      [Direction.up, [AxisEnum.applicataPositive, null]],
+      [Direction.right, [Axis.xPos, [2, 0, 3, 1]]],
+      [Direction.left, [Axis.xNeg, [1, 3, 0, 2]]],
+      [Direction.down, [Axis.zNeg, null]],
+      [Direction.up, [Axis.zPos, null]],
     ]),
   ],
   [
-    AxisEnum.applicataPositive,
+    Axis.zPos,
     new Map<Direction, ConversionEntry>([
-      [Direction.right, [AxisEnum.abscissaPositive, null]],
-      [Direction.left, [AxisEnum.abscissaNegative, null]],
-      [Direction.down, [AxisEnum.ordinateNegative, null]],
-      [Direction.up, [AxisEnum.ordinatePositive, null]],
+      [Direction.right, [Axis.xPos, null]],
+      [Direction.left, [Axis.xNeg, null]],
+      [Direction.down, [Axis.yNeg, null]],
+      [Direction.up, [Axis.yPos, null]],
     ]),
   ],
   [
-    AxisEnum.applicataNegative,
+    Axis.zNeg,
     new Map<Direction, ConversionEntry>([
-      [Direction.right, [AxisEnum.abscissaPositive, [3, 2, 1, 0]]],
-      [Direction.left, [AxisEnum.abscissaNegative, [3, 2, 1, 0]]],
-      [Direction.down, [AxisEnum.ordinatePositive, null]],
-      [Direction.up, [AxisEnum.ordinateNegative, null]],
+      [Direction.right, [Axis.xPos, [3, 2, 1, 0]]],
+      [Direction.left, [Axis.xNeg, [3, 2, 1, 0]]],
+      [Direction.down, [Axis.yPos, null]],
+      [Direction.up, [Axis.yNeg, null]],
     ]),
   ],
 ]);
@@ -108,7 +108,7 @@ export class AddressUtility {
     if (direction != Direction.halt) {
       let conversion;
       [result[0], conversion] = addressConversionMatrix
-        .get(result[0] as AxisEnum)!
+        .get(result[0] as Axis)!
         .get(direction)!;
 
       if (conversion != null) {

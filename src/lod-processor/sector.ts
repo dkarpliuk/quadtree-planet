@@ -63,10 +63,10 @@ export class Sector {
     this._sectorMesh.allocate(this._density);
 
     //place sector on the cube
-    let rawMatrix = SectorTransform.calculateTransformationMatrix(address, this._sphereRadius);
+    let modelMatrix = SectorTransform.calculateModelMatrix(address, this._sphereRadius);
 
     //then spherize
-    let workPositions = GeometryMath.buildWorkGrid(this._density, rawMatrix);
+    let workPositions = GeometryMath.buildWorkGrid(this._density, modelMatrix);
     this._applyTangentWarp(workPositions, this._density + 3);
     this._spherize(workPositions);
     let workNormals = GeometryMath.computeNormals();

@@ -1,5 +1,5 @@
 import { Matrix4, PlaneGeometry, Vector3 } from 'three';
-import type { Matrix16 } from './sector-transform';
+import type { ModelMatrix } from './sector-transform';
 
 //the padded work grid is shared scratch, built once and only re-transformed per
 //sector; it stays alive between the two calls of a single instantiate
@@ -20,7 +20,7 @@ export class GeometryMath {
    * placed on the cube by the raw 16-number transform. Returns the reused
    * position buffer for the caller to warp and spherize in place.
    */
-  static buildWorkGrid(density: number, rawMatrix: Matrix16): Float32Array {
+  static buildWorkGrid(density: number, modelMatrix: ModelMatrix): Float32Array {
     let segments = density + 2;
     if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
       let size = 2 + 4 / density;
@@ -28,7 +28,7 @@ export class GeometryMath {
       workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
     }
 
-    workMatrix.set(...rawMatrix);
+    workMatrix.set(...modelMatrix);
     let template = workGridTemplate!;
     let positions = workGeometry!.attributes.position.array as Float32Array;
     for (let i = 0; i < template.length; i += 3) {

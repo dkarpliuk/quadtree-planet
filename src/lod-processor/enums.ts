@@ -1,13 +1,13 @@
-export const AxisEnum = {
-  abscissaPositive: 0,
-  abscissaNegative: 1,
-  ordinatePositive: 2,
-  ordinateNegative: 3,
-  applicataPositive: 4,
-  applicataNegative: 5,
+export const Axis = {
+  xPos: 0,
+  xNeg: 1,
+  yPos: 2,
+  yNeg: 3,
+  zPos: 4,
+  zNeg: 5,
 } as const;
 
-export type AxisEnum = typeof AxisEnum[keyof typeof AxisEnum];
+export type Axis = typeof Axis[keyof typeof Axis];
 
 export const Direction = {
   right: 'R',
