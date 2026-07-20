@@ -52,12 +52,23 @@ export class Engine {
   private _topologyDirty = false;
 
   constructor(options: EngineOptions) {
+    this._validateOptions(options);
+
     this._minLod = options.minLod;
     this._maxLod = options.maxLod;
     this._sphereRadius = options.sphereRadius;
     this._density = options.density;
     this._sectorMeshFactory = options.sectorMeshFactory;
     this._tree = TreeNode.newRoot<Sector>();
+  }
+
+  private _validateOptions(options: EngineOptions) {
+    if (options.minLod < 1 || options.maxLod < options.minLod)
+      throw 'LOD range out of range. Require 1 <= minLod <= maxLod.';
+    if (options.sphereRadius <= 0)
+      throw 'Sphere radius out of range. Must be greater than 0.';
+    if (options.density < 2 || options.density % 2 !== 0)
+      throw 'Density out of range. Must be a positive even number.';
   }
 
   initialize() {

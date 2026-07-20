@@ -2,7 +2,7 @@ import { Group, Object3D, Vector3 } from 'three';
 import { throttle } from 'lodash-es';
 import seedrandom from 'seedrandom';
 import { createNoise3D } from 'simplex-noise';
-import { Engine, EngineBuilder } from '../lod-processor';
+import { Engine } from '../lod-processor';
 import { NoiseSampler } from './noise-sampler';
 import { LandmassMesh } from './landmass-mesh';
 
@@ -36,12 +36,13 @@ export class Planet {
   createLandmass(minLod: number, maxLod: number, density: number) {
     const noiseSampler = this._createNoiseSampler();
 
-    const engine = new EngineBuilder()
-      .setSphereRadius(this._radius)
-      .setLod(minLod, maxLod)
-      .setDensity(density)
-      .setSectorMeshFactory(() => new LandmassMesh(this._radius, noiseSampler))
-      .build();
+    const engine = new Engine({
+      minLod,
+      maxLod,
+      sphereRadius: this._radius,
+      density,
+      sectorMeshFactory: () => new LandmassMesh(this._radius, noiseSampler),
+    });
 
     engine.onSectorCreated = sector => this._engineGroup.add(sector.mesh);
     engine.onSectorRemoved = sector => this._engineGroup.remove(sector.mesh);
