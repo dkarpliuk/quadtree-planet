@@ -3,7 +3,7 @@ import { throttle } from 'lodash-es';
 import seedrandom from 'seedrandom';
 import { createNoise3D } from 'simplex-noise';
 import { Engine, EngineBuilder } from '../lod-processor';
-import { NoiseProcessor } from './noise-processor';
+import { NoiseSampler } from './noise-sampler';
 import { LandmassMesh } from './landmass-mesh';
 
 export class Planet {
@@ -34,12 +34,12 @@ export class Planet {
   }
 
   createLandmass(minLod: number, maxLod: number) {
-    const noiseProcessor = this._createNoiseProcessor();
+    const noiseSampler = this._createNoiseSampler();
 
     const engine = new EngineBuilder()
       .setSphereRadius(this._radius)
       .setLod(minLod, maxLod)
-      .setSectorMeshFactory(() => new LandmassMesh(this._radius, noiseProcessor))
+      .setSectorMeshFactory(() => new LandmassMesh(this._radius, noiseSampler))
       .build();
 
     engine.onSectorCreated = sector => this._engineGroup.add(sector.mesh);
@@ -57,8 +57,8 @@ export class Planet {
   private _getSpectatorLocalPosition = () =>
     this._engineGroup.worldToLocal(this._spectatorRef.position.clone());
 
-  private _createNoiseProcessor(): NoiseProcessor {
+  private _createNoiseSampler(): NoiseSampler {
     const random = seedrandom(this._seed.toString());
-    return new NoiseProcessor(createNoise3D(random));
+    return new NoiseSampler(createNoise3D(random));
   }
 }

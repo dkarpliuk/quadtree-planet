@@ -6,7 +6,7 @@ export interface OctaveNoiseOptions {
   frequency: number;
 }
 
-export class NoiseProcessor {
+export class NoiseSampler {
   noise: Noise3D;
 
   constructor(noiseFn: Noise3D) {

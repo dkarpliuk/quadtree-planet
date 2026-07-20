@@ -1,6 +1,6 @@
 import { Material, MeshStandardMaterial } from 'three';
 import { SectorMesh } from '../lod-processor';
-import type { NoiseProcessor, OctaveNoiseOptions } from './noise-processor';
+import type { NoiseSampler, OctaveNoiseOptions } from './noise-sampler';
 
 const material = new MeshStandardMaterial({ color: 0xffffff });
 
@@ -13,18 +13,18 @@ const noiseOptions: OctaveNoiseOptions = {
 
 export class LandmassMesh extends SectorMesh {
   private _sphereRadius: number;
-  private _noiseProcessor: NoiseProcessor;
+  private _noiseSampler: NoiseSampler;
 
-  constructor(sphereRadius: number, noiseProcessor: NoiseProcessor) {
+  constructor(sphereRadius: number, noiseSampler: NoiseSampler) {
     super();
     this._sphereRadius = sphereRadius;
-    this._noiseProcessor = noiseProcessor;
+    this._noiseSampler = noiseSampler;
   }
 
   protected get _material(): Material { return material; }
 
   getHeightOffset(vx: number, vy: number, vz: number): number {
-    const noise = this._noiseProcessor.getOctaveNoise(vx, vy, vz, noiseOptions);
+    const noise = this._noiseSampler.getOctaveNoise(vx, vy, vz, noiseOptions);
     return noise * this._sphereRadius * heightScale;
   }
 }
