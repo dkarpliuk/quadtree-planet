@@ -14,18 +14,16 @@ const OUTWARD_DIRECTIONS: Direction[][] = [
   [Direction.down, Direction.right], //3 - bottom-right
 ];
 
+export interface EngineOptions {
+  minLod: number;
+  maxLod: number;
+  sphereRadius: number;
+  //the three.js adapter injected into every sector; a layer supplies its own to
+  //vary material and height
+  sectorMeshFactory: () => SectorMesh;
+}
+
 export class Engine {
-  _minLod!: number;
-  _maxLod!: number;
-  _spectatorLocalPosition!: Vector3Like;
-  _sphereRadius!: number;
-
-  /**
-   * makes the three.js adapter injected into every sector; a layer supplies its
-   * own to vary material and height
-   */
-  _sectorMeshFactory: () => SectorMesh = () => new SectorMesh();
-
   /**
    * lifecycle hooks: the client attaches a sector's mesh to the scene on create
    * and detaches it on remove
@@ -33,26 +31,29 @@ export class Engine {
   onSectorCreated: (sector: Sector) => void = () => { };
   onSectorRemoved: (sector: Sector) => void = () => { };
 
-  _tree: TreeNode<Sector>;
-  _addresses: Set<string>;
-  _addressUtility: AddressUtility;
+  private readonly _minLod: number;
+  private readonly _maxLod: number;
+  private readonly _sphereRadius: number;
+  private readonly _sectorMeshFactory: () => SectorMesh;
+
+  private readonly _tree: TreeNode<Sector>;
+  private readonly _addresses = new Set<string>();
+  private readonly _addressUtility = new AddressUtility();
+
+  private _spectatorLocalPosition!: Vector3Like;
 
   /**
    * set when a split/merge changes the tree this tick, so the stitch pass runs
    * only when neighbor relationships could have changed
    */
-  _topologyDirty = false;
+  private _topologyDirty = false;
 
-  get minLod(): number { return this._minLod; }
-
-  get maxLod(): number { return this._maxLod; }
-
-  get sphereRadius(): number { return this._sphereRadius; }
-
-  constructor() {
+  constructor(options: EngineOptions) {
+    this._minLod = options.minLod;
+    this._maxLod = options.maxLod;
+    this._sphereRadius = options.sphereRadius;
+    this._sectorMeshFactory = options.sectorMeshFactory;
     this._tree = TreeNode.newRoot<Sector>();
-    this._addresses = new Set();
-    this._addressUtility = new AddressUtility();
   }
 
   initialize() {
@@ -93,7 +94,7 @@ export class Engine {
    * _canMerge balance guards: a coarser neighbor is at most one level below,
    * which is exactly what collapsing every other edge vertex fixes.
    */
-  _stitchLeaf(leafNode: TreeNode<Sector>) {
+  private _stitchLeaf(leafNode: TreeNode<Sector>) {
     let directions: Direction[] = [];
 
     for (let direction of Object.values(Direction)) {
@@ -109,11 +110,11 @@ export class Engine {
     leafNode.obj.stitch(directions);
   }
 
-  _processLOD(leafNode: TreeNode<Sector>) {
-    let splitDistance = this.sphereRadius / Math.pow(2, leafNode.level - 2);
+  private _processLOD(leafNode: TreeNode<Sector>) {
+    let splitDistance = this._sphereRadius / Math.pow(2, leafNode.level - 2);
 
-    let wantsSplit = leafNode.level < this.minLod
-      || leafNode.level < this.maxLod
+    let wantsSplit = leafNode.level < this._minLod
+      || leafNode.level < this._maxLod
       && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
 
     //any processed leaf sits below the root, so its parent is never null
@@ -122,7 +123,7 @@ export class Engine {
     if (wantsSplit && this._canSplit(leafNode)) {
       this._increaseLOD(leafNode);
     } else if (!wantsSplit
-      && parent.level > this.minLod
+      && parent.level > this._minLod
       && !parent.children.some(x => x.children.length)
       && this._getDistanceToSpectator(parent.obj) >= splitDistance * 2
       && this._canMerge(parent)) {
@@ -141,7 +142,7 @@ export class Engine {
    * exists there at that level or finer; its absence means a coarser neighbor.
    * This is the same primitive the stitch pass uses.
    */
-  _canSplit(leafNode: TreeNode<Sector>): boolean {
+  private _canSplit(leafNode: TreeNode<Sector>): boolean {
     return Object.values(Direction).every(direction => {
       let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
       return this._addresses.has(neighbor.join(''));
@@ -155,7 +156,7 @@ export class Engine {
    * that same-level neighbor is itself subdivided - a '0' child in the address
    * set means a level ℓ+2 cell is pressed against the edge.
    */
-  _canMerge(parent: TreeNode<Sector>): boolean {
+  private _canMerge(parent: TreeNode<Sector>): boolean {
     return parent.children.every((child, quadrant) =>
       OUTWARD_DIRECTIONS[quadrant].every(direction => {
         let neighbor = this._addressUtility.getNeighborAddress(child.address, direction);
@@ -166,12 +167,12 @@ export class Engine {
   /**
    * distance from the spectator to the nearest point of the sector
    */
-  _getDistanceToSpectator(sector: Sector): number {
+  private _getDistanceToSpectator(sector: Sector): number {
     let distance = CalcMisc.calcDistance(this._spectatorLocalPosition, sector.center);
     return Math.max(0, distance - sector.boundingRadius);
   }
 
-  _increaseLOD(leafNode: TreeNode<Sector>) {
+  private _increaseLOD(leafNode: TreeNode<Sector>) {
     this._topologyDirty = true;
     this.onSectorRemoved(leafNode.obj);
     leafNode.obj.clear();
@@ -189,7 +190,7 @@ export class Engine {
     }
   }
 
-  _decreaseLOD(leafNode: TreeNode<Sector>) {
+  private _decreaseLOD(leafNode: TreeNode<Sector>) {
     this._topologyDirty = true;
 
     for (let childNode of leafNode.children) {
@@ -203,7 +204,7 @@ export class Engine {
     this.onSectorCreated(leafNode.obj);
   }
 
-  _createSector(): Sector {
-    return new Sector(this.sphereRadius, this._sectorMeshFactory());
+  private _createSector(): Sector {
+    return new Sector(this._sphereRadius, this._sectorMeshFactory());
   }
 }

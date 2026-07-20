@@ -43,7 +43,7 @@ export class PlanetProcessor {
       .setSphereRadius(this._radius)
       .setLod(minLod, maxLod)
       .setSectorMeshFactory(() => new LandmassSectorMesh(this._radius, noiseProcessor))
-      .getResult();
+      .build();
 
     engine.onSectorCreated = sector => this._engineGroup.add(sector.mesh);
     engine.onSectorRemoved = sector => this._engineGroup.remove(sector.mesh);

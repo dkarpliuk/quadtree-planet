@@ -1,57 +1,45 @@
-import { Engine } from './engine';
-import type { SectorMesh } from './sector-mesh';
+import { Engine, type EngineOptions } from './engine';
+import { SectorMesh } from './sector-mesh';
 
 export class EngineBuilder {
-  _obj!: Engine;
-
-  get allPropertiesSet(): boolean {
-    return !!(this._obj._minLod && this._obj._maxLod && this._obj._sphereRadius);
-  }
-
-  constructor() {
-    this.reset();
-  }
+  private _options: Partial<EngineOptions> = {
+    sectorMeshFactory: () => new SectorMesh(),
+  };
 
   setLod(minLod: number, maxLod: number): this {
     if (minLod < 1 || maxLod < minLod) {
       throw 'LOD range out of range. Require 1 <= minLod <= maxLod.';
-    } else {
-      this._obj._minLod = minLod;
-      this._obj._maxLod = maxLod;
-      return this;
     }
+
+    this._options.minLod = minLod;
+    this._options.maxLod = maxLod;
+    return this;
   }
 
-  setSphereRadius(val: number): this {
-    if (val < 0) {
+  setSphereRadius(radius: number): this {
+    if (radius < 0) {
       throw 'Sphere radius out of range. Must be greater than 0.';
-    } else {
-      this._obj._sphereRadius = val;
-      return this;
     }
+
+    this._options.sphereRadius = radius;
+    return this;
   }
 
   setSectorMeshFactory(factory: () => SectorMesh): this {
     if (!factory) {
       throw 'Argument is out of range';
-    } else {
-      this._obj._sectorMeshFactory = factory;
-      return this;
     }
+
+    this._options.sectorMeshFactory = factory;
+    return this;
   }
 
-  getResult(): Engine {
-    this._validate();
-    return this._obj;
-  }
-
-  reset() {
-    this._obj = new Engine();
-  }
-
-  _validate() {
-    if (!this.allPropertiesSet) {
+  build(): Engine {
+    let { minLod, maxLod, sphereRadius } = this._options;
+    if (minLod == null || maxLod == null || sphereRadius == null) {
       throw 'Some of engine properties did not set!';
     }
+
+    return new Engine(this._options as EngineOptions);
   }
 }
