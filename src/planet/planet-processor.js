@@ -1,4 +1,4 @@
-import { Group } from 'three';
+import { Group, Vector3 } from 'three';
 import { LandmassEngineBuilder } from './landmass-engine-builder';
 import { throttle } from 'lodash-es';
 
@@ -35,7 +35,6 @@ export class PlanetProcessor {
 
   createLandmass(lod) {
     let engine = new LandmassEngineBuilder()
-      .setSpectatorRef(this._spectatorRef)
       .setSphereRadius(this._radius)
       .setLOD(lod)
       .setExecutionDebounce(this._processFrequency)
@@ -47,7 +46,11 @@ export class PlanetProcessor {
 
   process() {
     for (let engine of this._engines) {
-      engine.execute();
+      engine.execute(this._getSpectatorLocalPosition());
     }
+  }
+
+  _getSpectatorLocalPosition() {
+    return this._engineGroup.worldToLocal(this._spectatorRef.position.clone());
   }
 }

@@ -23,7 +23,7 @@ const OUTWARD_DIRECTIONS = [
 export class Engine {
   _maxLod = null;
   _executionDebounceMs = null;
-  _spectatorRef = null;
+  _spectatorLocalPosition = null;
   _sphereRadius = null;
 
   /**
@@ -64,11 +64,6 @@ export class Engine {
   get executionDebounce() { return this._executionDebounceMs; }
 
   /**
-   * @type {Object3D}
-   */
-  get spectatorRef() { return this._spectatorRef; }
-
-  /**
    * @type {number}
    */
   get sphereRadius() { return this._sphereRadius; }
@@ -96,7 +91,11 @@ export class Engine {
     });
   }
 
-  execute() {
+  /**
+   * @param {{x: number, y: number, z: number}} spectatorLocalPosition
+   */
+  execute(spectatorLocalPosition) {
+    this._spectatorLocalPosition = spectatorLocalPosition;
     this._topologyDirty = false;
     this._tree.traverseLeaves(this._processLOD.bind(this));
 
@@ -196,8 +195,7 @@ export class Engine {
    * @returns {number}
    */
   _getDistanceToSpectator(sector) {
-    let spectatorLocalPosition = this.attractor.worldToLocal(this._spectatorRef.position.clone());
-    let distance = CalcMisc.calcDistance(spectatorLocalPosition, sector.center);
+    let distance = CalcMisc.calcDistance(this._spectatorLocalPosition, sector.center);
     return Math.max(0, distance - sector.boundingRadius);
   }
 

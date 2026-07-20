@@ -10,7 +10,6 @@ export class EngineBuilder {
     let result =
       this._obj._maxLod &&
       this._obj._executionDebounceMs &&
-      this._obj._spectatorRef &&
       this._obj._sphereRadius;
 
     return result;
@@ -34,15 +33,6 @@ export class EngineBuilder {
       throw 'Execution debounce out of range. Must be greater than 0.';
     } else {
       this._obj._executionDebounceMs = val;
-      return this;
-    }
-  }
-
-  setSpectatorRef(val) {
-    if (!val) {
-      throw 'Argument is out of range';
-    } else {
-      this._obj._spectatorRef = val;
       return this;
     }
   }
