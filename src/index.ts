@@ -2,17 +2,22 @@ import Stats from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './controls';
 import { debounce } from 'lodash-es';
-import { PlanetProcessor, LOD, ProcessFrequency } from './planet';
+import { Planet, LOD, ProcessFrequency } from './planet';
 import './styles.css';
 
-var stats, scene, camera, renderer, controls, planetProcessor;
+let stats: Stats[];
+let scene: Scene;
+let camera: PerspectiveCamera;
+let renderer: WebGLRenderer;
+let controls: Controls;
+let planet: Planet;
 
 //temporary for development
-var radiusTest = 3000;
-var planetPositionTest = new Vector3(0, 0, 0);
-var seedTest = 1234;
-var sunPositionTest = new Vector3(0, 0, 1).multiplyScalar(radiusTest * 20);
-var sunRadiusTest = 1000;
+const radiusTest = 3000;
+const planetPositionTest = new Vector3(0, 0, 0);
+const seedTest = 1234;
+const sunPositionTest = new Vector3(0, 0, 1).multiplyScalar(radiusTest * 20);
+const sunRadiusTest = 1000;
 
 init();
 animate();
@@ -34,7 +39,7 @@ function initStats() {
   let offset = 0;
 
   stats = [0, 1].map(panel => {
-    let instance = new Stats();
+    const instance = new Stats();
     instance.showPanel(panel);
     document.body.appendChild(instance.dom);
 
@@ -57,26 +62,25 @@ function initControls() {
 
 function initScene() {
   scene = new Scene();
-  window.scene = scene;
 }
 
 function initPlanet() {
-  planetProcessor = new PlanetProcessor(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
-  planetProcessor.createLandmass(LOD.low, LOD.high);
-  planetProcessor.initialize();
-  scene.add(planetProcessor.object3d);
+  planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
+  planet.createLandmass(LOD.low, LOD.high);
+  planet.initialize();
+  scene.add(planet.object3d);
 }
 
 function initLight() {
-  let light = new DirectionalLight(0xffffff, Math.PI);
+  const light = new DirectionalLight(0xffffff, Math.PI);
   light.position.copy(sunPositionTest);
   scene.add(light);
 }
 
 function initSun() {
-  let geometry = new SphereGeometry(sunRadiusTest, 32, 32);
-  let material = new MeshBasicMaterial({ color: 0xffffff });
-  let sun = new Mesh(geometry, material);
+  const geometry = new SphereGeometry(sunRadiusTest, 32, 32);
+  const material = new MeshBasicMaterial({ color: 0xffffff });
+  const sun = new Mesh(geometry, material);
   sun.position.copy(sunPositionTest);
   scene.add(sun);
 }
@@ -99,7 +103,7 @@ function initResizeHandler() {
 function animate() {
   stats.forEach(x => x.begin());
 
-  planetProcessor.process();
+  planet.process();
   controls.control();
   renderer.render(scene, camera);
 

@@ -1,13 +1,15 @@
-export class Controls {
-  _keyboard = {};
-  _previousTimeStamp = 0;
-  _controlledObject = null;
-  _speedMetersPerSecond = 1000;
-  _turnDegreesPerSecond = 45;
-  _acceleration = 10;
+import { Object3D } from 'three';
 
-  get controlledObject() { return this._controlledObject; }
-  set controlledObject(value) { this._controlledObject = value; }
+export class Controls {
+  private _keyboard: Record<string, boolean> = {};
+  private _previousTimeStamp = 0;
+  private _controlledObject!: Object3D;
+  private _speedMetersPerSecond = 500;
+  private _turnDegreesPerSecond = 45;
+  private _acceleration = 20;
+
+  get controlledObject(): Object3D { return this._controlledObject; }
+  set controlledObject(value: Object3D) { this._controlledObject = value; }
 
   constructor() {
     window.addEventListener('keydown', this._keyDown.bind(this));
@@ -16,66 +18,51 @@ export class Controls {
   }
 
   control() {
-    let timeFactor = this._calculateTimeFactor();
+    const timeFactor = this._calculateTimeFactor();
 
-    if (this._keyboard[87]) { // W key			
+    if (this._keyboard['KeyW'])
       this.controlledObject.translateZ(-this._speedMetersPerSecond * timeFactor);
-    }
-    if (this._keyboard[83]) { // S key			
+    if (this._keyboard['KeyS'])
       this.controlledObject.translateZ(this._speedMetersPerSecond * timeFactor);
-    }
-    if (this._keyboard[65]) { // A key			
+    if (this._keyboard['KeyA'])
       this.controlledObject.translateX(-this._speedMetersPerSecond * timeFactor);
-    }
-    if (this._keyboard[68]) { // D key			
+    if (this._keyboard['KeyD'])
       this.controlledObject.translateX(this._speedMetersPerSecond * timeFactor);
-    }
-    if (this._keyboard[82]) { // R key			
+    if (this._keyboard['KeyR'])
       this.controlledObject.translateY(this._speedMetersPerSecond * timeFactor);
-    }
-    if (this._keyboard[70]) { // F key			
+    if (this._keyboard['KeyF'])
       this.controlledObject.translateY(-this._speedMetersPerSecond * timeFactor);
-    }
-    if (this._keyboard[81]) { // Q key			
+    if (this._keyboard['KeyQ'])
       this.controlledObject.rotateZ(this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
-    }
-    if (this._keyboard[69]) { // E key			
+    if (this._keyboard['KeyE'])
       this.controlledObject.rotateZ(-this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
-    }
-    if (this._keyboard[37]) { // left arrow key			
+    if (this._keyboard['ArrowLeft'])
       this.controlledObject.rotateY(this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
-    }
-    if (this._keyboard[39]) { // right arrow key			
+    if (this._keyboard['ArrowRight'])
       this.controlledObject.rotateY(-this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
-    }
-    if (this._keyboard[38]) { // up arrow key			
+    if (this._keyboard['ArrowUp'])
       this.controlledObject.rotateX(-this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
-    }
-    if (this._keyboard[40]) { // down arrow key			
+    if (this._keyboard['ArrowDown'])
       this.controlledObject.rotateX(this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
-    }
   }
 
-  _calculateTimeFactor() {
-    let now = + new Date();
-    let diff = now - this._previousTimeStamp;
+  private _calculateTimeFactor(): number {
+    const now = +new Date();
+    const diff = now - this._previousTimeStamp;
     this._previousTimeStamp = now;
     return diff / 1000;
   }
 
-  _keyDown(event) {
-    this._keyboard[event.keyCode] = true;
-  }
+  private _keyDown = (event: KeyboardEvent) =>
+    this._keyboard[event.code] = true;
 
-  _keyUp(event) {
-    this._keyboard[event.keyCode] = false;
-  }
+  private _keyUp = (event: KeyboardEvent) =>
+    this._keyboard[event.code] = false;
 
-  _scroll(e) {
-    if (e.deltaY > 0 && this._speedMetersPerSecond - this._acceleration >= 0) {
+  private _scroll(e: WheelEvent) {
+    if (e.deltaY > 0 && this._speedMetersPerSecond - this._acceleration >= 0)
       this._speedMetersPerSecond -= this._acceleration;
-    } else if (e.deltaY < 0) {
+    else if (e.deltaY < 0)
       this._speedMetersPerSecond += this._acceleration;
-    }
   }
 }

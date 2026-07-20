@@ -1,45 +1,42 @@
-import { Group } from 'three';
+import { Group, Object3D, Vector3 } from 'three';
 import { throttle } from 'lodash-es';
 import seedrandom from 'seedrandom';
 import { createNoise3D } from 'simplex-noise';
-import { EngineBuilder } from '../lod-processor';
+import { Engine, EngineBuilder } from '../lod-processor';
 import { NoiseProcessor } from './noise-processor';
 import { LandmassSectorMesh } from './landmass-sector-mesh';
 
-export class PlanetProcessor {
-  _radius = 0;
-  _spectatorRef = null;
-  _engines = [];
-  _engineGroup = null;
-  _seed = 0;
-  _processFrequency = 0;
+export class Planet {
+  private _radius: number;
+  private _spectatorRef: Object3D;
+  private _engines: Engine[] = [];
+  private _engineGroup: Group;
+  private _seed: number;
 
-  get object3d() { return this._engineGroup; }
+  get object3d(): Group { return this._engineGroup; }
 
-  constructor(spectatorRef, position, radius, seed, processFrequency) {
+  constructor(spectatorRef: Object3D, position: Vector3, radius: number, seed: number, processFrequency: number) {
     this._spectatorRef = spectatorRef;
     this._radius = radius;
 
     this._engineGroup = new Group();
     this._engineGroup.position.copy(position);
     this._seed = seed;
-    this._processFrequency = processFrequency;
 
-    if (processFrequency > 0) {
+    if (processFrequency > 0)
       this.process = throttle(this.process.bind(this), processFrequency, { trailing: false });
-    }
   }
 
   initialize() {
-    for (let engine of this._engines) {
+    for (const engine of this._engines) {
       engine.initialize();
     }
   }
 
-  createLandmass(minLod, maxLod) {
-    let noiseProcessor = this._createNoiseProcessor();
+  createLandmass(minLod: number, maxLod: number) {
+    const noiseProcessor = this._createNoiseProcessor();
 
-    let engine = new EngineBuilder()
+    const engine = new EngineBuilder()
       .setSphereRadius(this._radius)
       .setLod(minLod, maxLod)
       .setSectorMeshFactory(() => new LandmassSectorMesh(this._radius, noiseProcessor))
@@ -52,17 +49,16 @@ export class PlanetProcessor {
   }
 
   process() {
-    for (let engine of this._engines) {
+    for (const engine of this._engines) {
       engine.execute(this._getSpectatorLocalPosition());
     }
   }
 
-  _getSpectatorLocalPosition() {
-    return this._engineGroup.worldToLocal(this._spectatorRef.position.clone());
-  }
+  private _getSpectatorLocalPosition = () =>
+    this._engineGroup.worldToLocal(this._spectatorRef.position.clone());
 
-  _createNoiseProcessor() {
-    let random = seedrandom(this._seed);
+  private _createNoiseProcessor(): NoiseProcessor {
+    const random = seedrandom(this._seed.toString());
     return new NoiseProcessor(createNoise3D(random));
   }
 }
