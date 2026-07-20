@@ -98,9 +98,8 @@ export class Sector {
    */
   stitch(directions: Direction[]) {
     const key = directions.join('');
-    if (key === this._stitchedKey) {
+    if (key === this._stitchedKey)
       return;
-    }
 
     const positions = this._sectorMesh.positions;
     const normals = this._sectorMesh.normals;

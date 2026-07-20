@@ -7,9 +7,8 @@ export class EngineBuilder {
   };
 
   setLod(minLod: number, maxLod: number): this {
-    if (minLod < 1 || maxLod < minLod) {
+    if (minLod < 1 || maxLod < minLod)
       throw 'LOD range out of range. Require 1 <= minLod <= maxLod.';
-    }
 
     this._options.minLod = minLod;
     this._options.maxLod = maxLod;
@@ -17,18 +16,16 @@ export class EngineBuilder {
   }
 
   setSphereRadius(radius: number): this {
-    if (radius < 0) {
+    if (radius < 0)
       throw 'Sphere radius out of range. Must be greater than 0.';
-    }
 
     this._options.sphereRadius = radius;
     return this;
   }
 
   setSectorMeshFactory(factory: () => SectorMesh): this {
-    if (!factory) {
+    if (!factory)
       throw 'Argument is out of range';
-    }
 
     this._options.sectorMeshFactory = factory;
     return this;
@@ -36,9 +33,8 @@ export class EngineBuilder {
 
   build(): Engine {
     const { minLod, maxLod, sphereRadius } = this._options;
-    if (minLod == null || maxLod == null || sphereRadius == null) {
+    if (minLod == null || maxLod == null || sphereRadius == null)
       throw 'Some of engine properties did not set!';
-    }
 
     return new Engine(this._options as EngineOptions);
   }

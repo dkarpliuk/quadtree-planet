@@ -81,9 +81,8 @@ export class Engine {
 
     //re-stitch only when the tree actually changed this tick; otherwise every
     //leaf keeps the same neighbors and the previous stitching still holds
-    if (this._topologyDirty) {
+    if (this._topologyDirty)
       this._tree.traverseLeaves(this._stitchLeaf.bind(this));
-    }
   }
 
   /**
@@ -102,9 +101,8 @@ export class Engine {
 
       //absence from the address set means no node exists at the neighbor's level,
       //i.e. that side is covered by a coarser (lower-LOD) sector -> needs stitching
-      if (!this._addresses.has(neighbor.join(''))) {
+      if (!this._addresses.has(neighbor.join('')))
         directions.push(direction);
-      }
     }
 
     leafNode.obj.stitch(directions);

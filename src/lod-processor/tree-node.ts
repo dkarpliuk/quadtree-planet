@@ -48,7 +48,5 @@ export class TreeNode<T> {
     }
   }
 
-  _isOrphan(): boolean {
-    return this.parent == null && this.level > 0;
-  }
+  _isOrphan = () => this.parent == null && this.level > 0;
 }
