@@ -9,7 +9,7 @@ import { LandmassSectorMesh } from './landmass-sector-mesh';
 export class PlanetProcessor {
   _radius = 0;
   _spectatorRef = null;
-  _engines = new Array();
+  _engines = [];
   _engineGroup = null;
   _seed = 0;
   _processFrequency = 0;

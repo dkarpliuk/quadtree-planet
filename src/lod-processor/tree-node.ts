@@ -28,7 +28,7 @@ export class TreeNode<T> {
   }
 
   removeChildren() {
-    for (let child of this.children) {
+    for (const child of this.children) {
       child.parent = null;
     }
 
@@ -40,7 +40,7 @@ export class TreeNode<T> {
    */
   traverseLeaves(callback: (node: TreeNode<T>) => void) {
     if (this.children.length) {
-      for (let child of this.children) {
+      for (const child of this.children) {
         child.traverseLeaves(callback);
       }
     } else if (!this._isOrphan()) {

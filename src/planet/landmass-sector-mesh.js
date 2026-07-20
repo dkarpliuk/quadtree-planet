@@ -1,5 +1,6 @@
 import { MeshStandardMaterial } from 'three';
 import { SectorMesh } from '../lod-processor';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in a JSDoc @type
 import { NoiseProcessor } from './noise-processor';
 
 const material = new MeshStandardMaterial({ color: 0xffffff });

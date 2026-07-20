@@ -30,7 +30,7 @@ export class Sector {
 
   get center(): Vector3Like {
     if (!this._center) {
-      let n = this._density + 1;
+      const n = this._density + 1;
       this._center = this._readVertex((n * n - 1) / 2);
     }
 
@@ -43,8 +43,8 @@ export class Sector {
    */
   get boundingRadius(): number {
     if (this._boundingRadius === null) {
-      let n = this._density + 1;
-      let corners = [0, n - 1, n * (n - 1), n * n - 1];
+      const n = this._density + 1;
+      const corners = [0, n - 1, n * (n - 1), n * n - 1];
       this._boundingRadius = Math.max(...corners.map(v => CalcMisc.calcDistance(this._readVertex(v), this.center)));
     }
 
@@ -63,13 +63,13 @@ export class Sector {
     this._sectorMesh.allocate(this._density);
 
     //place sector on the cube
-    let modelMatrix = SectorTransform.calculateModelMatrix(address, this._sphereRadius);
+    const modelMatrix = SectorTransform.calculateModelMatrix(address, this._sphereRadius);
 
     //then spherize
-    let workPositions = GeometryMath.buildWorkGrid(this._density, modelMatrix);
+    const workPositions = GeometryMath.buildWorkGrid(this._density, modelMatrix);
     this._applyTangentWarp(workPositions, this._density + 3);
     this._spherize(workPositions);
-    let workNormals = GeometryMath.computeNormals();
+    const workNormals = GeometryMath.computeNormals();
 
     this._copyInnerGrid(workPositions, this._sectorMesh.positions);
     this._copyInnerGrid(workNormals, this._sectorMesh.normals);
@@ -97,13 +97,13 @@ export class Sector {
    * re-applying, so the sector unstitches cleanly when a neighbor refines.
    */
   stitch(directions: Direction[]) {
-    let key = directions.join('');
+    const key = directions.join('');
     if (key === this._stitchedKey) {
       return;
     }
 
-    let positions = this._sectorMesh.positions;
-    let normals = this._sectorMesh.normals;
+    const positions = this._sectorMesh.positions;
+    const normals = this._sectorMesh.normals;
 
     //restore full-resolution edges captured before the first stitch
     if (this._pristinePositions) {
@@ -117,7 +117,7 @@ export class Sector {
         this._pristineNormals = Float32Array.from(normals);
       }
 
-      for (let direction of directions) {
+      for (const direction of directions) {
         this._stitchEdge(direction);
       }
     }
@@ -132,7 +132,7 @@ export class Sector {
    * (i.e. a 2:1 / one-level-coarser neighbor)
    */
   _stitchEdge(direction: Direction) {
-    let n = this._density + 1; //sector grid dimension
+    const n = this._density + 1; //sector grid dimension
 
     if (direction == Direction.up) {
       for (let x = 1, y = 0; x < n; x += 2) {
@@ -154,13 +154,13 @@ export class Sector {
   }
 
   _copyInnerGrid(source: Float32Array, target: Float32Array) {
-    let n = this._density + 1;
-    let stride = n + 2;
+    const n = this._density + 1;
+    const stride = n + 2;
 
     for (let row = 0; row < n; row++) {
       for (let column = 0; column < n; column++) {
-        let from = ((row + 1) * stride + column + 1) * 3;
-        let to = (row * n + column) * 3;
+        const from = ((row + 1) * stride + column + 1) * 3;
+        const to = (row * n + column) * 3;
         target[to] = source[from];
         target[to + 1] = source[from + 1];
         target[to + 2] = source[from + 2];
@@ -169,8 +169,8 @@ export class Sector {
   }
 
   _readVertex(index: number): Vector3Like {
-    let vertices = this._sectorMesh.positions;
-    let i = index * 3;
+    const vertices = this._sectorMesh.positions;
+    const i = index * 3;
     return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
   }
 
@@ -190,11 +190,11 @@ export class Sector {
       if (vertices[n * 3 + axis] !== vertices[axis]) rowAxis = axis;
     }
 
-    let warp = (coordinate: number) =>
+    const warp = (coordinate: number) =>
       Math.tan(coordinate / this._sphereRadius * Math.PI / 4) * this._sphereRadius;
 
-    let columnValues = new Float64Array(n);
-    let rowValues = new Float64Array(n);
+    const columnValues = new Float64Array(n);
+    const rowValues = new Float64Array(n);
     for (let k = 0; k < n; k++) {
       columnValues[k] = warp(vertices[k * 3 + columnAxis]);
       rowValues[k] = warp(vertices[k * n * 3 + rowAxis]);
@@ -202,7 +202,7 @@ export class Sector {
 
     for (let row = 0; row < n; row++) {
       for (let column = 0; column < n; column++) {
-        let i = (row * n + column) * 3;
+        const i = (row * n + column) * 3;
         vertices[i + columnAxis] = columnValues[column];
         vertices[i + rowAxis] = rowValues[row];
       }
@@ -215,15 +215,15 @@ export class Sector {
    */
   _spherize(vertices: Float32Array) {
     for (let i = 0; i < vertices.length; i += 3) {
-      let vx = vertices[i];
-      let vy = vertices[i + 1];
-      let vz = vertices[i + 2];
+      const vx = vertices[i];
+      const vy = vertices[i + 1];
+      const vz = vertices[i + 2];
 
-      let length = Math.sqrt(vx * vx + vy * vy + vz * vz);
-      let scale = this._sphereRadius / length;
+      const length = Math.sqrt(vx * vx + vy * vy + vz * vz);
+      const scale = this._sphereRadius / length;
 
-      let heightOffset = this._sectorMesh.getHeightOffset(vx * scale, vy * scale, vz * scale);
-      let factor = (this._sphereRadius + heightOffset) / length;
+      const heightOffset = this._sectorMesh.getHeightOffset(vx * scale, vy * scale, vz * scale);
+      const factor = (this._sphereRadius + heightOffset) / length;
 
       vertices[i] *= factor;
       vertices[i + 1] *= factor;
@@ -235,10 +235,10 @@ export class Sector {
    * moves vertex1 onto vertex2, normal included
    */
   _mergeVertices(v1Number: number, v2Number: number) {
-    let positions = this._sectorMesh.positions;
-    let normals = this._sectorMesh.normals;
-    let i1 = v1Number * 3;
-    let i2 = v2Number * 3;
+    const positions = this._sectorMesh.positions;
+    const normals = this._sectorMesh.normals;
+    const i1 = v1Number * 3;
+    const i2 = v2Number * 3;
 
     for (let axis = 0; axis < 3; axis++) {
       positions[i1 + axis] = positions[i2 + axis];

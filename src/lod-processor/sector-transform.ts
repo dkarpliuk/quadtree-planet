@@ -55,9 +55,9 @@ const AxisRotationMatrixBase: Record<Axis, ModelMatrix> = {
  */
 export class SectorTransform {
   static calculateModelMatrix(address: number[], sphereRadius: number): ModelMatrix {
-    let matrix = [...AxisRotationMatrixBase[address[0] as Axis]];
+    const matrix = [...AxisRotationMatrixBase[address[0] as Axis]];
 
-    let scale = sphereRadius / Math.pow(2, address.length - 1);
+    const scale = sphereRadius / Math.pow(2, address.length - 1);
     matrix[0] *= scale;
     matrix[1] *= scale;
     matrix[2] *= scale;
@@ -68,7 +68,7 @@ export class SectorTransform {
     matrix[9] *= scale;
     matrix[10] *= scale;
 
-    let translation = SectorTransform.calculateTranslation(address, sphereRadius);
+    const translation = SectorTransform.calculateTranslation(address, sphereRadius);
     matrix[3] = translation.x;
     matrix[7] = translation.y;
     matrix[11] = translation.z;
@@ -82,7 +82,7 @@ export class SectorTransform {
     //first calculates relative translation
     //sum of translation of the quadrant on each level
     for (let i = 1; i < address.length; i++) {
-      let factor = Math.pow(2, i);
+      const factor = Math.pow(2, i);
       switch (address[i]) {
         case 0:
           a -= sphereRadius / factor;

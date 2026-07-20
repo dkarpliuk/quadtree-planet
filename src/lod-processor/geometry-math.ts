@@ -21,16 +21,16 @@ export class GeometryMath {
    * position buffer for the caller to warp and spherize in place.
    */
   static buildWorkGrid(density: number, modelMatrix: ModelMatrix): Float32Array {
-    let segments = density + 2;
+    const segments = density + 2;
     if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
-      let size = 2 + 4 / density;
+      const size = 2 + 4 / density;
       workGeometry = new PlaneGeometry(size, size, segments, segments);
       workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
     }
 
     workMatrix.set(...modelMatrix);
-    let template = workGridTemplate!;
-    let positions = workGeometry!.attributes.position.array as Float32Array;
+    const template = workGridTemplate!;
+    const positions = workGeometry!.attributes.position.array as Float32Array;
     for (let i = 0; i < template.length; i += 3) {
       workVertex
         .set(template[i], template[i + 1], template[i + 2])

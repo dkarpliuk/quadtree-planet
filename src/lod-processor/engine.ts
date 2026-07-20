@@ -57,7 +57,7 @@ export class Engine {
   }
 
   initialize() {
-    let sectors = [
+    const sectors = [
       this._createSector(),
       this._createSector(),
       this._createSector(),
@@ -95,10 +95,10 @@ export class Engine {
    * which is exactly what collapsing every other edge vertex fixes.
    */
   private _stitchLeaf(leafNode: TreeNode<Sector>) {
-    let directions: Direction[] = [];
+    const directions: Direction[] = [];
 
-    for (let direction of Object.values(Direction)) {
-      let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
+    for (const direction of Object.values(Direction)) {
+      const neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
 
       //absence from the address set means no node exists at the neighbor's level,
       //i.e. that side is covered by a coarser (lower-LOD) sector -> needs stitching
@@ -111,14 +111,14 @@ export class Engine {
   }
 
   private _processLOD(leafNode: TreeNode<Sector>) {
-    let splitDistance = this._sphereRadius / Math.pow(2, leafNode.level - 2);
+    const splitDistance = this._sphereRadius / Math.pow(2, leafNode.level - 2);
 
-    let wantsSplit = leafNode.level < this._minLod
+    const wantsSplit = leafNode.level < this._minLod
       || leafNode.level < this._maxLod
       && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
 
     //any processed leaf sits below the root, so its parent is never null
-    let parent = leafNode.parent!;
+    const parent = leafNode.parent!;
 
     if (wantsSplit && this._canSplit(leafNode)) {
       this._increaseLOD(leafNode);
@@ -144,7 +144,7 @@ export class Engine {
    */
   private _canSplit(leafNode: TreeNode<Sector>): boolean {
     return Object.values(Direction).every(direction => {
-      let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
+      const neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
       return this._addresses.has(neighbor.join(''));
     });
   }
@@ -159,7 +159,7 @@ export class Engine {
   private _canMerge(parent: TreeNode<Sector>): boolean {
     return parent.children.every((child, quadrant) =>
       OUTWARD_DIRECTIONS[quadrant].every(direction => {
-        let neighbor = this._addressUtility.getNeighborAddress(child.address, direction);
+        const neighbor = this._addressUtility.getNeighborAddress(child.address, direction);
         return !this._addresses.has(neighbor.join('') + '0');
       }));
   }
@@ -168,7 +168,7 @@ export class Engine {
    * distance from the spectator to the nearest point of the sector
    */
   private _getDistanceToSpectator(sector: Sector): number {
-    let distance = CalcMisc.calcDistance(this._spectatorLocalPosition, sector.center);
+    const distance = CalcMisc.calcDistance(this._spectatorLocalPosition, sector.center);
     return Math.max(0, distance - sector.boundingRadius);
   }
 
@@ -183,7 +183,7 @@ export class Engine {
       this._createSector()
     ]);
 
-    for (let childNode of leafNode.children) {
+    for (const childNode of leafNode.children) {
       this._addresses.add(childNode.address.join(''));
       childNode.obj.instantiate(childNode.address);
       this.onSectorCreated(childNode.obj);
@@ -193,7 +193,7 @@ export class Engine {
   private _decreaseLOD(leafNode: TreeNode<Sector>) {
     this._topologyDirty = true;
 
-    for (let childNode of leafNode.children) {
+    for (const childNode of leafNode.children) {
       this.onSectorRemoved(childNode.obj);
       childNode.obj.clear();
     }

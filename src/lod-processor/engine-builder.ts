@@ -35,7 +35,7 @@ export class EngineBuilder {
   }
 
   build(): Engine {
-    let { minLod, maxLod, sphereRadius } = this._options;
+    const { minLod, maxLod, sphereRadius } = this._options;
     if (minLod == null || maxLod == null || sphereRadius == null) {
       throw 'Some of engine properties did not set!';
     }

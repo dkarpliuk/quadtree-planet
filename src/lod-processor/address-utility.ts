@@ -99,7 +99,7 @@ export class AddressUtility {
    * Computes address of the potential nearest neighbor on the same level in specified direction
    */
   getNeighborAddress(address: number[], direction: Direction | "halt"): number[] {
-    let result = [...address];
+    const result = [...address];
     for (let i = result.length - 1; i > 0 && direction != "halt"; i--) {
       [result[i], direction] = neighboursFSM[result[i]].get(direction)!;
     }
