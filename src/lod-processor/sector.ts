@@ -134,19 +134,19 @@ export class Sector {
   _stitchEdge(direction: Direction) {
     const n = this._density + 1; //sector grid dimension
 
-    if (direction == Direction.up) {
+    if (direction === Direction.up) {
       for (let x = 1, y = 0; x < n; x += 2) {
         this._mergeVertices(n * y + x, n * y + x - 1);
       }
-    } else if (direction == Direction.right) {
+    } else if (direction === Direction.right) {
       for (let x = n - 1, y = 1; y < n; y += 2) {
         this._mergeVertices(n * y + x, n * (y + 1) + x);
       }
-    } else if (direction == Direction.down) {
+    } else if (direction === Direction.down) {
       for (let x = n - 2, y = n - 1; x >= 0; x -= 2) {
         this._mergeVertices(n * y + x, n * y + x + 1);
       }
-    } else if (direction == Direction.left) {
+    } else if (direction === Direction.left) {
       for (let x = 0, y = n - 2; y >= 0; y -= 2) {
         this._mergeVertices(n * y + x, n * (y - 1) + x);
       }

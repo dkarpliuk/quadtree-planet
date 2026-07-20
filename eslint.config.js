@@ -10,5 +10,8 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.browser },
     },
+    rules: {
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
+    },
   },
 );

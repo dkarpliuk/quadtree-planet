@@ -100,11 +100,11 @@ export class AddressUtility {
    */
   getNeighborAddress(address: number[], direction: Direction | "halt"): number[] {
     const result = [...address];
-    for (let i = result.length - 1; i > 0 && direction != "halt"; i--) {
+    for (let i = result.length - 1; i > 0 && direction !== "halt"; i--) {
       [result[i], direction] = neighboursFSM[result[i]].get(direction)!;
     }
 
-    if (direction != "halt") {
+    if (direction !== "halt") {
       let conversion;
       [result[0], conversion] = addressConversionMatrix
         .get(result[0] as Axis)!

@@ -25,7 +25,7 @@ export class SectorMesh {
    * template method: height above the base sphere at a surface point
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getHeightOffset(vx: number, vy: number, vz: number): number { return 0; }
+  getHeightOffset(_vx: number, _vy: number, _vz: number): number { return 0; }
 
   allocate(density: number) {
     this._geometry = new PlaneGeometry(2, 2, density, density);
