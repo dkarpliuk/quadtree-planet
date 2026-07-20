@@ -11,7 +11,7 @@ const noiseOptions: OctaveNoiseOptions = {
   frequency: 0.00025
 };
 
-export class LandmassSectorMesh extends SectorMesh {
+export class LandmassMesh extends SectorMesh {
   private _sphereRadius: number;
   private _noiseProcessor: NoiseProcessor;
 

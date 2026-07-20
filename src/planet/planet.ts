@@ -4,7 +4,7 @@ import seedrandom from 'seedrandom';
 import { createNoise3D } from 'simplex-noise';
 import { Engine, EngineBuilder } from '../lod-processor';
 import { NoiseProcessor } from './noise-processor';
-import { LandmassSectorMesh } from './landmass-sector-mesh';
+import { LandmassMesh } from './landmass-mesh';
 
 export class Planet {
   private _radius: number;
@@ -39,7 +39,7 @@ export class Planet {
     const engine = new EngineBuilder()
       .setSphereRadius(this._radius)
       .setLod(minLod, maxLod)
-      .setSectorMeshFactory(() => new LandmassSectorMesh(this._radius, noiseProcessor))
+      .setSectorMeshFactory(() => new LandmassMesh(this._radius, noiseProcessor))
       .build();
 
     engine.onSectorCreated = sector => this._engineGroup.add(sector.mesh);
