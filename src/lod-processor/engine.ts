@@ -110,24 +110,22 @@ export class Engine {
 
   private _processLOD(leafNode: TreeNode<Sector>) {
     const splitDistance = this._sphereRadius / Math.pow(2, leafNode.level - 2);
-
     const wantsSplit = leafNode.level < this._minLod
       || leafNode.level < this._maxLod
       && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
 
+    if (wantsSplit) {
+      if (this._canSplit(leafNode)) this._increaseLOD(leafNode);
+      return;
+    }
+
     //any processed leaf sits below the root, so its parent is never null
     const parent = leafNode.parent!;
+    const wantsMerge = parent.level > this._minLod &&
+      !parent.children.some(child => child.children.length) &&
+      this._getDistanceToSpectator(parent.obj) >= splitDistance * 2
 
-    if (wantsSplit && this._canSplit(leafNode)) {
-      this._increaseLOD(leafNode);
-    } else if (!wantsSplit
-      && parent.level > this._minLod
-      && !parent.children.some(x => x.children.length)
-      && this._getDistanceToSpectator(parent.obj) >= splitDistance * 2
-      && this._canMerge(parent)) {
-
-      this._decreaseLOD(parent);
-    }
+    if (wantsMerge && this._canMerge(parent)) this._decreaseLOD(parent);
   }
 
   /**
