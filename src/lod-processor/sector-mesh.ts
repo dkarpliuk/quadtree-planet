@@ -1,4 +1,5 @@
 import { Material, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
+import { UNIT_RADIUS } from './sector-transform';
 
 const defaultMaterial = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
@@ -28,7 +29,7 @@ export class SectorMesh {
   getHeightOffset(_vx: number, _vy: number, _vz: number): number { return 0; }
 
   allocate(density: number) {
-    this._geometry = new PlaneGeometry(2, 2, density, density);
+    this._geometry = new PlaneGeometry(UNIT_RADIUS * 2, UNIT_RADIUS * 2, density, density);
     this._mesh = new Mesh(this._geometry, this._material);
   }
 

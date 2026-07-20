@@ -8,6 +8,9 @@ export type ModelMatrix = [
   number, number, number, number,
 ];
 
+//the base matrices work in a normalized coordinate system of radius 1
+export const UNIT_RADIUS = 1;
+
 /**
  * rotation-only base matrix per cube face
  */

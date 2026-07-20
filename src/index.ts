@@ -53,7 +53,7 @@ function initStats() {
 
 function initCamera() {
   camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 100000);
-  camera.position.z = radiusTest * 2;
+  camera.position.z = 3000 * 2;
 }
 
 function initControls() {

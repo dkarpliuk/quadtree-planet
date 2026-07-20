@@ -1,51 +1,66 @@
-import { Matrix4, PlaneGeometry, Vector3 } from 'three';
-import type { ModelMatrix } from './sector-transform';
+import { BufferAttribute, BufferGeometry, Matrix4, PlaneGeometry, Vector3 } from 'three';
+import { UNIT_RADIUS, type ModelMatrix } from './sector-transform';
 
-//the padded work grid is shared scratch, built once and only re-transformed per
-//sector; it stays alive between the two calls of a single instantiate
-let workGeometry: PlaneGeometry | null = null;
-let workGridTemplate: Float32Array | null = null;
-const workVertex = new Vector3();
-const workMatrix = new Matrix4();
+interface GridTemplate {
+  //pristine planar positions to transform from
+  positions: Float32Array;
+  //shared triangle topology, immutable across builds
+  index: BufferAttribute;
+}
 
-/**
- * Generic geometry maths backed by three.js - grid generation, matrix transform
- * and vertex normals. The unique planetary algorithm (tangent warp, spherize,
- * edge-collapse stitch) stays in the Sector; this only keeps three's wheels out
- * of it. Stateful scratch, but the methods are a static utility.
- */
 export class GeometryMath {
-  /**
-   * Builds the sector's work grid - a plane padded by one cell on every side -
-   * placed on the cube by the raw 16-number transform. Returns the reused
-   * position buffer for the caller to warp and spherize in place.
-   */
-  static buildWorkGrid(density: number, modelMatrix: ModelMatrix): Float32Array {
-    const segments = density + 2;
-    if (!workGeometry || workGeometry.parameters.widthSegments !== segments) {
-      const size = 2 + 4 / density;
-      workGeometry = new PlaneGeometry(size, size, segments, segments);
-      workGridTemplate = Float32Array.from(workGeometry.attributes.position.array);
-    }
+  private static readonly _templates = new Map<number, GridTemplate>();
 
-    workMatrix.set(...modelMatrix);
-    const template = workGridTemplate!;
-    const positions = workGeometry!.attributes.position.array as Float32Array;
-    for (let i = 0; i < template.length; i += 3) {
-      workVertex
-        .set(template[i], template[i + 1], template[i + 2])
-        .applyMatrix4(workMatrix)
-        .toArray(positions, i);
-    }
+  /**
+   * Returns a fresh `density`*`density` segments grid, transformed by the `modelMatrix`.
+   * 
+   * Additional `scaleFactor` can be applied (default = 1).
+   */
+  static buildGrid(
+    density: number,
+    modelMatrix: ModelMatrix,
+    scaleFactor: number = 1): Float32Array {
+    //copy: applyMatrix4 mutates in place, the template must stay pristine
+    const positions = Float32Array.from(GeometryMath._getOrAddTemplate(density).positions);
+    const geometry = new BufferGeometry();
+    const matrix = new Matrix4()
+      .set(...modelMatrix)
+      .scale(new Vector3(scaleFactor, scaleFactor, scaleFactor));
+    
+    geometry.setAttribute('position', new BufferAttribute(positions, 3));
+    geometry.applyMatrix4(matrix);
 
     return positions;
   }
 
   /**
-   * Recomputes normals from the work grid positions mutated since buildWorkGrid.
+   * Computes vertex normals for the given square grid `positions`.
    */
-  static computeNormals(): Float32Array {
-    workGeometry!.computeVertexNormals();
-    return workGeometry!.attributes.normal.array as Float32Array;
+  static computeNormals(positions: Float32Array): Float32Array {
+    const density = Math.sqrt(positions.length / 3) - 1;
+    if (!Number.isInteger(density) || density < 1)
+      throw 'Positions do not form a square grid.';
+
+    const geometry = new BufferGeometry();
+    //position by reference (read-only here), index shared, normals written fresh
+    geometry.setAttribute('position', new BufferAttribute(positions, 3));
+    geometry.setIndex(GeometryMath._getOrAddTemplate(density).index);
+    geometry.computeVertexNormals();
+
+    return geometry.attributes.normal.array as Float32Array;
+  }
+
+  private static _getOrAddTemplate(density: number): GridTemplate {
+    let template = GeometryMath._templates.get(density);
+    if (!template) {
+      const plane = new PlaneGeometry(UNIT_RADIUS * 2, UNIT_RADIUS * 2, density, density);
+      template = {
+        positions: Float32Array.from(plane.attributes.position.array),
+        index: plane.index!,
+      };
+      GeometryMath._templates.set(density, template);
+    }
+
+    return template;
   }
 }

@@ -62,13 +62,15 @@ export class Sector {
 
     //place sector on the cube
     const modelMatrix = SectorTransform.calculateModelMatrix(address, this._sphereRadius);
-
-    //then spherize
-    const workPositions = GeometryMath.buildWorkGrid(this._density, modelMatrix);
-    this._applyTangentWarp(workPositions, this._density + 3);
+    
+    //1-segment padding used for correct normals computation, scale is adjusted
+    const scaleFactor = (this._density + 2) / this._density;
+    const workPositions = GeometryMath.buildGrid(this._density + 2, modelMatrix, scaleFactor);
+    this._applyTangentWarp(workPositions);
     this._spherize(workPositions);
-    const workNormals = GeometryMath.computeNormals();
+    const workNormals = GeometryMath.computeNormals(workPositions);
 
+    //copy work buffers to render buffers without padding
     this._copyInnerGrid(workPositions, this._sectorMesh.positions);
     this._copyInnerGrid(workNormals, this._sectorMesh.normals);
     this._sectorMesh.commit();
@@ -178,8 +180,9 @@ export class Sector {
    * The grid stays axis-aligned after the face transform, so each tangential
    * axis only holds n distinct coordinates, warped once and reused.
    */
-  _applyTangentWarp(vertices: Float32Array, n: number) {
+  _applyTangentWarp(vertices: Float32Array) {
     //the axis that stays constant is the face axis; the other two are tangential
+    const n = Math.sqrt(vertices.length / 3)
     let columnAxis = -1;
     let rowAxis = -1;
     for (let axis = 0; axis < 3; axis++) {
