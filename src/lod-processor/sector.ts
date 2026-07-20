@@ -4,12 +4,11 @@ import { GeometryMath } from './geometry-math';
 import { CalcMisc, type Vector3Like } from './calc-misc';
 import type { SectorMesh } from './sector-mesh';
 
-const density = 32; //must be even so edges halve cleanly when stitching
-
 export class Sector {
   _center: Vector3Like | null = null;
   _boundingRadius: number | null = null;
   _sphereRadius: number;
+  _density: number;
   _sectorMesh: SectorMesh;
 
   /**
@@ -23,8 +22,6 @@ export class Sector {
    * set of directions currently stitched (joined), to skip redundant work
    */
   _stitchedKey: string | null = null;
-
-  get _density() { return density; }
 
   get mesh() { return this._sectorMesh.mesh; }
 
@@ -51,8 +48,9 @@ export class Sector {
     return this._boundingRadius!;
   }
 
-  constructor(sphereRadius: number, sectorMesh: SectorMesh) {
+  constructor(sphereRadius: number, density: number, sectorMesh: SectorMesh) {
     this._sphereRadius = sphereRadius;
+    this._density = density;
     this._sectorMesh = sectorMesh;
   }
 

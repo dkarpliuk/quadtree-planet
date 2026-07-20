@@ -18,6 +18,8 @@ export interface EngineOptions {
   minLod: number;
   maxLod: number;
   sphereRadius: number;
+  //vertices per sector edge; must be even so edges halve cleanly when stitching
+  density: number;
   //the three.js adapter injected into every sector; a layer supplies its own to
   //vary material and height
   sectorMeshFactory: () => SectorMesh;
@@ -34,6 +36,7 @@ export class Engine {
   private readonly _minLod: number;
   private readonly _maxLod: number;
   private readonly _sphereRadius: number;
+  private readonly _density: number;
   private readonly _sectorMeshFactory: () => SectorMesh;
 
   private readonly _tree: TreeNode<Sector>;
@@ -52,6 +55,7 @@ export class Engine {
     this._minLod = options.minLod;
     this._maxLod = options.maxLod;
     this._sphereRadius = options.sphereRadius;
+    this._density = options.density;
     this._sectorMeshFactory = options.sectorMeshFactory;
     this._tree = TreeNode.newRoot<Sector>();
   }
@@ -201,6 +205,6 @@ export class Engine {
   }
 
   private _createSector(): Sector {
-    return new Sector(this._sphereRadius, this._sectorMeshFactory());
+    return new Sector(this._sphereRadius, this._density, this._sectorMeshFactory());
   }
 }

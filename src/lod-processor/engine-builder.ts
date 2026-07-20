@@ -23,6 +23,14 @@ export class EngineBuilder {
     return this;
   }
 
+  setDensity(density: number): this {
+    if (density < 2 || density % 2 !== 0)
+      throw 'Density out of range. Must be a positive even number.';
+
+    this._options.density = density;
+    return this;
+  }
+
   setSectorMeshFactory(factory: () => SectorMesh): this {
     if (!factory)
       throw 'Argument is out of range';
@@ -32,8 +40,8 @@ export class EngineBuilder {
   }
 
   build(): Engine {
-    const { minLod, maxLod, sphereRadius } = this._options;
-    if (minLod == null || maxLod == null || sphereRadius == null)
+    const { minLod, maxLod, sphereRadius, density } = this._options;
+    if (minLod == null || maxLod == null || sphereRadius == null || density == null)
       throw 'Some of engine properties did not set!';
 
     return new Engine(this._options as EngineOptions);

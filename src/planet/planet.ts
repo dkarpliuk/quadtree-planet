@@ -33,12 +33,13 @@ export class Planet {
     }
   }
 
-  createLandmass(minLod: number, maxLod: number) {
+  createLandmass(minLod: number, maxLod: number, density: number) {
     const noiseSampler = this._createNoiseSampler();
 
     const engine = new EngineBuilder()
       .setSphereRadius(this._radius)
       .setLod(minLod, maxLod)
+      .setDensity(density)
       .setSectorMeshFactory(() => new LandmassMesh(this._radius, noiseSampler))
       .build();
 

@@ -16,6 +16,7 @@ let planet: Planet;
 const radiusTest = 3000;
 const planetPositionTest = new Vector3(0, 0, 0);
 const seedTest = 1234;
+const densityTest = 32;
 const sunPositionTest = new Vector3(0, 0, 1).multiplyScalar(radiusTest * 20);
 const sunRadiusTest = 1000;
 
@@ -66,7 +67,7 @@ function initScene() {
 
 function initPlanet() {
   planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
-  planet.createLandmass(LOD.low, LOD.high);
+  planet.createLandmass(LOD.low, LOD.high, densityTest);
   planet.initialize();
   scene.add(planet.object3d);
 }
