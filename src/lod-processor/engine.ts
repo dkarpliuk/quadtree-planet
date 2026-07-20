@@ -8,9 +8,6 @@ import { SectorMesh } from './sector-mesh';
 //depth every sector is split to regardless of distance
 const MIN_LOD = 4;
 
-//edge directions, in a fixed order, used for neighbor lookups
-const DIRECTIONS: Direction[] = [Direction.up, Direction.right, Direction.down, Direction.left];
-
 //for each Z-order quadrant (0 1 / 2 3), the two sides lying on the parent's
 //outer edge; the other two sides face siblings inside the parent
 const OUTWARD_DIRECTIONS: Direction[][] = [
@@ -99,7 +96,7 @@ export class Engine {
   _stitchLeaf(leafNode: TreeNode<Sector>) {
     let directions: Direction[] = [];
 
-    for (let direction of DIRECTIONS) {
+    for (let direction of Object.values(Direction)) {
       let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
 
       //absence from the address set means no node exists at the neighbor's level,
@@ -145,7 +142,7 @@ export class Engine {
    * This is the same primitive the stitch pass uses.
    */
   _canSplit(leafNode: TreeNode<Sector>): boolean {
-    return DIRECTIONS.every(direction => {
+    return Object.values(Direction).every(direction => {
       let neighbor = this._addressUtility.getNeighborAddress(leafNode.address, direction);
       return this._addresses.has(neighbor.join(''));
     });
