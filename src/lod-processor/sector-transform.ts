@@ -1,57 +1,63 @@
-import { AxisEnum } from '@enums';
+import { Axis } from './enums';
+import type { Vector3Like } from './calc-misc';
 
-/**
- * transformation matrices (rotation only) for each side of the cube for better performance
- */
-const AxisRotationMatrixBase = [
-  //abscissaPositive
-  0, 0, 1, 0,
-  0, 1, 0, 0,
-  -1, 0, 0, 0,
-  0, 0, 0, 1,
-
-  //abscissaNegative
-  0, 0, -1, 0,
-  0, 1, 0, 0,
-  1, 0, 0, 0,
-  0, 0, 0, 1,
-
-  //ordinatePositive
-  1, 0, 0, 0,
-  0, 0, 1, 0,
-  0, -1, 0, 0,
-  0, 0, 0, 1,
-
-  //ordinateNegative
-  1, 0, 0, 0,
-  0, 0, -1, 0,
-  0, 1, 0, 0,
-  0, 0, 0, 1,
-
-  //applicataPositive
-  1, 0, 0, 0,
-  0, 1, 0, 0,
-  0, 0, 1, 0,
-  0, 0, 0, 1,
-
-  //applicataNegative
-  1, 0, 0, 0,
-  0, -1, 0, 0,
-  0, 0, -1, 0,
-  0, 0, 0, 1
+export type ModelMatrix = [
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number,
 ];
 
-Object.freeze(AxisRotationMatrixBase);
+/**
+ * rotation-only base matrix per cube face
+ */
+const AxisRotationMatrixBase: Record<Axis, ModelMatrix> = {
+  [Axis.xPos]: [
+    0, 0, 1, 0,
+    0, 1, 0, 0,
+    -1, 0, 0, 0,
+    0, 0, 0, 1,
+  ],
+  [Axis.xNeg]: [
+    0, 0, -1, 0,
+    0, 1, 0, 0,
+    1, 0, 0, 0,
+    0, 0, 0, 1,
+  ],
+  [Axis.yPos]: [
+    1, 0, 0, 0,
+    0, 0, 1, 0,
+    0, -1, 0, 0,
+    0, 0, 0, 1,
+  ],
+  [Axis.yNeg]: [
+    1, 0, 0, 0,
+    0, 0, -1, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 1,
+  ],
+  [Axis.zPos]: [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  ],
+  [Axis.zNeg]: [
+    1, 0, 0, 0,
+    0, -1, 0, 0,
+    0, 0, -1, 0,
+    0, 0, 0, 1,
+  ],
+};
 
 /**
- * Class used to calculate initial transformation matrix
- * used to properly place sector on the cube
+ * Calculates the initial transformation matrix used to place a sector on the cube.
  */
 export class SectorTransform {
-  static calculateTransformationMatrix(address, sphereRadius) {
-    let matrix = AxisRotationMatrixBase.slice(address[0] * 16, (address[0] + 1) * 16);
+  static calculateModelMatrix(address: number[], sphereRadius: number): ModelMatrix {
+    const matrix = [...AxisRotationMatrixBase[address[0] as Axis]];
 
-    let scale = sphereRadius / Math.pow(2, address.length - 1);
+    const scale = sphereRadius / Math.pow(2, address.length - 1);
     matrix[0] *= scale;
     matrix[1] *= scale;
     matrix[2] *= scale;
@@ -62,21 +68,21 @@ export class SectorTransform {
     matrix[9] *= scale;
     matrix[10] *= scale;
 
-    let translation = SectorTransform.calculateTranslation(address, sphereRadius);
+    const translation = SectorTransform.calculateTranslation(address, sphereRadius);
     matrix[3] = translation.x;
     matrix[7] = translation.y;
     matrix[11] = translation.z;
 
-    return matrix;
+    return matrix as ModelMatrix;
   }
 
-  static calculateTranslation(address, sphereRadius) {
+  static calculateTranslation(address: number[], sphereRadius: number): Vector3Like {
     let a = 0;
     let b = 0;
     //first calculates relative translation
     //sum of translation of the quadrant on each level
     for (let i = 1; i < address.length; i++) {
-      let factor = Math.pow(2, i);
+      const factor = Math.pow(2, i);
       switch (address[i]) {
         case 0:
           a -= sphereRadius / factor;
@@ -101,17 +107,17 @@ export class SectorTransform {
 
     //then turns relative translation to absolute (for particular side of the cube)
     switch (address[0]) {
-      case AxisEnum.abscissaPositive:
+      case Axis.xPos:
         return { x: sphereRadius, y: b, z: -a };
-      case AxisEnum.abscissaNegative:
+      case Axis.xNeg:
         return { x: -sphereRadius, y: b, z: a };
-      case AxisEnum.ordinatePositive:
+      case Axis.yPos:
         return { x: a, y: sphereRadius, z: -b };
-      case AxisEnum.ordinateNegative:
+      case Axis.yNeg:
         return { x: a, y: -sphereRadius, z: b };
-      case AxisEnum.applicataPositive:
+      case Axis.zPos:
         return { x: a, y: b, z: sphereRadius };
-      case AxisEnum.applicataNegative:
+      case Axis.zNeg:
         return { x: a, y: -b, z: -sphereRadius };
       default:
         throw `Invalid sector address: ${address.join('')}`;
