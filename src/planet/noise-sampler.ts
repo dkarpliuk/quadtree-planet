@@ -4,6 +4,8 @@ export interface OctaveNoiseOptions {
   octaves: number;
   persistence: number;
   frequency: number;
+  //planet radius: coordinates are normalized by it so the noise is scale-invariant
+  radius: number;
 }
 
 export class NoiseSampler {
@@ -14,14 +16,19 @@ export class NoiseSampler {
   }
 
   getOctaveNoise(x: number, y: number, z: number, options: OctaveNoiseOptions): number {
-    const { octaves, persistence } = options;
+    const { octaves, persistence, radius } = options;
     let frequency = options.frequency;
     let total = 0;
     let amplitude = 1;
     let maxValue = 0;
 
+    //normalize to the unit sphere so feature scale is independent of planet size
+    const nx = x / radius;
+    const ny = y / radius;
+    const nz = z / radius;
+
     for (let i = 0; i < octaves; i++) {
-      const value = this.noise(x * frequency, y * frequency, z * frequency);
+      const value = this.noise(nx * frequency, ny * frequency, nz * frequency);
       total += value * amplitude;
       maxValue += amplitude;
       amplitude *= persistence;
