@@ -12,24 +12,24 @@ export class Sector {
   onBufferChanged?: (address: string) => void;
   onDisposed?: (address: string) => void;
 
-  _address = '';
-  _center: Vector3Like | null = null;
-  _boundingRadius: number | null = null;
-  _sphereRadius: number;
-  _density: number;
-  _buffer: SectorBuffer | null = null;
+  private _address = '';
+  private _center: Vector3Like | null = null;
+  private _boundingRadius: number | null = null;
+  protected _sphereRadius: number;
+  private _density: number;
+  private _buffer: SectorBuffer | null = null;
 
   /**
    * pristine full-resolution vertex positions, captured before the first stitch
    * so that edges can be restored and re-stitched when neighbor LOD changes
    */
-  _pristinePositions: Float32Array | null = null;
-  _pristineNormals: Float32Array | null = null;
+  private _pristinePositions: Float32Array | null = null;
+  private _pristineNormals: Float32Array | null = null;
 
   /**
    * set of directions currently stitched (joined), to skip redundant work
    */
-  _stitchedKey: string | null = null;
+  private _stitchedKey: string | null = null;
 
   get buffer(): SectorBuffer { return this._buffer!; }
 
@@ -166,7 +166,6 @@ export class Sector {
   /**
    * collapses every other vertex along one edge onto its neighbor, degenerating
    * the in-between triangles so the edge matches a neighbor of half the density
-   * (i.e. a 2:1 / one-level-coarser neighbor)
    */
   private _stitchEdge(direction: Direction) {
     const n = this._density + 1; //sector grid dimension
@@ -214,9 +213,6 @@ export class Sector {
   /**
    * Redistributes the grid across the cube face so that spherizing it yields
    * cells of near-equal angular size.
-   *
-   * The grid stays axis-aligned after the face transform, so each tangential
-   * axis only holds n distinct coordinates, warped once and reused.
    */
   private _applyTangentWarp(vertices: Float32Array) {
     //the axis that stays constant is the face axis; the other two are tangential
