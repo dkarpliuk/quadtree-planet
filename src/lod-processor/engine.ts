@@ -25,10 +25,7 @@ export class Engine<T extends Sector> {
   onSectorBufferChanged: (address: string, buffer: SectorBuffer) => void = () => { };
   onSectorDisposed: (address: string) => void = () => { };
 
-  private readonly _minLod: number;
-  private readonly _maxLod: number;
-  private readonly _sphereRadius: number;
-  private readonly _sectorFactory: () => T;
+  private readonly _options: EngineOptions<T>;
 
   private readonly _tree: TreeNode<T>;
   private readonly _addresses = new Set<string>();
@@ -44,10 +41,7 @@ export class Engine<T extends Sector> {
   constructor(options: EngineOptions<T>) {
     this._validateOptions(options);
 
-    this._minLod = options.minLod;
-    this._maxLod = options.maxLod;
-    this._sphereRadius = options.sphereRadius;
-    this._sectorFactory = options.sectorFactory;
+    this._options = { ...options };
     this._tree = TreeNode.newRoot<T>();
   }
 
@@ -109,7 +103,7 @@ export class Engine<T extends Sector> {
   }
 
   private _processLodMerges(leafParent: TreeNode<T>) {
-    if (leafParent.level < this._minLod) return;
+    if (leafParent.level < this._options.minLod) return;
 
     const mergeDistance = this._getProcessingDistance(leafParent.level);
     const wantsMerge = this._getDistanceToSpectator(leafParent.obj) >= mergeDistance;
@@ -118,16 +112,17 @@ export class Engine<T extends Sector> {
   }
 
   private _processLodSplits(leafNode: TreeNode<T>) {
-    if (leafNode.level >= this._maxLod) return;
+    if (leafNode.level >= this._options.maxLod) return;
 
     const splitDistance = this._getProcessingDistance(leafNode.level);
     const wantsSplit = this._getDistanceToSpectator(leafNode.obj) <= splitDistance;
-    if ((leafNode.level < this._minLod || wantsSplit) && this._canSplit(leafNode))
+    const belowMinLevel = leafNode.level < this._options.minLod;
+    if ((belowMinLevel || wantsSplit) && this._canSplit(leafNode))
       this._increaseLOD(leafNode);
   }
 
   private _getProcessingDistance = (level: number) =>
-    this._sphereRadius / Math.pow(2, level - 2);
+    this._options.sphereRadius / Math.pow(2, level - 2);
 
   private _getDistanceToSpectator(sector: Sector): number {
     const distance = CalcMisc.calcDistance(this._spectatorLocalPosition, sector.center);
@@ -188,9 +183,13 @@ export class Engine<T extends Sector> {
   }
 
   private _createSector = (): T => {
-    const sector = this._sectorFactory();
-    sector.onBufferChanged = address => this.onSectorBufferChanged(address, sector.buffer);
-    sector.onDisposed = address => this.onSectorDisposed(address);
+    const sector = this._options.sectorFactory();
+    
+    sector.onBufferChanged = address =>
+      this.onSectorBufferChanged(address, sector.buffer);
+    sector.onDisposed = address =>
+      this.onSectorDisposed(address);
+    
     return sector;
   };
 }
