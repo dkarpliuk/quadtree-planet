@@ -1,10 +1,7 @@
 import { Group, Object3D, Vector3 } from 'three';
 import { throttle } from 'lodash-es';
-import seedrandom from 'seedrandom';
-import { createNoise3D } from 'simplex-noise';
-import { Engine } from '../lod-processor';
-import { NoiseSampler } from './noise-sampler';
-import { LandmassMesh } from './landmass-mesh';
+import { Engine } from './lod-processor';
+import { LandmassMesh } from './sector-mesh';
 
 export class Planet {
   private _radius: number;
@@ -34,14 +31,12 @@ export class Planet {
   }
 
   createLandmass(minLod: number, maxLod: number, density: number) {
-    const noiseSampler = this._createNoiseSampler();
-
     const engine = new Engine({
       minLod,
       maxLod,
       sphereRadius: this._radius,
       density,
-      sectorMeshFactory: () => new LandmassMesh(this._radius, noiseSampler),
+      sectorMeshFactory: () => new LandmassMesh(this._radius, this._seed),
     });
 
     engine.onSectorCreated = sector => this._engineGroup.add(sector.mesh);
@@ -58,9 +53,4 @@ export class Planet {
 
   private _getSpectatorLocalPosition = () =>
     this._engineGroup.worldToLocal(this._spectatorRef.position.clone());
-
-  private _createNoiseSampler(): NoiseSampler {
-    const random = seedrandom(this._seed.toString());
-    return new NoiseSampler(createNoise3D(random));
-  }
 }

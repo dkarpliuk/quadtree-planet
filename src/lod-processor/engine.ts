@@ -3,7 +3,7 @@ import { TreeNode } from './tree-node';
 import { Direction } from './enums';
 import { CalcMisc, type Vector3Like } from './calc-misc';
 import { Sector } from './sector';
-import { SectorMesh } from './sector-mesh';
+import type { SectorMesh } from '../sector-mesh';
 
 //for each Z-order quadrant (0 1 / 2 3), the two sides lying on the parent's
 //outer edge; the other two sides face siblings inside the parent

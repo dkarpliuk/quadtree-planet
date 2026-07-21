@@ -2,7 +2,8 @@ import Stats from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import { Controls } from './controls';
 import { debounce } from 'lodash-es';
-import { Planet, LOD, ProcessFrequency } from './planet';
+import { Planet } from './planet';
+import { LOD, ProcessFrequency } from './enums';
 import './styles.css';
 
 let stats: Stats[];

@@ -2,7 +2,7 @@ import { SectorTransform } from './sector-transform';
 import { Direction } from './enums';
 import { GeometryMath } from './geometry-math';
 import { CalcMisc, type Vector3Like } from './calc-misc';
-import type { SectorMesh } from './sector-mesh';
+import type { SectorMesh } from '../sector-mesh';
 
 export class Sector {
   _center: Vector3Like | null = null;

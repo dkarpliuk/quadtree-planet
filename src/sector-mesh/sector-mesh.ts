@@ -1,5 +1,5 @@
 import { Material, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
-import { UNIT_RADIUS } from './sector-transform';
+import { UNIT_RADIUS } from '../lod-processor/sector-transform';
 
 const defaultMaterial = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
