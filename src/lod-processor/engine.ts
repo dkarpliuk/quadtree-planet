@@ -92,7 +92,10 @@ export class Engine {
   execute(spectatorLocalPosition: Vector3Like) {
     this._spectatorLocalPosition = spectatorLocalPosition;
     this._topologyDirty = false;
-    this._tree.traverseLeaves(this._processLOD.bind(this));
+
+    //merge first (coarsen what is too far), then split (refine what is close)
+    this._tree.traverseLeafParents(this._processLodMerges.bind(this));
+    this._tree.traverseLeaves(this._processLodSplits.bind(this));
 
     //re-stitch only when the tree actually changed this tick; otherwise every
     //leaf keeps the same neighbors and the previous stitching still holds
@@ -123,25 +126,26 @@ export class Engine {
     leafNode.obj.stitch(directions);
   }
 
-  private _processLOD(leafNode: TreeNode<Sector>) {
-    const splitDistance = this._sphereRadius / Math.pow(2, leafNode.level - 2);
-    const wantsSplit = leafNode.level < this._minLod
-      || leafNode.level < this._maxLod
-      && this._getDistanceToSpectator(leafNode.obj) < splitDistance;
+  private _processLodMerges(leafParent: TreeNode<Sector>) {
+    if (leafParent.level < this._minLod) return;
 
-    if (wantsSplit) {
-      if (this._canSplit(leafNode)) this._increaseLOD(leafNode);
-      return;
-    }
-
-    //any processed leaf sits below the root, so its parent is never null
-    const parent = leafNode.parent!;
-    const wantsMerge = parent.level > this._minLod &&
-      !parent.children.some(child => child.children.length) &&
-      this._getDistanceToSpectator(parent.obj) >= splitDistance * 2
-
-    if (wantsMerge && this._canMerge(parent)) this._decreaseLOD(parent);
+    const mergeDistance = this._getProcessingDistance(leafParent.level);
+    const wantsMerge = this._getDistanceToSpectator(leafParent.obj) >= mergeDistance;
+    if (wantsMerge && this._canMerge(leafParent))
+      this._decreaseLOD(leafParent);
   }
+
+  private _processLodSplits(leafNode: TreeNode<Sector>) {
+    if (leafNode.level >= this._maxLod) return;
+
+    const splitDistance = this._getProcessingDistance(leafNode.level);
+    const wantsSplit = this._getDistanceToSpectator(leafNode.obj) <= splitDistance;
+    if ((leafNode.level < this._minLod || wantsSplit) && this._canSplit(leafNode))
+      this._increaseLOD(leafNode);
+  }
+
+  private _getProcessingDistance = (level: number) =>
+    this._sphereRadius / Math.pow(2, level - 2);
 
   /**
    * 2:1 balance guard for splitting: a leaf may split only if no edge-neighbor
@@ -215,7 +219,6 @@ export class Engine {
     this.onSectorCreated(leafNode.obj);
   }
 
-  private _createSector(): Sector {
-    return new Sector(this._sphereRadius, this._density, this._sectorMeshFactory());
-  }
+  private _createSector = () =>
+    new Sector(this._sphereRadius, this._density, this._sectorMeshFactory());
 }
