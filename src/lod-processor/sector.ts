@@ -2,14 +2,22 @@ import { SectorTransform } from './sector-transform';
 import { Direction } from './enums';
 import { GeometryMath } from './geometry-math';
 import { CalcMisc, type Vector3Like } from './calc-misc';
-import type { SectorMesh } from '../sector-mesh';
+
+export interface SectorBuffer {
+  positions: Float32Array;
+  normals: Float32Array;
+}
 
 export class Sector {
+  onBufferChanged?: (address: string) => void;
+  onDisposed?: (address: string) => void;
+
+  _address = '';
   _center: Vector3Like | null = null;
   _boundingRadius: number | null = null;
   _sphereRadius: number;
   _density: number;
-  _sectorMesh: SectorMesh;
+  _buffer: SectorBuffer | null = null;
 
   /**
    * pristine full-resolution vertex positions, captured before the first stitch
@@ -23,7 +31,7 @@ export class Sector {
    */
   _stitchedKey: string | null = null;
 
-  get mesh() { return this._sectorMesh.mesh; }
+  get buffer(): SectorBuffer { return this._buffer!; }
 
   get center(): Vector3Like {
     if (!this._center) {
@@ -48,21 +56,27 @@ export class Sector {
     return this._boundingRadius!;
   }
 
-  constructor(sphereRadius: number, density: number, sectorMesh: SectorMesh) {
+  constructor(sphereRadius: number, density: number) {
     this._sphereRadius = sphereRadius;
     this._density = density;
-    this._sectorMesh = sectorMesh;
   }
+
+  /**
+   * template method: height above the base sphere at a surface point
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getHeightOffset(_vx: number, _vy: number, _vz: number): number { return 0; }
 
   /**
    * builds the sector geometry and performs the initial transformation
    */
   instantiate(address: number[]) {
-    this._sectorMesh.allocate(this._density);
+    this._address = address.join('');
+    this._buffer = this._createBuffer();
 
     //place sector on the cube
     const modelMatrix = SectorTransform.calculateModelMatrix(address, this._sphereRadius);
-    
+
     //1-segment padding used for correct normals computation, scale is adjusted
     const scaleFactor = (this._density + 2) / this._density;
     const workPositions = GeometryMath.buildGrid(this._density + 2, modelMatrix, scaleFactor);
@@ -71,9 +85,8 @@ export class Sector {
     const workNormals = GeometryMath.computeNormals(workPositions);
 
     //copy work buffers to render buffers without padding
-    this._copyInnerGrid(workPositions, this._sectorMesh.positions);
-    this._copyInnerGrid(workNormals, this._sectorMesh.normals);
-    this._sectorMesh.commit();
+    this._copyInnerGrid(workPositions, this._buffer.positions);
+    this._copyInnerGrid(workNormals, this._buffer.normals);
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
@@ -81,14 +94,25 @@ export class Sector {
     this._pristinePositions = null;
     this._pristineNormals = null;
     this._stitchedKey = null;
+
+    this.onBufferChanged?.(this._address);
   }
 
-  clear() {
-    this._sectorMesh.dispose();
-
+  dispose() {
+    this._buffer = null;
     this._pristinePositions = null;
     this._pristineNormals = null;
     this._stitchedKey = null;
+
+    this.onDisposed?.(this._address);
+  }
+
+  _createBuffer(): SectorBuffer {
+    const n = this._density + 1;
+    return {
+      positions: new Float32Array(n * n * 3),
+      normals: new Float32Array(n * n * 3),
+    };
   }
 
   /**
@@ -98,11 +122,10 @@ export class Sector {
    */
   stitch(directions: Direction[]) {
     const key = directions.join('');
-    if (key === this._stitchedKey)
-      return;
+    if (key === this._stitchedKey) return;
 
-    const positions = this._sectorMesh.positions;
-    const normals = this._sectorMesh.normals;
+    const positions = this._buffer!.positions;
+    const normals = this._buffer!.normals;
 
     //restore the pristine perimeter captured before the first stitch
     if (this._pristinePositions)
@@ -118,7 +141,7 @@ export class Sector {
     }
 
     this._stitchedKey = key;
-    this._sectorMesh.commit();
+    this.onBufferChanged?.(this._address);
   }
 
   _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
@@ -183,7 +206,7 @@ export class Sector {
   }
 
   _readVertex(index: number): Vector3Like {
-    const vertices = this._sectorMesh.positions;
+    const vertices = this._buffer!.positions;
     const i = index * 3;
     return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
   }
@@ -237,7 +260,7 @@ export class Sector {
       const length = Math.sqrt(vx * vx + vy * vy + vz * vz);
       const scale = this._sphereRadius / length;
 
-      const heightOffset = this._sectorMesh.getHeightOffset(vx * scale, vy * scale, vz * scale);
+      const heightOffset = this.getHeightOffset(vx * scale, vy * scale, vz * scale);
       const factor = (this._sphereRadius + heightOffset) / length;
 
       vertices[i] *= factor;
@@ -250,8 +273,8 @@ export class Sector {
    * moves vertex1 onto vertex2, normal included
    */
   _mergeVertices(v1Number: number, v2Number: number) {
-    const positions = this._sectorMesh.positions;
-    const normals = this._sectorMesh.normals;
+    const positions = this._buffer!.positions;
+    const normals = this._buffer!.normals;
     const i1 = v1Number * 3;
     const i2 = v2Number * 3;
 

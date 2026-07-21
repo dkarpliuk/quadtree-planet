@@ -1,5 +1,5 @@
 import { Engine, type EngineOptions } from './engine';
-import { Sector } from './sector';
+import { Sector, type SectorBuffer } from './sector';
 
 export { Engine, Sector };
-export type { EngineOptions };
+export type { EngineOptions, SectorBuffer };
