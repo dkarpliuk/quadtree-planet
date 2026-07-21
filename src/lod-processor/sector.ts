@@ -104,17 +104,13 @@ export class Sector {
     const positions = this._sectorMesh.positions;
     const normals = this._sectorMesh.normals;
 
-    //restore full-resolution edges captured before the first stitch
-    if (this._pristinePositions) {
-      positions.set(this._pristinePositions);
-      normals.set(this._pristineNormals!);
-    }
+    //restore the pristine perimeter captured before the first stitch
+    if (this._pristinePositions)
+      this._restorePerimeterVertices(positions, normals);
 
     if (directions.length > 0) {
-      if (!this._pristinePositions) {
-        this._pristinePositions = Float32Array.from(positions);
-        this._pristineNormals = Float32Array.from(normals);
-      }
+      if (!this._pristinePositions)
+        this._capturePerimeterVertices(positions, normals);
 
       for (const direction of directions) {
         this._stitchEdge(direction);
@@ -123,6 +119,25 @@ export class Sector {
 
     this._stitchedKey = key;
     this._sectorMesh.commit();
+  }
+
+  _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
+    const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
+    this._pristinePositions = new Float32Array(perimeter.length);
+    this._pristineNormals = new Float32Array(perimeter.length);
+
+    for (let p = 0; p < perimeter.length; p++) {
+      this._pristinePositions[p] = positions[perimeter[p]];
+      this._pristineNormals[p] = normals[perimeter[p]];
+    }
+  }
+
+  _restorePerimeterVertices(positions: Float32Array, normals: Float32Array) {
+    const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
+    for (let p = 0; p < perimeter.length; p++) {
+      positions[perimeter[p]] = this._pristinePositions![p];
+      normals[perimeter[p]] = this._pristineNormals![p];
+    }
   }
 
   /**
