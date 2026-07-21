@@ -65,7 +65,7 @@ export class Sector {
    * template method: height above the base sphere at a surface point
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getHeightOffset(_vx: number, _vy: number, _vz: number): number { return 0; }
+  protected getHeightOffset(_vx: number, _vy: number, _vz: number): number { return 0; }
 
   /**
    * builds the sector geometry and performs the initial transformation
@@ -107,7 +107,7 @@ export class Sector {
     this.onDisposed?.(this._address);
   }
 
-  _createBuffer(): SectorBuffer {
+  private _createBuffer(): SectorBuffer {
     const n = this._density + 1;
     return {
       positions: new Float32Array(n * n * 3),
@@ -144,7 +144,7 @@ export class Sector {
     this.onBufferChanged?.(this._address);
   }
 
-  _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
+  private _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
     const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
     this._pristinePositions = new Float32Array(perimeter.length);
     this._pristineNormals = new Float32Array(perimeter.length);
@@ -155,7 +155,7 @@ export class Sector {
     }
   }
 
-  _restorePerimeterVertices(positions: Float32Array, normals: Float32Array) {
+  private _restorePerimeterVertices(positions: Float32Array, normals: Float32Array) {
     const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
     for (let p = 0; p < perimeter.length; p++) {
       positions[perimeter[p]] = this._pristinePositions![p];
@@ -168,7 +168,7 @@ export class Sector {
    * the in-between triangles so the edge matches a neighbor of half the density
    * (i.e. a 2:1 / one-level-coarser neighbor)
    */
-  _stitchEdge(direction: Direction) {
+  private _stitchEdge(direction: Direction) {
     const n = this._density + 1; //sector grid dimension
 
     if (direction === Direction.up) {
@@ -190,7 +190,7 @@ export class Sector {
     }
   }
 
-  _copyInnerGrid(source: Float32Array, target: Float32Array) {
+  private _copyInnerGrid(source: Float32Array, target: Float32Array) {
     const n = this._density + 1;
     const stride = n + 2;
 
@@ -205,7 +205,7 @@ export class Sector {
     }
   }
 
-  _readVertex(index: number): Vector3Like {
+  private _readVertex(index: number): Vector3Like {
     const vertices = this._buffer!.positions;
     const i = index * 3;
     return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
@@ -218,7 +218,7 @@ export class Sector {
    * The grid stays axis-aligned after the face transform, so each tangential
    * axis only holds n distinct coordinates, warped once and reused.
    */
-  _applyTangentWarp(vertices: Float32Array) {
+  private _applyTangentWarp(vertices: Float32Array) {
     //the axis that stays constant is the face axis; the other two are tangential
     const n = Math.sqrt(vertices.length / 3)
     let columnAxis = -1;
@@ -251,7 +251,7 @@ export class Sector {
    * key method that turns a cube into a sphere
    * (moves each vertex to be the same distance from the center)
    */
-  _spherize(vertices: Float32Array) {
+  private _spherize(vertices: Float32Array) {
     for (let i = 0; i < vertices.length; i += 3) {
       const vx = vertices[i];
       const vy = vertices[i + 1];
@@ -272,7 +272,7 @@ export class Sector {
   /**
    * moves vertex1 onto vertex2, normal included
    */
-  _mergeVertices(v1Number: number, v2Number: number) {
+  private _mergeVertices(v1Number: number, v2Number: number) {
     const positions = this._buffer!.positions;
     const normals = this._buffer!.normals;
     const i1 = v1Number * 3;
