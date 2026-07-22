@@ -1,8 +1,8 @@
-import { throttle } from 'lodash-es';
 import { Group, Object3D, Vector3 } from 'three';
 
 import { createLandmassLayer } from './layers/landmass';
 import type { LayerView } from './layers/layer-view';
+import { asyncThrottle } from './lib/async-throttle';
 
 export class Planet {
   private _radius: number;
@@ -22,7 +22,7 @@ export class Planet {
     this._seed = seed;
 
     if (updateFrequency > 0)
-      this.update = throttle(this.update.bind(this), updateFrequency, { trailing: false });
+      this.update = asyncThrottle(this.update.bind(this), updateFrequency);
   }
 
   async createLandmass(minLod: number, maxLod: number, density: number) {
@@ -44,11 +44,9 @@ export class Planet {
     }
   }
 
-  update() {
+  async update() {
     const spectatorLocalPosition = this._getSpectatorLocalPosition();
-    for (const layer of this._layers) {
-      layer.update(spectatorLocalPosition);
-    }
+    await Promise.all(this._layers.map(layer => layer.update(spectatorLocalPosition)));
   }
 
   private _getSpectatorLocalPosition = () =>
