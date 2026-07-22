@@ -5,7 +5,7 @@ import Stats from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 
 import { Controls } from './controls';
-import { LOD, UpdateFrequency } from './enums';
+import { LOD, UNIT_KILOMETERS, UpdateFrequency } from './enums';
 import { Planet } from './planet';
 
 let stats: Stats[];
@@ -16,12 +16,12 @@ let controls: Controls;
 let planet: Planet;
 
 //temporary for development
-const radiusTest = 3000;
+const radiusTest = 3000 * UNIT_KILOMETERS;
 const planetPositionTest = new Vector3(0, 0, 0);
 const seedTest = 1234;
 const densityTest = 32;
 const sunPositionTest = new Vector3(0, 0, 1).multiplyScalar(radiusTest * 20);
-const sunRadiusTest = 1000;
+const sunRadiusTest = 1000 * UNIT_KILOMETERS;
 
 init();
 animate();
@@ -55,8 +55,8 @@ function initStats() {
 }
 
 function initCamera() {
-  camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 100000);
-  camera.position.z = 3000 * 2;
+  camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 100000 * UNIT_KILOMETERS);
+  camera.position.z = radiusTest * 2;
 }
 
 function initControls() {

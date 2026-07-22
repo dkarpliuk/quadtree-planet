@@ -1,3 +1,7 @@
+//world units per real-world meter (1 unit = 1000m, i.e. a 1:1000 scale)
+export const UNIT_METERS = 1 / 1000;
+export const UNIT_KILOMETERS = UNIT_METERS * 1000;
+
 export const LOD = {
   ultraLow: 2,
   low: 4,
