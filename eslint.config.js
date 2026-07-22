@@ -12,6 +12,7 @@ export default tseslint.config(
     },
     rules: {
       eqeqeq: ['error', 'always', { null: 'ignore' }],
+      'keyword-spacing': ['error', { before: true, after: true }],
     },
   },
 );

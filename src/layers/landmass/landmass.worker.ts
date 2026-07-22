@@ -1,10 +1,10 @@
 import { expose } from 'comlink';
-import { EngineWorker } from '../../engine';
+import { ChunkEngine } from '../../engine';
 import { LandmassSector } from './landmass-sector';
 import type { LandmassParams } from './types';
 
 //worker bundle root: builds the engine with a landmass sector factory
-export class LandmassEngineWorker extends EngineWorker<LandmassSector> {
+export class LandmassWorker extends ChunkEngine<LandmassSector> {
   constructor(params: LandmassParams) {
     super({
       minLod: params.minLod,
@@ -16,4 +16,4 @@ export class LandmassEngineWorker extends EngineWorker<LandmassSector> {
   }
 }
 
-expose(LandmassEngineWorker);
+expose(LandmassWorker);

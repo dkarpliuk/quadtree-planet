@@ -3,7 +3,7 @@ import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Sp
 import { Controls } from './controls';
 import { debounce } from 'lodash-es';
 import { Planet } from './planet';
-import { LOD, ProcessFrequency } from './enums';
+import { LOD, UpdateFrequency } from './enums';
 import './styles.css';
 
 let stats: Stats[];
@@ -67,7 +67,7 @@ function initScene() {
 }
 
 function initPlanet() {
-  planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
+  planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, UpdateFrequency.medium);
   scene.add(planet.object3d);
   planet.createLandmass(LOD.low, LOD.high, densityTest).then(() => planet.initialize());
 }
@@ -104,7 +104,7 @@ function initResizeHandler() {
 function animate() {
   stats.forEach(x => x.begin());
 
-  planet.process();
+  planet.update();
   controls.control();
   renderer.render(scene, camera);
 

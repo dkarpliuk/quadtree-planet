@@ -11,10 +11,21 @@ export interface EngineChunk {
   removed: string[];
 }
 
+type Awaitable<T> = T | Promise<T>;
+
+/**
+ * chunk-producing engine contract; synchronous in the worker,
+ * a promise across a worker boundary - both satisfy it
+ */
+export interface IChunkEngine {
+  initialize(): Awaitable<EngineChunk>;
+  execute(spectatorLocalPosition: Vector3Like): Awaitable<EngineChunk>;
+}
+
 /**
  * drives an Engine and batches its per-sector events into one chunk per execution
  */
-export class EngineWorker<T extends Sector> {
+export class ChunkEngine<T extends Sector> implements IChunkEngine {
   private readonly _engine: Engine<T>;
   private readonly _upserts = new Map<string, SectorBuffer>();
   private readonly _removed = new Set<string>();
