@@ -2,7 +2,16 @@ import './styles.css';
 
 import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
-import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import {
+  DirectionalLight,
+  Mesh,
+  MeshBasicMaterial,
+  PerspectiveCamera,
+  Scene,
+  SphereGeometry,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 
 import { Controls } from './controls';
 import { LOD, UNIT_KILOMETERS, UpdateFrequency } from './enums';
@@ -55,7 +64,8 @@ function initStats() {
 }
 
 function initCamera() {
-  camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 100000 * UNIT_KILOMETERS);
+  camera = new PerspectiveCamera(
+    70, window.innerWidth / window.innerHeight, 1, 100000 * UNIT_KILOMETERS);
   camera.position.z = radiusTest * 2;
 }
 
@@ -69,7 +79,8 @@ function initScene() {
 }
 
 function initPlanet() {
-  planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, UpdateFrequency.medium);
+  planet = new Planet(
+    camera, planetPositionTest, radiusTest, seedTest, UpdateFrequency.medium);
   scene.add(planet.object3d);
   planet.createLandmass(LOD.low, LOD.high, densityTest).then(() => planet.initialize());
 }
