@@ -1,4 +1,5 @@
 import { Material, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
+
 import type { SectorBuffer } from '../engine';
 
 const defaultMaterial = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });

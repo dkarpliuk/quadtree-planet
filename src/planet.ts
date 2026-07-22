@@ -1,7 +1,8 @@
-import { Group, Object3D, Vector3 } from 'three';
 import { throttle } from 'lodash-es';
-import type { LayerView } from './layers/layer-view';
+import { Group, Object3D, Vector3 } from 'three';
+
 import { createLandmassLayer } from './layers/landmass';
+import type { LayerView } from './layers/layer-view';
 
 export class Planet {
   private _radius: number;

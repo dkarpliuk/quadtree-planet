@@ -1,4 +1,5 @@
 import { Group } from 'three';
+
 import type { EngineChunk, IChunkEngine, Vector3Like } from '../engine';
 import type { SectorMesh } from './sector-mesh';
 

@@ -1,4 +1,5 @@
 import { expose } from 'comlink';
+
 import { ChunkEngine } from '../../engine';
 import { LandmassSector } from './landmass-sector';
 import type { LandmassParams } from './types';

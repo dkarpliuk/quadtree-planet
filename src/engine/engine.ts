@@ -1,8 +1,8 @@
 import { AddressUtility } from './address-utility';
-import { TreeNode } from './tree-node';
-import { Direction } from './enums';
 import { CalcMisc, type Vector3Like } from './calc-misc';
+import { Direction } from './enums';
 import { Sector, type SectorBuffer } from './sector';
+import { TreeNode } from './tree-node';
 
 //for each Z-order quadrant (0 1 / 2 3), the two sides lying on the parent's
 //outer edge; the other two sides face siblings inside the parent

@@ -1,6 +1,6 @@
+import type { Vector3Like } from './calc-misc';
 import { Engine, type EngineOptions } from './engine';
 import { Sector, type SectorBuffer } from './sector';
-import type { Vector3Like } from './calc-misc';
 
 /**
  * an execution's worth of buffer changes, collected from the engine's events:

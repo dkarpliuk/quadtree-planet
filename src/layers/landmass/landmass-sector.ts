@@ -1,5 +1,6 @@
 import seedrandom from 'seedrandom';
 import { createNoise3D } from 'simplex-noise';
+
 import { Sector } from '../../engine';
 import { NoiseSampler, type OctaveNoiseOptions } from './noise-sampler';
 

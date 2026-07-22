@@ -1,7 +1,8 @@
 import { wrap } from 'comlink';
+
 import { LayerView } from '../layer-view';
-import { LandmassMesh } from './landmass-mesh';
 import type { LandmassWorker } from './landmass.worker';
+import { LandmassMesh } from './landmass-mesh';
 import type { LandmassParams } from './types';
 
 export type { LandmassParams };

@@ -1,10 +1,12 @@
+import './styles.css';
+
+import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+
 import { Controls } from './controls';
-import { debounce } from 'lodash-es';
-import { Planet } from './planet';
 import { LOD, UpdateFrequency } from './enums';
-import './styles.css';
+import { Planet } from './planet';
 
 let stats: Stats[];
 let scene: Scene;

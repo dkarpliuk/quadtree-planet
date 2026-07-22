@@ -1,7 +1,7 @@
-import { Engine, type EngineOptions } from './engine';
-import { ChunkEngine, type IChunkEngine, type EngineChunk } from './chunk-engine';
-import { Sector, type SectorBuffer } from './sector';
 import type { Vector3Like } from './calc-misc';
+import { ChunkEngine, type EngineChunk, type IChunkEngine } from './chunk-engine';
+import { Engine, type EngineOptions } from './engine';
+import { Sector, type SectorBuffer } from './sector';
 
-export { Engine, ChunkEngine, Sector };
-export type { EngineOptions, IChunkEngine, EngineChunk, SectorBuffer, Vector3Like };
+export { ChunkEngine, Engine, Sector };
+export type { EngineChunk, EngineOptions, IChunkEngine, SectorBuffer, Vector3Like };

@@ -1,7 +1,7 @@
-import { SectorTransform } from './sector-transform';
+import { CalcMisc, type Vector3Like } from './calc-misc';
 import { Direction } from './enums';
 import { GeometryMath } from './geometry-math';
-import { CalcMisc, type Vector3Like } from './calc-misc';
+import { SectorTransform } from './sector-transform';
 
 export interface SectorBuffer {
   positions: Float32Array;
