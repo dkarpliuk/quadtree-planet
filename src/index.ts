@@ -1,9 +1,12 @@
+import './styles.css';
+
+import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
 import { DirectionalLight, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+
 import { Controls } from './controls';
-import { debounce } from 'lodash-es';
-import { Planet, LOD, ProcessFrequency } from './planet';
-import './styles.css';
+import { LOD, UpdateFrequency } from './enums';
+import { Planet } from './planet';
 
 let stats: Stats[];
 let scene: Scene;
@@ -66,10 +69,9 @@ function initScene() {
 }
 
 function initPlanet() {
-  planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
-  planet.createLandmass(LOD.low, LOD.high, densityTest);
-  planet.initialize();
+  planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, UpdateFrequency.medium);
   scene.add(planet.object3d);
+  planet.createLandmass(LOD.low, LOD.high, densityTest).then(() => planet.initialize());
 }
 
 function initLight() {
@@ -104,7 +106,7 @@ function initResizeHandler() {
 function animate() {
   stats.forEach(x => x.begin());
 
-  planet.process();
+  planet.update();
   controls.control();
   renderer.render(scene, camera);
 

@@ -1,5 +1,5 @@
-import { Axis } from './enums';
 import type { Vector3Like } from './calc-misc';
+import { Axis } from './enums';
 
 export type ModelMatrix = [
   number, number, number, number,

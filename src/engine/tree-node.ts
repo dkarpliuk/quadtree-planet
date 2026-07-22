@@ -48,5 +48,20 @@ export class TreeNode<T> {
     }
   }
 
+  /**
+   * executes callback for each leaf-parent: a node whose children are all leaves
+   */
+  traverseLeafParents(callback: (node: TreeNode<T>) => void) {
+    if (!this.children.length) return;
+
+    if (this.children.every(child => !child.children.length)) {
+      callback(this);
+    } else {
+      for (const child of this.children) {
+        child.traverseLeafParents(callback);
+      }
+    }
+  }
+
   _isOrphan = () => this.parent == null && this.level > 0;
 }

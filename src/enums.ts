@@ -8,11 +8,11 @@ export const LOD = {
 
 export type LOD = typeof LOD[keyof typeof LOD];
 
-export const ProcessFrequency = {
+export const UpdateFrequency = {
   realtime: 0,
   high: 300,
   medium: 500,
   low: 1000,
 } as const;
 
-export type ProcessFrequency = typeof ProcessFrequency[keyof typeof ProcessFrequency];
+export type UpdateFrequency = typeof UpdateFrequency[keyof typeof UpdateFrequency];

@@ -1,5 +1,6 @@
 import { BufferAttribute, BufferGeometry, Matrix4, PlaneGeometry, Vector3 } from 'three';
-import { UNIT_RADIUS, type ModelMatrix } from './sector-transform';
+
+import { type ModelMatrix, UNIT_RADIUS } from './sector-transform';
 
 interface GridTemplate {
   //pristine planar positions to transform from

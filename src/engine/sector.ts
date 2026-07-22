@@ -1,29 +1,37 @@
-import { SectorTransform } from './sector-transform';
+import { CalcMisc, type Vector3Like } from './calc-misc';
 import { Direction } from './enums';
 import { GeometryMath } from './geometry-math';
-import { CalcMisc, type Vector3Like } from './calc-misc';
-import type { SectorMesh } from './sector-mesh';
+import { SectorTransform } from './sector-transform';
+
+export interface SectorBuffer {
+  positions: Float32Array;
+  normals: Float32Array;
+}
 
 export class Sector {
-  _center: Vector3Like | null = null;
-  _boundingRadius: number | null = null;
-  _sphereRadius: number;
-  _density: number;
-  _sectorMesh: SectorMesh;
+  onBufferChanged?: (address: string) => void;
+  onDisposed?: (address: string) => void;
+
+  private _address = '';
+  private _center: Vector3Like | null = null;
+  private _boundingRadius: number | null = null;
+  protected _sphereRadius: number;
+  private _density: number;
+  private _buffer: SectorBuffer | null = null;
 
   /**
    * pristine full-resolution vertex positions, captured before the first stitch
    * so that edges can be restored and re-stitched when neighbor LOD changes
    */
-  _pristinePositions: Float32Array | null = null;
-  _pristineNormals: Float32Array | null = null;
+  private _pristinePositions: Float32Array | null = null;
+  private _pristineNormals: Float32Array | null = null;
 
   /**
    * set of directions currently stitched (joined), to skip redundant work
    */
-  _stitchedKey: string | null = null;
+  private _stitchedKey: string | null = null;
 
-  get mesh() { return this._sectorMesh.mesh; }
+  get buffer(): SectorBuffer { return this._buffer!; }
 
   get center(): Vector3Like {
     if (!this._center) {
@@ -48,21 +56,27 @@ export class Sector {
     return this._boundingRadius!;
   }
 
-  constructor(sphereRadius: number, density: number, sectorMesh: SectorMesh) {
+  constructor(sphereRadius: number, density: number) {
     this._sphereRadius = sphereRadius;
     this._density = density;
-    this._sectorMesh = sectorMesh;
   }
+
+  /**
+   * template method: height above the base sphere at a surface point
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected getHeightOffset(_vx: number, _vy: number, _vz: number): number { return 0; }
 
   /**
    * builds the sector geometry and performs the initial transformation
    */
   instantiate(address: number[]) {
-    this._sectorMesh.allocate(this._density);
+    this._address = address.join('');
+    this._buffer = this._createBuffer();
 
     //place sector on the cube
     const modelMatrix = SectorTransform.calculateModelMatrix(address, this._sphereRadius);
-    
+
     //1-segment padding used for correct normals computation, scale is adjusted
     const scaleFactor = (this._density + 2) / this._density;
     const workPositions = GeometryMath.buildGrid(this._density + 2, modelMatrix, scaleFactor);
@@ -71,9 +85,8 @@ export class Sector {
     const workNormals = GeometryMath.computeNormals(workPositions);
 
     //copy work buffers to render buffers without padding
-    this._copyInnerGrid(workPositions, this._sectorMesh.positions);
-    this._copyInnerGrid(workNormals, this._sectorMesh.normals);
-    this._sectorMesh.commit();
+    this._copyInnerGrid(workPositions, this._buffer.positions);
+    this._copyInnerGrid(workNormals, this._buffer.normals);
 
     //fresh geometry: drop everything cached from a previous instantiation
     this._center = null;
@@ -81,14 +94,25 @@ export class Sector {
     this._pristinePositions = null;
     this._pristineNormals = null;
     this._stitchedKey = null;
+
+    this.onBufferChanged?.(this._address);
   }
 
-  clear() {
-    this._sectorMesh.dispose();
-
+  dispose() {
+    this._buffer = null;
     this._pristinePositions = null;
     this._pristineNormals = null;
     this._stitchedKey = null;
+
+    this.onDisposed?.(this._address);
+  }
+
+  private _createBuffer(): SectorBuffer {
+    const n = this._density + 1;
+    return {
+      positions: new Float32Array(n * n * 3),
+      normals: new Float32Array(n * n * 3),
+    };
   }
 
   /**
@@ -98,11 +122,10 @@ export class Sector {
    */
   stitch(directions: Direction[]) {
     const key = directions.join('');
-    if (key === this._stitchedKey)
-      return;
+    if (key === this._stitchedKey) return;
 
-    const positions = this._sectorMesh.positions;
-    const normals = this._sectorMesh.normals;
+    const positions = this._buffer!.positions;
+    const normals = this._buffer!.normals;
 
     //restore the pristine perimeter captured before the first stitch
     if (this._pristinePositions)
@@ -118,10 +141,10 @@ export class Sector {
     }
 
     this._stitchedKey = key;
-    this._sectorMesh.commit();
+    this.onBufferChanged?.(this._address);
   }
 
-  _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
+  private _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
     const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
     this._pristinePositions = new Float32Array(perimeter.length);
     this._pristineNormals = new Float32Array(perimeter.length);
@@ -132,7 +155,7 @@ export class Sector {
     }
   }
 
-  _restorePerimeterVertices(positions: Float32Array, normals: Float32Array) {
+  private _restorePerimeterVertices(positions: Float32Array, normals: Float32Array) {
     const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
     for (let p = 0; p < perimeter.length; p++) {
       positions[perimeter[p]] = this._pristinePositions![p];
@@ -143,9 +166,8 @@ export class Sector {
   /**
    * collapses every other vertex along one edge onto its neighbor, degenerating
    * the in-between triangles so the edge matches a neighbor of half the density
-   * (i.e. a 2:1 / one-level-coarser neighbor)
    */
-  _stitchEdge(direction: Direction) {
+  private _stitchEdge(direction: Direction) {
     const n = this._density + 1; //sector grid dimension
 
     if (direction === Direction.up) {
@@ -167,7 +189,7 @@ export class Sector {
     }
   }
 
-  _copyInnerGrid(source: Float32Array, target: Float32Array) {
+  private _copyInnerGrid(source: Float32Array, target: Float32Array) {
     const n = this._density + 1;
     const stride = n + 2;
 
@@ -182,8 +204,8 @@ export class Sector {
     }
   }
 
-  _readVertex(index: number): Vector3Like {
-    const vertices = this._sectorMesh.positions;
+  private _readVertex(index: number): Vector3Like {
+    const vertices = this._buffer!.positions;
     const i = index * 3;
     return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
   }
@@ -191,13 +213,10 @@ export class Sector {
   /**
    * Redistributes the grid across the cube face so that spherizing it yields
    * cells of near-equal angular size.
-   *
-   * The grid stays axis-aligned after the face transform, so each tangential
-   * axis only holds n distinct coordinates, warped once and reused.
    */
-  _applyTangentWarp(vertices: Float32Array) {
+  private _applyTangentWarp(vertices: Float32Array) {
     //the axis that stays constant is the face axis; the other two are tangential
-    const n = Math.sqrt(vertices.length / 3)
+    const n = Math.sqrt(vertices.length / 3);
     let columnAxis = -1;
     let rowAxis = -1;
     for (let axis = 0; axis < 3; axis++) {
@@ -228,7 +247,7 @@ export class Sector {
    * key method that turns a cube into a sphere
    * (moves each vertex to be the same distance from the center)
    */
-  _spherize(vertices: Float32Array) {
+  private _spherize(vertices: Float32Array) {
     for (let i = 0; i < vertices.length; i += 3) {
       const vx = vertices[i];
       const vy = vertices[i + 1];
@@ -237,7 +256,7 @@ export class Sector {
       const length = Math.sqrt(vx * vx + vy * vy + vz * vz);
       const scale = this._sphereRadius / length;
 
-      const heightOffset = this._sectorMesh.getHeightOffset(vx * scale, vy * scale, vz * scale);
+      const heightOffset = this.getHeightOffset(vx * scale, vy * scale, vz * scale);
       const factor = (this._sphereRadius + heightOffset) / length;
 
       vertices[i] *= factor;
@@ -249,9 +268,9 @@ export class Sector {
   /**
    * moves vertex1 onto vertex2, normal included
    */
-  _mergeVertices(v1Number: number, v2Number: number) {
-    const positions = this._sectorMesh.positions;
-    const normals = this._sectorMesh.normals;
+  private _mergeVertices(v1Number: number, v2Number: number) {
+    const positions = this._buffer!.positions;
+    const normals = this._buffer!.normals;
     const i1 = v1Number * 3;
     const i2 = v2Number * 3;
 
