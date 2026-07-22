@@ -216,7 +216,7 @@ export class Sector {
    */
   private _applyTangentWarp(vertices: Float32Array) {
     //the axis that stays constant is the face axis; the other two are tangential
-    const n = Math.sqrt(vertices.length / 3)
+    const n = Math.sqrt(vertices.length / 3);
     let columnAxis = -1;
     let rowAxis = -1;
     for (let axis = 0; axis < 3; axis++) {

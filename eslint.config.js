@@ -16,6 +16,8 @@ export default tseslint.config(
     },
     rules: {
       eqeqeq: ['error', 'always', { null: 'ignore' }],
+      semi: ['warn', 'always'],
+      'comma-dangle': ['warn', 'always-multiline'],
       'keyword-spacing': ['error', { before: true, after: true }],
       'comma-spacing': ['error', { before: false, after: true }],
       'simple-import-sort/imports': 'error',

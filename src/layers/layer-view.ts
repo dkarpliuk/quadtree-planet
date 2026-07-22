@@ -25,7 +25,8 @@ export class LayerView {
   }
 
   async update(spectatorLocalPosition: Vector3Like) {
-    this._apply(await this._engine.execute(spectatorLocalPosition));
+    const chunk = await this._engine.execute(spectatorLocalPosition);
+    this._apply(chunk);
   }
 
   private _apply(chunk: EngineChunk) {

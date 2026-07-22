@@ -61,7 +61,7 @@ export class Engine<T extends Sector> {
       this._createSector(),
       this._createSector(),
       this._createSector(),
-      this._createSector()
+      this._createSector(),
     ];
 
     this._tree.setChildren(sectors);
@@ -161,7 +161,7 @@ export class Engine<T extends Sector> {
       this._createSector(),
       this._createSector(),
       this._createSector(),
-      this._createSector()
+      this._createSector(),
     ]);
 
     for (const childNode of leafNode.children) {
