@@ -33,7 +33,7 @@ export class Engine<T extends Sector> {
   private _spectatorLocalPosition!: Vector3Like;
 
   /**
-   * set when a split/merge changes the tree topology this tick,
+   * set when a split/merge changes the tree topology this execution,
    * so the stitch pass runs only when neighbor relationships change
    */
   private _topologyDirty = false;

@@ -68,9 +68,8 @@ function initScene() {
 
 function initPlanet() {
   planet = new Planet(camera, planetPositionTest, radiusTest, seedTest, ProcessFrequency.medium);
-  planet.createLandmass(LOD.low, LOD.high, densityTest);
-  planet.initialize();
   scene.add(planet.object3d);
+  planet.createLandmass(LOD.low, LOD.high, densityTest).then(() => planet.initialize());
 }
 
 function initLight() {
