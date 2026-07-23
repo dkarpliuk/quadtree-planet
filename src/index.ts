@@ -11,6 +11,7 @@ import {
   DirectionalLight,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   PerspectiveCamera,
   Scene,
   SphereGeometry,
@@ -48,6 +49,7 @@ function init() {
   initControls();
   initScene();
   initPlanet();
+  initWater();
   initLight();
   initSun();
   initRenderer();
@@ -89,6 +91,17 @@ function initPlanet() {
   planet.object3d.position.copy(planetPosition);
   scene.add(planet.object3d);
   planet.createLandmass().then(() => planet.initialize());
+}
+
+function initWater() {
+  const radius = planetConfig.value.radiusMeters * METER_UNITS;
+  const geometry = new SphereGeometry(radius, 256, 256);
+  const material = new MeshStandardMaterial({
+    color: 0x000000, transparent: true, opacity: 0.5,
+  });
+  const water = new Mesh(geometry, material);
+  water.position.copy(planetPosition);
+  scene.add(water);
 }
 
 function initLight() {
