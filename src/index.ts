@@ -1,5 +1,10 @@
 import './styles.css';
 
+import { type Coordinate, METER_UNITS } from '@config/common';
+import { warmConfig } from '@config/config-service';
+import { controlsConfig } from '@config/controls-config';
+import { planetConfig } from '@config/planet-config';
+import { sceneConfig } from '@config/scene-config';
 import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
 import {
@@ -9,12 +14,11 @@ import {
   PerspectiveCamera,
   Scene,
   SphereGeometry,
-  Vector3,
   WebGLRenderer,
 } from 'three';
+import { Vector3 } from 'three';
 
 import { Controls } from './controls';
-import { LOD, UNIT_KILOMETERS, UpdateFrequency } from './enums';
 import { Planet } from './planet';
 
 let stats: Stats[];
@@ -24,16 +28,19 @@ let renderer: WebGLRenderer;
 let controls: Controls;
 let planet: Planet;
 
-//temporary for development
-const radiusTest = 3000 * UNIT_KILOMETERS;
-const planetPositionTest = new Vector3(0, 0, 0);
-const seedTest = 1234;
-const densityTest = 32;
-const sunPositionTest = new Vector3(0, 0, 1).multiplyScalar(radiusTest * 20);
-const sunRadiusTest = 1000 * UNIT_KILOMETERS;
+await warmConfig();
+
+const planetPosition = getVector3(sceneConfig.value.planetPositionMeters);
+const sunPosition = getVector3(sceneConfig.value.sunPositionMeters);
+const sunRadius = sceneConfig.value.sunRadiusMeters * METER_UNITS;
+const cameraPosition = getVector3(sceneConfig.value.cameraPositionMeters);
+const cameraFar = sceneConfig.value.cameraFarMeters * METER_UNITS;
+
+function getVector3(metersCoord: Coordinate): Vector3 {
+  return new Vector3(metersCoord.x, metersCoord.y, metersCoord.z).multiplyScalar(METER_UNITS);
+}
 
 init();
-animate();
 
 function init() {
   initStats();
@@ -45,6 +52,7 @@ function init() {
   initSun();
   initRenderer();
   initResizeHandler();
+  animate();
 }
 
 function initStats() {
@@ -64,14 +72,12 @@ function initStats() {
 }
 
 function initCamera() {
-  camera = new PerspectiveCamera(
-    70, window.innerWidth / window.innerHeight, 1, 100000 * UNIT_KILOMETERS);
-  camera.position.z = radiusTest * 2;
+  camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, cameraFar);
+  camera.position.copy(cameraPosition);
 }
 
 function initControls() {
-  controls = new Controls();
-  controls.controlledObject = camera;
+  controls = new Controls(camera, controlsConfig.value);
 }
 
 function initScene() {
@@ -79,23 +85,23 @@ function initScene() {
 }
 
 function initPlanet() {
-  planet = new Planet(
-    camera, planetPositionTest, radiusTest, seedTest, UpdateFrequency.medium);
+  planet = new Planet(camera, planetConfig.value);
+  planet.object3d.position.copy(planetPosition);
   scene.add(planet.object3d);
-  planet.createLandmass(LOD.low, LOD.high, densityTest).then(() => planet.initialize());
+  planet.createLandmass().then(() => planet.initialize());
 }
 
 function initLight() {
   const light = new DirectionalLight(0xffffff, Math.PI);
-  light.position.copy(sunPositionTest);
+  light.position.copy(sunPosition);
   scene.add(light);
 }
 
 function initSun() {
-  const geometry = new SphereGeometry(sunRadiusTest, 32, 32);
+  const geometry = new SphereGeometry(sunRadius, 32, 32);
   const material = new MeshBasicMaterial({ color: 0xffffff });
   const sun = new Mesh(geometry, material);
-  sun.position.copy(sunPositionTest);
+  sun.position.copy(sunPosition);
   scene.add(sun);
 }
 

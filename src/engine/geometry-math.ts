@@ -1,6 +1,6 @@
 import { BufferAttribute, BufferGeometry, Matrix4, PlaneGeometry, Vector3 } from 'three';
 
-import { type ModelMatrix, UNIT_RADIUS } from './sector-transform';
+import { type ModelMatrix, NORMALIZED } from './sector-transform';
 
 interface GridTemplate {
   //pristine planar positions to transform from
@@ -54,7 +54,7 @@ export class GeometryMath {
   private static _getOrAddTemplate(density: number): GridTemplate {
     let template = GeometryMath._templates.get(density);
     if (!template) {
-      const plane = new PlaneGeometry(UNIT_RADIUS * 2, UNIT_RADIUS * 2, density, density);
+      const plane = new PlaneGeometry(NORMALIZED * 2, NORMALIZED * 2, density, density);
       template = {
         positions: Float32Array.from(plane.attributes.position.array),
         index: plane.index!,
