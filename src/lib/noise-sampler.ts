@@ -6,16 +6,17 @@ export interface OctaveNoiseOptions {
   frequency: number;
 }
 
-export class NoiseSampler {
-  noise: Noise3D;
+export abstract class NoiseSampler {
+  protected abstract readonly noise: Noise3D;
+  private readonly _options: OctaveNoiseOptions;
 
-  constructor(noiseFn: Noise3D) {
-    this.noise = noiseFn;
+  constructor(options: OctaveNoiseOptions) {
+    this._options = options;
   }
 
-  getOctaveNoise(x: number, y: number, z: number, options: OctaveNoiseOptions): number {
-    const { octaves, persistence } = options;
-    let frequency = options.frequency;
+  getOctaveNoise(x: number, y: number, z: number): number {
+    const { octaves, persistence } = this._options;
+    let frequency = this._options.frequency;
     let total = 0;
     let amplitude = 1;
     let maxValue = 0;
@@ -30,7 +31,4 @@ export class NoiseSampler {
 
     return total / maxValue;
   }
-
-  normalize = (x: number, min: number, max: number) =>
-    Math.abs(x - min) / (max - min);
 }
