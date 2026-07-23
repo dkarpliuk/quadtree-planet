@@ -87,7 +87,7 @@ function initScene() {
 }
 
 function initPlanet() {
-  planet = new Planet(camera, planetConfig.value);
+  planet = new Planet(camera);
   planet.object3d.position.copy(planetPosition);
   scene.add(planet.object3d);
   planet.createLandmass().then(() => planet.initialize());

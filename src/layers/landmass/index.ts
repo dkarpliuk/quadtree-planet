@@ -1,3 +1,4 @@
+import { landmassConfig } from '@config/landmass-config';
 import { wrap } from 'comlink';
 
 import { LayerView } from '../layer-view';
@@ -13,5 +14,5 @@ export async function createLandmassLayer(): Promise<LayerView> {
   const LandmassRemote = wrap<typeof LandmassWorker>(worker);
   const engine = await new LandmassRemote();
 
-  return new LayerView(engine, () => new LandmassMesh());
+  return new LayerView(engine, () => new LandmassMesh(), landmassConfig.value.updateFrequencyMs);
 }

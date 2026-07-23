@@ -1,6 +1,7 @@
 import { Group } from 'three';
 
 import type { EngineChunk, IChunkEngine, Vector3Like } from '../engine';
+import { asyncThrottle } from '../lib/async-throttle';
 import type { SectorMesh } from './sector-mesh';
 
 /**
@@ -15,9 +16,12 @@ export class LayerView {
 
   get object3d(): Group { return this._group; }
 
-  constructor(engine: IChunkEngine, createMesh: () => SectorMesh) {
+  constructor(engine: IChunkEngine, createMesh: () => SectorMesh, updateFrequencyMs = 0) {
     this._engine = engine;
     this._createMesh = createMesh;
+
+    if (updateFrequencyMs > 0)
+      this.update = asyncThrottle(this.update.bind(this), updateFrequencyMs);
   }
 
   async initialize() {
