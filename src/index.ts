@@ -3,7 +3,6 @@ import './styles.css';
 import { type Coordinate, METER_UNITS } from '@config/common';
 import { warmConfig } from '@config/config-service';
 import { controlsConfig } from '@config/controls-config';
-import { planetConfig } from '@config/planet-config';
 import { sceneConfig } from '@config/scene-config';
 import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
@@ -11,7 +10,6 @@ import {
   DirectionalLight,
   Mesh,
   MeshBasicMaterial,
-  MeshStandardMaterial,
   PerspectiveCamera,
   Scene,
   SphereGeometry,
@@ -49,7 +47,6 @@ function init() {
   initControls();
   initScene();
   initPlanet();
-  initWater();
   initLight();
   initSun();
   initRenderer();
@@ -86,22 +83,16 @@ function initScene() {
   scene = new Scene();
 }
 
-function initPlanet() {
+async function initPlanet() {
   planet = new Planet(camera);
   planet.object3d.position.copy(planetPosition);
   scene.add(planet.object3d);
-  planet.createLandmass().then(() => planet.initialize());
-}
+  await Promise.all([
+    planet.createLandmass(),
+    planet.createWater(),
+  ]);
 
-function initWater() {
-  const radius = planetConfig.value.radiusMeters * METER_UNITS;
-  const geometry = new SphereGeometry(radius, 256, 256);
-  const material = new MeshStandardMaterial({
-    color: 0x000000, transparent: true, opacity: 0.5,
-  });
-  const water = new Mesh(geometry, material);
-  water.position.copy(planetPosition);
-  scene.add(water);
+  planet.initialize();
 }
 
 function initLight() {
