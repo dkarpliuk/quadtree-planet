@@ -42,7 +42,7 @@ export class ChunkEngine<T extends Sector> implements IChunkEngine {
     };
   }
 
-  initialize(): EngineChunk {
+  initialize(): Awaitable<EngineChunk> {
     this._engine.initialize();
     return this._flush();
   }
