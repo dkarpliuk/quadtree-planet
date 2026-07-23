@@ -1,17 +1,20 @@
+import { METER_UNITS } from '@config/common';
+import type { ControlsConfig } from '@config/controls-config';
 import { Object3D } from 'three';
 
 export class Controls {
   private _keyboard: Record<string, boolean> = {};
   private _previousTimeStamp = 0;
-  private _controlledObject!: Object3D;
-  private _speedMetersPerSecond = 500;
-  private _turnDegreesPerSecond = 45;
-  private _acceleration = 20;
+  private _controlledObject: Object3D;
+  private _config: ControlsConfig;
+  private _turnRad: number;
+  private _currentSpeed: number;
 
-  get controlledObject(): Object3D { return this._controlledObject; }
-  set controlledObject(value: Object3D) { this._controlledObject = value; }
-
-  constructor() {
+  constructor(controlledObject: Object3D, config: ControlsConfig) {
+    this._controlledObject = controlledObject;
+    this._config = config;
+    this._turnRad = config.turnDegreesSec * Math.PI / 180;
+    this._currentSpeed = config.speedMetersSec * METER_UNITS;
     window.addEventListener('keydown', this._keyDown.bind(this));
     window.addEventListener('keyup', this._keyUp.bind(this));
     window.addEventListener('wheel', this._scroll.bind(this));
@@ -21,29 +24,29 @@ export class Controls {
     const timeFactor = this._calculateTimeFactor();
 
     if (this._keyboard['KeyW'])
-      this.controlledObject.translateZ(-this._speedMetersPerSecond * timeFactor);
+      this._controlledObject.translateZ(-this._currentSpeed * timeFactor);
     if (this._keyboard['KeyS'])
-      this.controlledObject.translateZ(this._speedMetersPerSecond * timeFactor);
+      this._controlledObject.translateZ(this._currentSpeed * timeFactor);
     if (this._keyboard['KeyA'])
-      this.controlledObject.translateX(-this._speedMetersPerSecond * timeFactor);
+      this._controlledObject.translateX(-this._currentSpeed * timeFactor);
     if (this._keyboard['KeyD'])
-      this.controlledObject.translateX(this._speedMetersPerSecond * timeFactor);
+      this._controlledObject.translateX(this._currentSpeed * timeFactor);
     if (this._keyboard['KeyR'])
-      this.controlledObject.translateY(this._speedMetersPerSecond * timeFactor);
+      this._controlledObject.translateY(this._currentSpeed * timeFactor);
     if (this._keyboard['KeyF'])
-      this.controlledObject.translateY(-this._speedMetersPerSecond * timeFactor);
+      this._controlledObject.translateY(-this._currentSpeed * timeFactor);
     if (this._keyboard['KeyQ'])
-      this.controlledObject.rotateZ(this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
+      this._controlledObject.rotateZ(this._turnRad * timeFactor);
     if (this._keyboard['KeyE'])
-      this.controlledObject.rotateZ(-this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
+      this._controlledObject.rotateZ(-this._turnRad * timeFactor);
     if (this._keyboard['ArrowLeft'])
-      this.controlledObject.rotateY(this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
+      this._controlledObject.rotateY(this._turnRad * timeFactor);
     if (this._keyboard['ArrowRight'])
-      this.controlledObject.rotateY(-this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
+      this._controlledObject.rotateY(-this._turnRad * timeFactor);
     if (this._keyboard['ArrowUp'])
-      this.controlledObject.rotateX(-this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
+      this._controlledObject.rotateX(-this._turnRad * timeFactor);
     if (this._keyboard['ArrowDown'])
-      this.controlledObject.rotateX(this._turnDegreesPerSecond * Math.PI / 360 * timeFactor);
+      this._controlledObject.rotateX(this._turnRad * timeFactor);
   }
 
   private _calculateTimeFactor(): number {
@@ -60,9 +63,10 @@ export class Controls {
     this._keyboard[event.code] = false;
 
   private _scroll(e: WheelEvent) {
-    if (e.deltaY > 0 && this._speedMetersPerSecond - this._acceleration >= 0)
-      this._speedMetersPerSecond -= this._acceleration;
+    const acceleration = this._config.accelerationStepMeters * METER_UNITS;
+    if (e.deltaY > 0)
+      this._currentSpeed = Math.max(0, this._currentSpeed - acceleration);
     else if (e.deltaY < 0)
-      this._speedMetersPerSecond += this._acceleration;
+      this._currentSpeed += acceleration;
   }
 }
