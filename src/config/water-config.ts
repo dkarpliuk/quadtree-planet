@@ -8,8 +8,8 @@ export interface WaterConfig {
 }
 
 export const waterConfig = new ConfigService<WaterConfig>({
-  minLod: 3,
-  maxLod: 6,
-  density: 16,
+  minLod: 4,
+  maxLod: 8,
+  density: 32,
   updateFrequencyMs: 1500,
 });

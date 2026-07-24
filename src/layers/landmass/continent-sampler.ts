@@ -2,15 +2,18 @@ import { METER_UNITS } from '@config/common';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
+import { DomainWarp } from '../../lib/domain-warp';
 import { NoiseSampler } from '../../lib/noise-sampler';
 import { SimplexNoiseSampler } from '../../lib/simplex-noise-sampler';
 
 const OCTAVES = 3;
 const PERSISTENCE = 0.5;
 const FLATNESS_MAX_EXPONENT = 4;
+const WARP_OCTAVES = 2;
 
 export class ContinentSampler {
   private readonly _noise: NoiseSampler;
+  private readonly _warp: DomainWarp;
   private readonly _flatnessExponent: number;
   private readonly _coastSlope: number = 0;
 
@@ -23,6 +26,11 @@ export class ContinentSampler {
       persistence: PERSISTENCE,
       frequency: 1 / (options.sizeMeters * METER_UNITS),
     });
+    this._warp = new DomainWarp(seed + 4, options.warpStrengthMeters * METER_UNITS, {
+      octaves: WARP_OCTAVES,
+      persistence: PERSISTENCE,
+      frequency: 1 / (options.warpSizeMeters * METER_UNITS),
+    });
     this._flatnessExponent = 1 + options.flatnessFactor * (FLATNESS_MAX_EXPONENT - 1);
 
     if (waterEnabled) {
@@ -34,7 +42,8 @@ export class ContinentSampler {
   }
 
   sample(vx: number, vy: number, vz: number): number {
-    const raw = this._noise.getOctaveNoise(vx, vy, vz);
+    const [wx, wy, wz] = this._warp.apply(vx, vy, vz);
+    const raw = this._noise.getOctaveNoise(wx, wy, wz);
     const magnitude = Math.abs(raw);
 
     const linear = this._coastSlope * magnitude;
