@@ -22,8 +22,9 @@ export class LandmassSector extends Sector {
   }
 
   protected getHeightOffset(vx: number, vy: number, vz: number): number {
-    const continent = LandmassSector._continent!.sample(vx, vy, vz);
-    
-    return continent * this._continentAmplitude;
+    const continentHeight = LandmassSector._continent!.sample(vx, vy, vz) * this._continentAmplitude;
+    const mountainHeight = LandmassSector._mountain!.sample(vx, vy, vz, continentHeight);
+
+    return continentHeight + mountainHeight;
   }
 }
