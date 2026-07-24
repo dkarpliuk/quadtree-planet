@@ -84,11 +84,16 @@ function initScene() {
   scene = new Scene();
 }
 
-function initPlanet() {
-  planet = new Planet(camera, planetConfig.value);
+async function initPlanet() {
+  planet = new Planet(camera);
   planet.object3d.position.copy(planetPosition);
   scene.add(planet.object3d);
-  planet.createLandmass().then(() => planet.initialize());
+  await Promise.all([
+    planet.createLandmass(),
+    planetConfig.value.waterEnabled && planet.createWater(),
+  ]);
+
+  planet.initialize();
 }
 
 function initLight() {

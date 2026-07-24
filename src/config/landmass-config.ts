@@ -1,28 +1,32 @@
-import { LOD } from './common';
+import { KM } from './common';
 import { ConfigService } from './config-service';
 
+export interface ContinentOptions {
+  sizeMeters: number;
+  amplitudeMeters: number;
+}
+
 export interface TerrainOptions {
-  noiseOctaves: number;
-  noisePersistence: number;
-  noiseFrequency: number;
-  heightScale: number;
+  continents: ContinentOptions;
 }
 
 export interface LandmassConfig {
   minLod: number;
   maxLod: number;
   density: number;
+  updateFrequencyMs: number;
   terrain: TerrainOptions;
 }
 
 export const landmassConfig = new ConfigService<LandmassConfig>({
-  minLod: LOD.low,
-  maxLod: LOD.high,
+  minLod: 4,
+  maxLod: 12,
   density: 32,
+  updateFrequencyMs: 500,
   terrain: {
-    noiseOctaves: 12,
-    noisePersistence: 0.5,
-    noiseFrequency: 0.75,
-    heightScale: 0.03,
+    continents: {
+      sizeMeters: 3000 * KM,
+      amplitudeMeters: 12 * KM,
+    },
   },
 });

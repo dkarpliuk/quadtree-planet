@@ -65,7 +65,7 @@ const addressConversionMatrix = new Map<Axis, Map<Direction, ConversionEntry>>([
 
 /**
  * FSM FOR QUADTREE NEIGHBORS IN ANY DIRECTION
- * see http://web.archive.org/web/20120907211934/http://ww1.ucmss.com/books/LFS/CSREA2006/MSV4517.pdf
+ * @see http://web.archive.org/web/20120907211934/http://ww1.ucmss.com/books/LFS/CSREA2006/MSV4517.pdf
  */
 const neighboursFSM: Map<Direction, [number, Direction | "halt"]>[] = [
   new Map([
