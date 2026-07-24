@@ -6,7 +6,7 @@ import { smoothstep } from '../../lib/math';
 import { NoiseSampler } from '../../lib/noise-sampler';
 import { SimplexNoiseSampler } from '../../lib/simplex-noise-sampler';
 
-const OCTAVES = 4;
+const OCTAVES = 2;
 const PERSISTENCE = 0.5;
 
 //fade the roughness out over twice its amplitude near the waterline: keeps it below the

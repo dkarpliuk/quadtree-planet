@@ -52,7 +52,7 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
     },
     roughness: {
       sizeMeters: 3 * KM,
-      amplitudeMeters: 600,
+      amplitudeMeters: 300,
     },
   },
 });
