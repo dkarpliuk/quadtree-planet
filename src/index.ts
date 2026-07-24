@@ -3,6 +3,7 @@ import './styles.css';
 import { type Coordinate, METER_UNITS } from '@config/common';
 import { warmConfig } from '@config/config-service';
 import { controlsConfig } from '@config/controls-config';
+import { planetConfig } from '@config/planet-config';
 import { sceneConfig } from '@config/scene-config';
 import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
@@ -89,7 +90,7 @@ async function initPlanet() {
   scene.add(planet.object3d);
   await Promise.all([
     planet.createLandmass(),
-    planet.createWater(),
+    planetConfig.value.waterEnabled && planet.createWater(),
   ]);
 
   planet.initialize();

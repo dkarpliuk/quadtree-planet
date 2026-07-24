@@ -1,5 +1,6 @@
 import { METER_UNITS } from '@config/common';
-import type { ContinentOptions } from '@config/landmass-config';
+import { landmassConfig } from '@config/landmass-config';
+import { planetConfig } from '@config/planet-config';
 
 import { NoiseSampler } from '../../lib/noise-sampler';
 import { SimplexNoiseSampler } from '../../lib/simplex-noise-sampler';
@@ -11,9 +12,12 @@ const FLATNESS_MAX_EXPONENT = 4;
 export class ContinentSampler {
   private readonly _noise: NoiseSampler;
   private readonly _flatnessExponent: number;
-  private readonly _coastSlope: number;
+  private readonly _coastSlope: number = 0;
 
-  constructor(seed: number, options: ContinentOptions) {
+  constructor() {
+    const options = landmassConfig.value.terrain.continents;
+    const { seed, waterEnabled } = planetConfig.value;
+
     this._noise = new SimplexNoiseSampler(seed, {
       octaves: OCTAVES,
       persistence: PERSISTENCE,
@@ -21,9 +25,12 @@ export class ContinentSampler {
     });
     this._flatnessExponent = 1 + options.flatnessFactor * (FLATNESS_MAX_EXPONENT - 1);
 
-    //slope of the linear coast, set so it meets the exponential exactly at the coast height
-    const coastHeightNorm = options.coastHeightMeters / options.amplitudeMeters;
-    this._coastSlope = Math.pow(coastHeightNorm, (this._flatnessExponent - 1) / this._flatnessExponent);
+    if (waterEnabled) {
+      //slope of the linear coast, set so it meets the exponential exactly at the coast height
+      const coastHeightNorm = options.coastHeightMeters / options.amplitudeMeters;
+      const coastExponent = (this._flatnessExponent - 1) / this._flatnessExponent;
+      this._coastSlope = Math.pow(coastHeightNorm, coastExponent);
+    }
   }
 
   sample(vx: number, vy: number, vz: number): number {

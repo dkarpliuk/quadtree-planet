@@ -1,5 +1,6 @@
 import { METER_UNITS } from '@config/common';
-import type { MountainOptions } from '@config/landmass-config';
+import { landmassConfig } from '@config/landmass-config';
+import { planetConfig } from '@config/planet-config';
 
 import { NoiseSampler } from '../../lib/noise-sampler';
 import { SimplexNoiseSampler } from '../../lib/simplex-noise-sampler';
@@ -17,7 +18,10 @@ export class MountainSampler {
   private readonly _region: NoiseSampler;
   private readonly _regionThreshold: number;
 
-  constructor(seed: number, options: MountainOptions) {
+  constructor() {
+    const options = landmassConfig.value.terrain.mountains;
+    const seed = planetConfig.value.seed;
+
     this._ridge = new SimplexNoiseSampler(seed + 1, {
       octaves: RIDGE_OCTAVES,
       persistence: RIDGE_PERSISTENCE,

@@ -14,17 +14,16 @@ export class LandmassSector extends Sector {
 
   constructor() {
     super(planetConfig.value.radiusMeters * METER_UNITS, landmassConfig.value.density);
-
-    const { continents, mountains } = landmassConfig.value.terrain;
-    const seed = planetConfig.value.seed;
-    this._continentAmplitude = continents.amplitudeMeters * METER_UNITS;
-    LandmassSector._continent ??= new ContinentSampler(seed, continents);
-    LandmassSector._mountain ??= new MountainSampler(seed, mountains);
+    const { amplitudeMeters } = landmassConfig.value.terrain.continents;
+    this._continentAmplitude = amplitudeMeters * METER_UNITS;
+    
+    LandmassSector._continent ??= new ContinentSampler();
+    LandmassSector._mountain ??= new MountainSampler();
   }
 
   protected getHeightOffset(vx: number, vy: number, vz: number): number {
     const continent = LandmassSector._continent!.sample(vx, vy, vz);
-
+    
     return continent * this._continentAmplitude;
   }
 }
