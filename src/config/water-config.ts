@@ -5,6 +5,7 @@ export interface WaterConfig {
   maxLod: number;
   density: number;
   updateFrequencyMs: number;
+  seaLevelMeters: number;
 }
 
 export const waterConfig = new ConfigService<WaterConfig>({
@@ -12,4 +13,5 @@ export const waterConfig = new ConfigService<WaterConfig>({
   maxLod: 6,
   density: 16,
   updateFrequencyMs: 1500,
+  seaLevelMeters: 0,
 });

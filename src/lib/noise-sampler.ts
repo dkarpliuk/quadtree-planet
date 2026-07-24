@@ -31,4 +31,23 @@ export abstract class NoiseSampler {
 
     return total / maxValue;
   }
+
+  //ridged fBm for sharp ridges, output [0, 1]
+  getRidged(x: number, y: number, z: number): number {
+    const { octaves, persistence } = this._options;
+    let frequency = this._options.frequency;
+    let total = 0;
+    let amplitude = 1;
+    let maxValue = 0;
+
+    for (let i = 0; i < octaves; i++) {
+      const ridge = 1 - Math.abs(this.noise(x * frequency, y * frequency, z * frequency));
+      total += ridge * ridge * amplitude;
+      maxValue += amplitude;
+      amplitude *= persistence;
+      frequency *= 2;
+    }
+
+    return total / maxValue;
+  }
 }

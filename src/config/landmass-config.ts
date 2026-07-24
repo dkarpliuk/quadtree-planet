@@ -3,13 +3,20 @@ import { ConfigService } from './config-service';
 
 export interface ContinentOptions {
   sizeMeters: number;
+  amplitudeMeters: number;
   flatnessFactor: number;
+  shoreWidthMeters: number;
+}
+
+export interface MountainOptions {
+  regionSizeMeters: number;
+  coverageFactor: number;
+  amplitudeMeters: number;
 }
 
 export interface TerrainOptions {
-  amplitudeMeters: number;
-  seaLevelMeters: number;
   continents: ContinentOptions;
+  mountains: MountainOptions;
 }
 
 export interface LandmassConfig {
@@ -26,11 +33,16 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
   density: 32,
   updateFrequencyMs: 500,
   terrain: {
-    amplitudeMeters: 6 * KM,
-    seaLevelMeters: 0,
     continents: {
       sizeMeters: 2000 * KM,
+      amplitudeMeters: 6 * KM,
       flatnessFactor: 0.5,
+      shoreWidthMeters: 100,
+    },
+    mountains: {
+      regionSizeMeters: 1000 * KM,
+      coverageFactor: 0.6,
+      amplitudeMeters: 14 * KM,
     },
   },
 });
