@@ -5,6 +5,7 @@ export interface ContinentOptions {
   sizeMeters: number;
   amplitudeMeters: number;
   flatnessFactor: number;
+  coastHeightMeters: number;
 }
 
 export interface MountainOptions {
@@ -36,6 +37,7 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
       sizeMeters: 2000 * KM,
       amplitudeMeters: 6 * KM,
       flatnessFactor: 0.5,
+      coastHeightMeters: 100,
     },
     mountains: {
       regionSizeMeters: 1000 * KM,

@@ -11,6 +11,7 @@ const FLATNESS_MAX_EXPONENT = 4;
 export class ContinentSampler {
   private readonly _noise: NoiseSampler;
   private readonly _flatnessExponent: number;
+  private readonly _coastSlope: number;
 
   constructor(seed: number, options: ContinentOptions) {
     this._noise = new SimplexNoiseSampler(seed, {
@@ -19,11 +20,19 @@ export class ContinentSampler {
       frequency: 1 / (options.sizeMeters * METER_UNITS),
     });
     this._flatnessExponent = 1 + options.flatnessFactor * (FLATNESS_MAX_EXPONENT - 1);
+
+    //slope of the linear coast, set so it meets the exponential exactly at the coast height
+    const coastHeightNorm = options.coastHeightMeters / options.amplitudeMeters;
+    this._coastSlope = Math.pow(coastHeightNorm, (this._flatnessExponent - 1) / this._flatnessExponent);
   }
 
   sample(vx: number, vy: number, vz: number): number {
-    const elevation = this._noise.getOctaveNoise(vx, vy, vz);
+    const raw = this._noise.getOctaveNoise(vx, vy, vz);
+    const magnitude = Math.abs(raw);
 
-    return Math.sign(elevation) * Math.pow(Math.abs(elevation), this._flatnessExponent);
+    const linear = this._coastSlope * magnitude;
+    const exponential = Math.pow(magnitude, this._flatnessExponent);
+
+    return Math.sign(raw) * Math.max(linear, exponential);
   }
 }
