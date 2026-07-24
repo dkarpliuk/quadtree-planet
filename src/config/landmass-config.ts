@@ -14,6 +14,8 @@ export interface MountainOptions {
   regionSizeMeters: number;
   coverageFactor: number;
   maxHeightMeters: number;
+  warpStrengthMeters: number;
+  warpSizeMeters: number;
 }
 
 export interface RoughnessOptions {
@@ -53,6 +55,8 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
       regionSizeMeters: 1000 * KM,
       coverageFactor: 0.6,
       maxHeightMeters: 20 * KM,
+      warpStrengthMeters: 80 * KM,
+      warpSizeMeters: 300 * KM,
     },
     roughness: {
       sizeMeters: 3 * KM,

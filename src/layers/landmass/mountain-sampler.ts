@@ -2,6 +2,7 @@ import { METER_UNITS } from '@config/common';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
+import { DomainWarp } from '../../lib/domain-warp';
 import { smoothstep } from '../../lib/math';
 import { NoiseSampler } from '../../lib/noise-sampler';
 import { SimplexNoiseSampler } from '../../lib/simplex-noise-sampler';
@@ -10,6 +11,7 @@ const RIDGE_OCTAVES = 4;
 const RIDGE_PERSISTENCE = 0.5;
 const REGION_OCTAVES = 2;
 const REGION_PERSISTENCE = 0.5;
+const WARP_OCTAVES = 1;
 
 //a mountain is this many times wider than it is tall (realistic ~25-30° slopes)
 const MOUNTAIN_ASPECT = 4;
@@ -17,6 +19,7 @@ const MOUNTAIN_ASPECT = 4;
 export class MountainSampler {
   private readonly _ridge: NoiseSampler;
   private readonly _region: NoiseSampler;
+  private readonly _warp: DomainWarp;
   private readonly _regionThreshold: number;
   private readonly _maxHeight: number;
   private readonly _coastHeight: number;
@@ -30,6 +33,11 @@ export class MountainSampler {
       persistence: RIDGE_PERSISTENCE,
       frequency: 1 / (mountains.maxHeightMeters * MOUNTAIN_ASPECT * METER_UNITS),
     });
+    this._warp = new DomainWarp(seed + 7, mountains.warpStrengthMeters * METER_UNITS, {
+      octaves: WARP_OCTAVES,
+      persistence: RIDGE_PERSISTENCE,
+      frequency: 1 / (mountains.warpSizeMeters * METER_UNITS),
+    });
     this._region = new SimplexNoiseSampler(seed + 2, {
       octaves: REGION_OCTAVES,
       persistence: REGION_PERSISTENCE,
@@ -41,7 +49,8 @@ export class MountainSampler {
   }
 
   sample(vx: number, vy: number, vz: number, continentHeight: number): number {
-    const region = (this._region.getOctaveNoise(vx, vy, vz) + 1) / 2;
+    const [wx, wy, wz] = this._warp.apply(vx, vy, vz);
+    const region = (this._region.getOctaveNoise(wx, wy, wz) + 1) / 2;
     if (region <= this._regionThreshold) return 0;
 
     const mask = (region - this._regionThreshold) / (1 - this._regionThreshold);
