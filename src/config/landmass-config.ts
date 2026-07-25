@@ -4,6 +4,7 @@ import { ConfigService } from './config-service';
 
 export interface ContinentOptions {
   sizeMeters: number;
+  tectonicFactor: number;
   elevationProfile: ElevationProfile;
 }
 
@@ -27,6 +28,7 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
   terrain: {
     continents: {
       sizeMeters: 3000 * KM,
+      tectonicFactor: 0.25,
       elevationProfile: [
         [-1, -6000],
         [-0.3, -4000],
