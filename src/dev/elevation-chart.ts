@@ -1,4 +1,4 @@
-import { Chart } from 'chart.js/auto';
+import { Chart, type ChartConfiguration } from 'chart.js/auto';
 
 import { type ElevationProfile, ElevationProfileSampler } from '../lib/elevation-profile-sampler';
 
@@ -9,8 +9,8 @@ interface Point {
   y: number;
 }
 
-function sampleElevationProfile(profile: ElevationProfile): Point[] {
-  const sampler = new ElevationProfileSampler(profile);
+function sampleElevationProfile(profile: ElevationProfile, raw = false): Point[] {
+  const sampler = new ElevationProfileSampler(profile, raw);
   sampler.warm();
 
   const min = profile[0][0];
@@ -26,16 +26,14 @@ function sampleElevationProfile(profile: ElevationProfile): Point[] {
   return curve;
 }
 
-export function renderElevationProfile(canvas: HTMLCanvasElement, profile: ElevationProfile): void {
-  const controlPoints = profile.map(([x, y]) => ({ x, y }));
-
-  new Chart(canvas, {
+function chartConfig(profile: ElevationProfile): ChartConfiguration<'scatter'> {
+  return {
     type: 'scatter',
     data: {
       datasets: [
         {
           label: 'control points',
-          data: controlPoints,
+          data: profile.map(([x, y]) => ({ x, y })),
           backgroundColor: '#00f',
           borderColor: '#00f',
           borderWidth: 1,
@@ -43,8 +41,8 @@ export function renderElevationProfile(canvas: HTMLCanvasElement, profile: Eleva
           pointHoverRadius: 3,
         },
         {
-          label: 'elevation',
-          data: sampleElevationProfile(profile),
+          label: 'hypsometry',
+          data: sampleElevationProfile(profile, true),
           showLine: true,
           backgroundColor: '#fff',
           pointHoverBackgroundColor: '#fff',
@@ -52,6 +50,17 @@ export function renderElevationProfile(canvas: HTMLCanvasElement, profile: Eleva
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 3,
+        },
+        {
+          label: 'gaussian',
+          data: sampleElevationProfile(profile),
+          showLine: true,
+          backgroundColor: '#fff',
+          borderColor: '#f00',
+          borderWidth: 1,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          hidden: true,
         },
       ],
     },
@@ -63,5 +72,23 @@ export function renderElevationProfile(canvas: HTMLCanvasElement, profile: Eleva
         tooltip: { position: 'nearest' },
       },
     },
+  };
+}
+
+export function renderElevationProfile(canvas: HTMLCanvasElement, profiles: Record<string, ElevationProfile>): void {
+  const select = document.getElementById('profile-select') as HTMLSelectElement;
+
+  const names = Object.keys(profiles);
+  select.replaceChildren(...names.map((name) => new Option(name, name)));
+  let profile = profiles[names[0]];
+
+  const chart = new Chart(canvas, chartConfig(profile));
+
+  select.addEventListener('change', () => {
+    profile = profiles[select.value];
+    chart.data.datasets[0].data = profile.map(([x, y]) => ({ x, y }));
+    chart.data.datasets[1].data = sampleElevationProfile(profile, true);
+    chart.data.datasets[2].data = sampleElevationProfile(profile);
+    chart.update();
   });
 }

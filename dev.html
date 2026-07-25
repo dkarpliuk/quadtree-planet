@@ -4,27 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dev</title>
+    <style>
+      .section {
+        padding: 1rem;
+      }
+
+      .section h2 {
+        margin-top: 0;
+      }
+
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+        margin-bottom: 1rem;
+      }
+    </style>
   </head>
   <body>
-    <div style="padding: 1rem">
-      <h2 style="margin-top: 0">Continent elevation profile</h2>
-      <canvas id="continent-profile" width="900" height="500"></canvas>
-    </div>
-    <div style="padding: 1rem">
-      <h2 style="margin-top: 0">Noise max calibration</h2>
-      <div style="display: grid; grid-template-columns: auto auto; gap: 0.5rem; align-items: center; justify-content: start">
-        <label for="noise-seeds">seeds:</label>
-        <input id="noise-seeds" type="number" value="5" min="1" />
-        <label for="noise-samples">samples per seed:</label>
-        <input id="noise-samples" type="number" value="200000" min="1" />
-        <label for="noise-octaves">octaves:</label>
-        <input id="noise-octaves" type="number" value="3" min="1" />
-        <label for="noise-persistence">persistence:</label>
-        <input id="noise-persistence" type="number" value="0.5" step="0.1" min="0" max="1" />
-        <label for="noise-percentile">percentile:</label>
-        <input id="noise-percentile" type="number" value="0.999" step="0.001" min="0" max="1" />
-        <button id="noise-calculate" style="grid-column: span 2">Calculate max</button>
+    <div class="section">
+      <h2>Elevation profile</h2>
+      <div class="controls">
+        <label for="profile-select">profile:</label>
+        <select id="profile-select"></select>
       </div>
+      <canvas id="elevation-profile" width="900" height="500"></canvas>
     </div>
     <script type="module" src="/src/dev/main.ts"></script>
   </body>

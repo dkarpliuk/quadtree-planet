@@ -5,18 +5,16 @@ import { landmassConfig } from '@config/landmass-config';
 import { Chart } from 'chart.js/auto';
 
 import { renderElevationProfile } from './elevation-chart';
-import { setupNoiseCalibration } from './noise-calibration';
 
 Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
 
 async function main(): Promise<void> {
   await warmConfig();
 
-  renderElevationProfile(
-    document.getElementById('continent-profile') as HTMLCanvasElement,
-    landmassConfig.value.terrain.continents.elevationProfile);
-
-  setupNoiseCalibration();
+  const canvas = document.getElementById('elevation-profile') as HTMLCanvasElement;
+  renderElevationProfile(canvas, {
+    continent: landmassConfig.value.terrain.continents.elevationProfile
+  });
 }
 
 await main();
