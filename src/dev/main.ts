@@ -8,7 +8,7 @@ import { type ElevationProfile, ElevationProfileSampler } from '../lib/elevation
 
 Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
 
-const ELEVATION_SAMPLES = 64;
+const ELEVATION_SAMPLES = 128;
 
 interface Point {
   x: number;
@@ -42,8 +42,8 @@ function renderElevationProfile(canvas: HTMLCanvasElement, profile: ElevationPro
         {
           label: 'control points',
           data: controlPoints,
-          backgroundColor: '#000',
-          borderColor: '#000',
+          backgroundColor: '#00f',
+          borderColor: '#00f',
           borderWidth: 1,
           pointRadius: 3,
           pointHoverRadius: 3,
@@ -53,7 +53,8 @@ function renderElevationProfile(canvas: HTMLCanvasElement, profile: ElevationPro
           data: sampleElevationProfile(profile),
           showLine: true,
           backgroundColor: '#fff',
-          borderColor: '#000',
+          pointHoverBackgroundColor: '#fff',
+          borderColor: '#00f',
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 3,
