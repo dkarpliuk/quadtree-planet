@@ -3,22 +3,23 @@ import { monotoneCubic } from './math';
 export type ElevationProfile = [number, number][];
 
 const RESOLUTION = 512;
-const SIGMA = 1 / 3; //noise ±1 sits at ±3σ
 
 //logistic approximation of the normal CDF
-function gaussianCdf(x: number, sigma: number): number {
-  return 1 / (1 + Math.exp((-1.702 * x) / sigma));
+function gaussianCdf(x: number, std: number): number {
+  return 1 / (1 + Math.exp((-1.702 * x) / std));
 }
 
 export class ElevationProfileSampler {
   private readonly _profile: ElevationProfile;
-  private readonly _raw: boolean;
+  private readonly _hypsometry: boolean;
+  private readonly _std: number;
   private readonly _lut = new Float64Array(RESOLUTION);
   private readonly _scale = (RESOLUTION - 1) / 2; //hot path optimization
 
-  constructor(profile: ElevationProfile, raw = false) {
+  constructor(profile: ElevationProfile, hypsometry = true, std = 1) {
     this._profile = profile;
-    this._raw = raw;
+    this._hypsometry = hypsometry;
+    this._std = std;
   }
 
   warm(): void {
@@ -28,11 +29,9 @@ export class ElevationProfileSampler {
 
     for (let i = 0; i < RESOLUTION; i++) {
       const noise = -1 + (2 * i) / (RESOLUTION - 1);
-      //redistribute noise onto area fraction
-      //so the profile reads as hypsometry, unless raw
-      this._lut[i] = this._raw
-        ? curve(noise)
-        : curve(2 * gaussianCdf(noise, SIGMA) - 1);
+      this._lut[i] = this._hypsometry
+        ? curve(2 * gaussianCdf(noise, this._std) - 1)
+        : curve(noise);
     }
   }
 

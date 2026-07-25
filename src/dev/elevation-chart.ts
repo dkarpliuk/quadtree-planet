@@ -9,8 +9,8 @@ interface Point {
   y: number;
 }
 
-function sampleElevationProfile(profile: ElevationProfile, raw = false): Point[] {
-  const sampler = new ElevationProfileSampler(profile, raw);
+function sampleElevationProfile(profile: ElevationProfile): Point[] {
+  const sampler = new ElevationProfileSampler(profile, false);
   sampler.warm();
 
   const min = profile[0][0];
@@ -41,8 +41,8 @@ function chartConfig(profile: ElevationProfile): ChartConfiguration<'scatter'> {
           pointHoverRadius: 3,
         },
         {
-          label: 'hypsometry',
-          data: sampleElevationProfile(profile, true),
+          label: 'profile',
+          data: sampleElevationProfile(profile),
           showLine: true,
           backgroundColor: '#fff',
           pointHoverBackgroundColor: '#fff',
@@ -50,17 +50,6 @@ function chartConfig(profile: ElevationProfile): ChartConfiguration<'scatter'> {
           borderWidth: 1,
           pointRadius: 0,
           pointHoverRadius: 3,
-        },
-        {
-          label: 'gaussian',
-          data: sampleElevationProfile(profile),
-          showLine: true,
-          backgroundColor: '#fff',
-          borderColor: '#f00',
-          borderWidth: 1,
-          pointRadius: 0,
-          pointHoverRadius: 3,
-          hidden: true,
         },
       ],
     },
@@ -87,8 +76,7 @@ export function renderElevationProfile(canvas: HTMLCanvasElement, profiles: Reco
   select.addEventListener('change', () => {
     profile = profiles[select.value];
     chart.data.datasets[0].data = profile.map(([x, y]) => ({ x, y }));
-    chart.data.datasets[1].data = sampleElevationProfile(profile, true);
-    chart.data.datasets[2].data = sampleElevationProfile(profile);
+    chart.data.datasets[1].data = sampleElevationProfile(profile);
     chart.update();
   });
 }

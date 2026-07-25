@@ -5,6 +5,7 @@ import { landmassConfig } from '@config/landmass-config';
 import { Chart } from 'chart.js/auto';
 
 import { renderElevationProfile } from './elevation-chart';
+import { setupStdCalculation } from './std-calc';
 
 Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
 
@@ -15,6 +16,8 @@ async function main(): Promise<void> {
   renderElevationProfile(canvas, {
     continent: landmassConfig.value.terrain.continents.elevationProfile
   });
+
+  setupStdCalculation();
 }
 
 await main();

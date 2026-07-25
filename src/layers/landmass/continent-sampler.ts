@@ -8,6 +8,7 @@ import { SimplexNoise } from '../../lib/simplex-noise';
 
 const OCTAVES = 8;
 const PERSISTENCE = 0.5;
+const NOISE_STD = 0.246; //dev: std-calc
 
 export class ContinentSampler {
   private readonly _noise: Noise;
@@ -20,7 +21,7 @@ export class ContinentSampler {
       persistence: PERSISTENCE,
       frequency: 1 / (options.sizeMeters * METER_UNITS),
     });
-    this._profile = new ElevationProfileSampler(options.elevationProfile);
+    this._profile = new ElevationProfileSampler(options.elevationProfile, true, NOISE_STD);
     this._profile.warm();
   }
 
