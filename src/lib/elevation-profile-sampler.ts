@@ -25,13 +25,15 @@ export class ElevationProfileSampler {
   }
 
   sample(noise: number): number {
-    const t = (noise + 1) * this._scale; //lut fractional index
-    if (t <= 0) return this._lut[0];
-    if (t >= RESOLUTION - 1) return this._lut[RESOLUTION - 1];
-
-    const i = t | 0; //fast truncate
+    //lut fractional index
+    const t = (noise + 1) * this._scale;
+    
+    //clamp to a valid segment; the tail extrapolates via f
+    const i = Math.min(Math.max(t | 0, 0), RESOLUTION - 2);
     const f = t - i;
-    //linear interpolation between adjacent nodes
+    
+    //linear interpolation between nodes
+    //extrapolated past the ends by the edge segment slope
     return this._lut[i] + (this._lut[i + 1] - this._lut[i]) * f;
   }
 }
