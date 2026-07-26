@@ -6,10 +6,10 @@ import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
 
 const OCTAVES = 3;
-const PERSISTENCE = 0.5;
+const PERSISTENCE = 0.6;
 
 //a hill is this many times wider than it is tall
-const ROUGHNESS_ASPECT = 10;
+const ROUGHNESS_ASPECT = 30;
 
 export class RoughnessSampler {
   private readonly _noise: Noise;
@@ -24,6 +24,6 @@ export class RoughnessSampler {
   }
 
   sample(coord: Coordinate): number {
-    return (this._noise.getFbm(coord.x, coord.y, coord.z) + 1) / 2;
+    return (this._noise.getBillow(coord.x, coord.y, coord.z) + 1) / 2;
   }
 }

@@ -14,7 +14,7 @@ async function main(): Promise<void> {
 
   const canvas = document.getElementById('elevation-profile') as HTMLCanvasElement;
   renderElevationProfile(canvas, {
-    continent: landmassConfig.value.terrain.continents.elevationProfile
+    continent: landmassConfig.value.terrain.continents.elevationProfile,
   });
 
   setupStdCalculation();

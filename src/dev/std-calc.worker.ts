@@ -12,7 +12,7 @@ function measureStd(options: StdOptions): number {
   const noise = new SimplexNoise(Math.random(), {
     octaves: options.octaves,
     persistence: options.persistence,
-    frequency: 1
+    frequency: 1,
   });
   
   return noise.getStd(options.samples);

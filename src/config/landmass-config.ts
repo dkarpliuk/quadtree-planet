@@ -59,7 +59,7 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
       coverageFactor: 0.45,
     },
     roughness: {
-      heightMeters: 300,
+      heightMeters: 500,
     },
   },
 });

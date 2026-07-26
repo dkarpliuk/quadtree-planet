@@ -7,7 +7,7 @@ const measureStd = wrap<(options: StdCalcOptions) => number>(
 
 async function runStdCalculation(
   button: HTMLButtonElement,
-  options: StdCalcOptions
+  options: StdCalcOptions,
 ): Promise<void> {
   button.disabled = true;
   button.style.cursor = 'wait';

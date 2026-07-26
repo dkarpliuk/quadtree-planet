@@ -1,6 +1,16 @@
+import type { Coordinate } from "@config/common";
+
 export function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
+}
+
+export function lerp(a: Coordinate, b: Coordinate, t: number): Coordinate {
+  return {
+    x: a.x + t * (b.x - a.x),
+    y: a.y + t * (b.y - a.y),
+    z: a.z + t * (b.z - a.z),
+  };
 }
 
 //Monotone cubic interpolation (Fritsch–Carlson): passes through the points without overshoot.

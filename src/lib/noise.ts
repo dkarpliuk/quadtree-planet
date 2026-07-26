@@ -66,4 +66,23 @@ export abstract class Noise {
 
     return total / maxValue;
   }
+
+  //output [0, 1]
+  getBillow(x: number, y: number, z: number): number {
+    const { octaves, persistence } = this._options;
+    let frequency = this._options.frequency;
+    let total = 0;
+    let amplitude = 1;
+    let maxValue = 0;
+
+    for (let i = 0; i < octaves; i++) {
+      const value = Math.abs(this.noise(x * frequency, y * frequency, z * frequency));
+      total += value * amplitude;
+      maxValue += amplitude;
+      amplitude *= persistence;
+      frequency *= 2;
+    }
+
+    return total / maxValue;
+  }
 }

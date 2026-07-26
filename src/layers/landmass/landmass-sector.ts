@@ -1,10 +1,10 @@
-import { type Coordinate, KM, METER_UNITS } from '@config/common';
+import { KM, METER_UNITS } from '@config/common';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
 import { Sector } from '../../engine';
 import { DomainWarp } from '../../lib/domain-warp';
-import { smoothstep } from '../../lib/math';
+import { lerp, smoothstep } from '../../lib/math';
 import { ContinentSampler } from './continent-sampler';
 import { MountainSampler } from './mountain-sampler';
 import { RoughnessSampler } from './roughness-sampler';
@@ -21,15 +21,6 @@ const MOUNTAIN_WARP = 2;
 //fine single-octave warp that frays the coastline; strength is a fraction of its feature size
 const COAST_WARP_SIZE = 40 * KM;
 const COAST_WARP_STRENGTH = 0.1;
-
-//scales the shared warp displacement (warped - raw) by a factor, no extra noise sampling
-function scaleWarp(raw: Coordinate, warped: Coordinate, factor: number): Coordinate {
-  return {
-    x: raw.x + factor * (warped.x - raw.x),
-    y: raw.y + factor * (warped.y - raw.y),
-    z: raw.z + factor * (warped.z - raw.z),
-  };
-}
 
 export class LandmassSector extends Sector {
   private static _continent: ContinentSampler | null = null;
@@ -86,7 +77,7 @@ export class LandmassSector extends Sector {
 
     const mountainCeiling = this._maxHeight * smoothstep(0, this._mountainCoast, base);
     const mountainHeadroom = Math.max(0, mountainCeiling - base);
-    const mountainWarped = scaleWarp(raw, warped, MOUNTAIN_WARP);
+    const mountainWarped = lerp(raw, warped, MOUNTAIN_WARP);
     base += LandmassSector._mountain!.sample(raw, mountainWarped) * mountainHeadroom;
 
     const roughness = LandmassSector._roughness!.sample(raw);
