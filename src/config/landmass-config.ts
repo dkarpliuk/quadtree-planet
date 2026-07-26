@@ -49,9 +49,9 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
       ],
     },
     mountains: {
-      maxHeightMeters: 12 * KM,
-      regionSizeMeters: 1500 * KM,
-      coverageFactor: 0.5,
+      maxHeightMeters: 12000,
+      regionSizeMeters: 800 * KM,
+      coverageFactor: 0.4,
     },
   },
 });

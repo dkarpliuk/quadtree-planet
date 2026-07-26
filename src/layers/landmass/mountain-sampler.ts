@@ -2,6 +2,7 @@ import { METER_UNITS } from '@config/common';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
+import { smoothstep } from '../../lib/math';
 import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
 
@@ -10,7 +11,11 @@ const RIDGE_PERSISTENCE = 0.5;
 const REGION_OCTAVES = 2;
 const REGION_PERSISTENCE = 0.5;
 
+//a mountain is this many times wider than it is tall
 const MOUNTAIN_ASPECT = 6;
+
+//width of the region border fade, in region-noise units (smaller = tighter border)
+const REGION_FADE = 0.15;
 
 export class MountainSampler {
   private readonly _ridge: Noise;
@@ -37,7 +42,7 @@ export class MountainSampler {
     const region = (this._region.getFbm(vx, vy, vz) + 1) / 2;
     if (region <= this._regionThreshold) return 0;
 
-    const mask = (region - this._regionThreshold) / (1 - this._regionThreshold);
+    const mask = smoothstep(this._regionThreshold, this._regionThreshold + REGION_FADE, region);
     return this._ridge.getRidgedFbm(vx, vy, vz) * mask;
   }
 }
