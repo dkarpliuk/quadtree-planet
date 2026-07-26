@@ -1,33 +1,96 @@
-import { METER_UNITS } from '@config/common';
-import { landmassConfig, type TerrainOptions } from '@config/landmass-config';
+import { type Coordinate, KM, METER_UNITS } from '@config/common';
+import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
-import seedrandom from 'seedrandom';
-import { createNoise3D } from 'simplex-noise';
 
 import { Sector } from '../../engine';
-import { NoiseSampler, type OctaveNoiseOptions } from './noise-sampler';
+import { DomainWarp } from '../../lib/domain-warp';
+import { smoothstep } from '../../lib/math';
+import { ContinentSampler } from './continent-sampler';
+import { MountainSampler } from './mountain-sampler';
+import { RoughnessSampler } from './roughness-sampler';
+
+//fraction of the mountain height over which they fade in from the coast
+const COAST_FACTOR = 0.05;
+
+const WARP_OCTAVES = 5;
+const WARP_PERSISTENCE = 0.5;
+
+//extra warp strength for mountain regions, relative to the continent warp
+const MOUNTAIN_WARP = 2;
+
+//fine single-octave warp that frays the coastline; strength is a fraction of its feature size
+const COAST_WARP_SIZE = 40 * KM;
+const COAST_WARP_STRENGTH = 0.1;
+
+//scales the shared warp displacement (warped - raw) by a factor, no extra noise sampling
+function scaleWarp(raw: Coordinate, warped: Coordinate, factor: number): Coordinate {
+  return {
+    x: raw.x + factor * (warped.x - raw.x),
+    y: raw.y + factor * (warped.y - raw.y),
+    z: raw.z + factor * (warped.z - raw.z),
+  };
+}
 
 export class LandmassSector extends Sector {
-  //one sampler shared by every landmass sector
-  private static _noiseSampler: NoiseSampler | null = null;
-  private _noiseOptions: OctaveNoiseOptions;
-  private _terrainOptions: TerrainOptions;
-  
+  private static _continent: ContinentSampler | null = null;
+  private static _mountain: MountainSampler | null = null;
+  private static _roughness: RoughnessSampler | null = null;
+  private static _continentWarp: DomainWarp | null = null;
+  private static _coastWarp: DomainWarp | null = null;
+
+  private readonly _maxHeight: number;
+  private readonly _mountainCoast: number;
+  private readonly _roughnessHeight: number;
+  private readonly _roughnessCoast: number;
+
   constructor() {
-    const radius = planetConfig.value.radiusMeters * METER_UNITS;
-    super(radius, landmassConfig.value.density);
-    const seed = planetConfig.value.seed.toString();
-    LandmassSector._noiseSampler ??= new NoiseSampler(createNoise3D(seedrandom(seed)));
-    this._terrainOptions = landmassConfig.value.terrain;
-    this._noiseOptions = {
-      octaves: this._terrainOptions.noiseOctaves,
-      persistence: this._terrainOptions.noisePersistence,
-      frequency: this._terrainOptions.noiseFrequency / radius,
-    };
+    super(planetConfig.value.radiusMeters * METER_UNITS, landmassConfig.value.density);
+    this._maxHeight = landmassConfig.value.terrain.mountains.maxHeightMeters;
+    this._mountainCoast = COAST_FACTOR * this._maxHeight;
+    this._roughnessHeight = landmassConfig.value.terrain.roughness.heightMeters;
+    this._roughnessCoast = COAST_FACTOR * this._roughnessHeight;
+    LandmassSector._continent ??= new ContinentSampler();
+    LandmassSector._mountain ??= new MountainSampler();
+    LandmassSector._roughness ??= new RoughnessSampler();
+    LandmassSector._continentWarp ??= LandmassSector.buildContinentWarp();
+    LandmassSector._coastWarp ??= LandmassSector.buildCoastWarp();
+  }
+
+  private static buildContinentWarp(): DomainWarp {
+    const continents = landmassConfig.value.terrain.continents;
+    const size = continents.sizeMeters * METER_UNITS;
+    return new DomainWarp(planetConfig.value.seed + 1, size * continents.tectonicFactor, {
+      octaves: WARP_OCTAVES,
+      persistence: WARP_PERSISTENCE,
+      frequency: 1 / size,
+    });
+  }
+
+  private static buildCoastWarp(): DomainWarp {
+    const size = COAST_WARP_SIZE * METER_UNITS;
+    return new DomainWarp(planetConfig.value.seed + 5, COAST_WARP_STRENGTH * size, {
+      octaves: 1,
+      persistence: WARP_PERSISTENCE,
+      frequency: 1 / size,
+    });
   }
 
   protected getHeightOffset(vx: number, vy: number, vz: number): number {
-    const noise = LandmassSector._noiseSampler!.getOctaveNoise(vx, vy, vz, this._noiseOptions);
-    return noise * this._sphereRadius * this._terrainOptions.heightScale;
+    const raw = { x: vx, y: vy, z: vz };
+    const coastWarped = LandmassSector._coastWarp!.apply(raw);
+    const warped = LandmassSector._continentWarp!.apply(coastWarped);
+
+    let base = LandmassSector._continent!.sample(warped);
+
+    const mountainCeiling = this._maxHeight * smoothstep(0, this._mountainCoast, base);
+    const mountainHeadroom = Math.max(0, mountainCeiling - base);
+    const mountainWarped = scaleWarp(raw, warped, MOUNTAIN_WARP);
+    base += LandmassSector._mountain!.sample(raw, mountainWarped) * mountainHeadroom;
+
+    const roughnessCeiling = Math.min(this._roughnessHeight, Math.abs(base));
+    const roughnessMask = smoothstep(0, this._roughnessCoast, Math.abs(base));
+    base += LandmassSector._roughness!.sample(raw) * roughnessCeiling * roughnessMask;
+
+    return base * METER_UNITS;
   }
 }

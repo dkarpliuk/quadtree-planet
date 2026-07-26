@@ -7,6 +7,14 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        dev: fileURLToPath(new URL('./dev.html', import.meta.url)),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@config': fileURLToPath(new URL('./src/config', import.meta.url)),

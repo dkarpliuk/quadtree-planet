@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dev</title>
+    <style>
+      .section {
+        padding: 1rem;
+      }
+
+      .section h2 {
+        margin-top: 0;
+      }
+
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+        margin-bottom: 1rem;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 0.5rem;
+        align-items: baseline;
+        justify-content: start;
+      }
+
+      .controls-grid button {
+        grid-column: span 2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="section">
+      <h2>Elevation profile</h2>
+      <div class="controls">
+        <label for="profile-select">profile:</label>
+        <select id="profile-select"></select>
+      </div>
+      <canvas id="elevation-profile" width="900" height="500"></canvas>
+    </div>
+    <div class="section">
+      <h2>Standard deviation</h2>
+      <div class="controls-grid">
+        <label for="std-samples">samples:</label>
+        <input id="std-samples" type="number" value="10000" min="1" />
+        <label for="std-octaves">octaves:</label>
+        <input id="std-octaves" type="number" value="8" min="1" />
+        <label for="std-persistence">persistence:</label>
+        <input id="std-persistence" type="number" value="0.5" step="0.1" min="0" max="1" />
+        <button id="std-calculate">Calculate std</button>
+      </div>
+    </div>
+    <script type="module" src="/src/dev/main.ts"></script>
+  </body>
+</html>
