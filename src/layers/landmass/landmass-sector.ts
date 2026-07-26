@@ -42,6 +42,7 @@ export class LandmassSector extends Sector {
   private readonly _mountainCoast: number;
   private readonly _roughnessHeight: number;
   private readonly _roughnessCoast: number;
+  private readonly _waterEnabled: boolean;
 
   constructor() {
     super(planetConfig.value.radiusMeters * METER_UNITS, landmassConfig.value.density);
@@ -49,6 +50,7 @@ export class LandmassSector extends Sector {
     this._mountainCoast = COAST_FACTOR * this._maxHeight;
     this._roughnessHeight = landmassConfig.value.terrain.roughness.heightMeters;
     this._roughnessCoast = COAST_FACTOR * this._roughnessHeight;
+    this._waterEnabled = planetConfig.value.waterEnabled;
     LandmassSector._continent ??= new ContinentSampler();
     LandmassSector._mountain ??= new MountainSampler();
     LandmassSector._roughness ??= new RoughnessSampler();
@@ -87,9 +89,15 @@ export class LandmassSector extends Sector {
     const mountainWarped = scaleWarp(raw, warped, MOUNTAIN_WARP);
     base += LandmassSector._mountain!.sample(raw, mountainWarped) * mountainHeadroom;
 
-    const roughnessCeiling = Math.min(this._roughnessHeight, Math.abs(base));
-    const roughnessMask = smoothstep(0, this._roughnessCoast, Math.abs(base));
-    base += LandmassSector._roughness!.sample(raw) * roughnessCeiling * roughnessMask;
+    const roughness = LandmassSector._roughness!.sample(raw);
+    if (this._waterEnabled) {
+      //fade to the waterline so hills never surface as islands or texture the coast
+      const ceiling = Math.min(this._roughnessHeight, Math.abs(base));
+      const mask = smoothstep(0, this._roughnessCoast, Math.abs(base));
+      base += roughness * ceiling * mask;
+    } else {
+      base += roughness * this._roughnessHeight;
+    }
 
     return base * METER_UNITS;
   }
