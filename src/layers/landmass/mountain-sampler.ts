@@ -1,4 +1,4 @@
-import { METER_UNITS } from '@config/common';
+import { type Coordinate, METER_UNITS } from '@config/common';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
@@ -15,7 +15,7 @@ const REGION_PERSISTENCE = 0.5;
 const MOUNTAIN_ASPECT = 6;
 
 //width of the region border fade, in region-noise units (smaller = tighter border)
-const REGION_FADE = 0.15;
+const REGION_FADE = 0.3;
 
 export class MountainSampler {
   private readonly _ridge: Noise;
@@ -38,11 +38,11 @@ export class MountainSampler {
     this._regionThreshold = 1 - options.coverageFactor;
   }
 
-  sample(vx: number, vy: number, vz: number): number {
-    const region = (this._region.getFbm(vx, vy, vz) + 1) / 2;
+  sample(raw: Coordinate, warped: Coordinate): number {
+    const region = (this._region.getFbm(warped.x, warped.y, warped.z) + 1) / 2;
     if (region <= this._regionThreshold) return 0;
 
     const mask = smoothstep(this._regionThreshold, this._regionThreshold + REGION_FADE, region);
-    return this._ridge.getRidgedFbm(vx, vy, vz) * mask;
+    return this._ridge.getRidgedFbm(raw.x, raw.y, raw.z) * mask;
   }
 }
