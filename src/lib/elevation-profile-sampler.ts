@@ -11,6 +11,24 @@ function gaussianCdf(x: number, std: number): number {
 
 export interface HypsometryOptions {
   noiseStd: number;
+  landFactor: number;
+}
+
+//the hypsometry profile is normalized by default (50:50 land/water)
+//landFactor shifts the sea-level control point to the desired split
+function shiftLandWater(profile: ElevationProfile, landFactor?: number): ElevationProfile {
+  if (!landFactor) return profile;
+  const anchor = 1 - 2 * landFactor;
+
+  return profile.map(([x, y]): [number, number] => {
+    if (x <= 0) {
+      //water side: remap [-1, 0] onto [-1, anchor]
+      return [-1 + (x + 1) * (anchor + 1), y];
+    }
+
+    //land side: remap [0, 1] onto [anchor, 1]
+    return [anchor + x * (1 - anchor), y];
+  });
 }
 
 export class ElevationProfileSampler {
@@ -20,7 +38,7 @@ export class ElevationProfileSampler {
   private readonly _scale = (RESOLUTION - 1) / 2; //hot path optimization
 
   constructor(profile: ElevationProfile, hypsometry?: HypsometryOptions) {
-    this._profile = profile;
+    this._profile = shiftLandWater(profile, hypsometry?.landFactor);
     this._hypsometry = hypsometry;
   }
 

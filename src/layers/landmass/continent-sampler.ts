@@ -33,7 +33,8 @@ export class ContinentSampler {
       frequency: 1 / size,
     });
     this._profile = new ElevationProfileSampler(options.elevationProfile, {
-      noiseStd: NOISE_STD
+      noiseStd: NOISE_STD,
+      landFactor: options.landFactor,
     });
     this._profile.warm();
   }
