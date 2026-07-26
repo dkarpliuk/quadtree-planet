@@ -32,12 +32,12 @@ export class LandmassSector extends Sector {
   private static _continentWarp: DomainWarp | null = null;
 
   private readonly _maxHeight: number;
-  private readonly _coastWidth: number;
+  private readonly _mountainCoast: number;
 
   constructor() {
     super(planetConfig.value.radiusMeters * METER_UNITS, landmassConfig.value.density);
     this._maxHeight = landmassConfig.value.terrain.mountains.maxHeightMeters;
-    this._coastWidth = COAST_FACTOR * this._maxHeight;
+    this._mountainCoast = COAST_FACTOR * this._maxHeight;
     LandmassSector._continent ??= new ContinentSampler();
     LandmassSector._mountain ??= new MountainSampler();
     LandmassSector._continentWarp ??= LandmassSector.buildContinentWarp();
@@ -58,12 +58,12 @@ export class LandmassSector extends Sector {
     const warped = LandmassSector._continentWarp!.apply(raw);
 
     const continent = LandmassSector._continent!.sample(warped);
-    const ceiling = this._maxHeight * smoothstep(0, this._coastWidth, continent);
-    const headroom = Math.max(0, ceiling - continent);
-
+    
+    const mountainCeiling = this._maxHeight * smoothstep(0, this._mountainCoast, continent);
+    const mountainHeadroom = Math.max(0, mountainCeiling - continent);
     const mountainWarped = scaleWarp(raw, warped, MOUNTAIN_WARP);
-    const mountains = LandmassSector._mountain!.sample(raw, mountainWarped) * headroom;
+    const mountain = LandmassSector._mountain!.sample(raw, mountainWarped) * mountainHeadroom;
 
-    return (continent + mountains) * METER_UNITS;
+    return (continent + mountain) * METER_UNITS;
   }
 }
