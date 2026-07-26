@@ -32,7 +32,9 @@ export class ContinentSampler {
       persistence: WARP_PERSISTENCE,
       frequency: 1 / size,
     });
-    this._profile = new ElevationProfileSampler(options.elevationProfile, true, NOISE_STD);
+    this._profile = new ElevationProfileSampler(options.elevationProfile, {
+      noiseStd: NOISE_STD
+    });
     this._profile.warm();
   }
 

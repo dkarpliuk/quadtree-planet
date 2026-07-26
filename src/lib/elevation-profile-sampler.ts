@@ -9,17 +9,19 @@ function gaussianCdf(x: number, std: number): number {
   return 1 / (1 + Math.exp((-1.702 * x) / std));
 }
 
+export interface HypsometryOptions {
+  noiseStd: number;
+}
+
 export class ElevationProfileSampler {
   private readonly _profile: ElevationProfile;
-  private readonly _hypsometry: boolean;
-  private readonly _std: number;
+  private readonly _hypsometry?: HypsometryOptions;
   private readonly _lut = new Float64Array(RESOLUTION);
   private readonly _scale = (RESOLUTION - 1) / 2; //hot path optimization
 
-  constructor(profile: ElevationProfile, hypsometry = true, std = 1) {
+  constructor(profile: ElevationProfile, hypsometry?: HypsometryOptions) {
     this._profile = profile;
     this._hypsometry = hypsometry;
-    this._std = std;
   }
 
   warm(): void {
@@ -30,7 +32,7 @@ export class ElevationProfileSampler {
     for (let i = 0; i < RESOLUTION; i++) {
       const noise = -1 + (2 * i) / (RESOLUTION - 1);
       this._lut[i] = this._hypsometry
-        ? curve(2 * gaussianCdf(noise, this._std) - 1)
+        ? curve(2 * gaussianCdf(noise, this._hypsometry.noiseStd) - 1)
         : curve(noise);
     }
   }

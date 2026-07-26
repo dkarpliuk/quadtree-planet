@@ -10,7 +10,7 @@ interface Point {
 }
 
 function sampleElevationProfile(profile: ElevationProfile): Point[] {
-  const sampler = new ElevationProfileSampler(profile, false);
+  const sampler = new ElevationProfileSampler(profile);
   sampler.warm();
 
   const min = profile[0][0];
