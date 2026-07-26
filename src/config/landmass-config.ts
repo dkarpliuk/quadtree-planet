@@ -9,8 +9,15 @@ export interface ContinentOptions {
   elevationProfile: ElevationProfile;
 }
 
+export interface MountainOptions {
+  maxHeightMeters: number;
+  regionSizeMeters: number;
+  coverageFactor: number;
+}
+
 export interface TerrainOptions {
   continents: ContinentOptions;
+  mountains: MountainOptions;
 }
 
 export interface LandmassConfig {
@@ -40,6 +47,11 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
         [0.9, 2600],
         [1, 3000],
       ],
+    },
+    mountains: {
+      maxHeightMeters: 12 * KM,
+      regionSizeMeters: 1500 * KM,
+      coverageFactor: 0.5,
     },
   },
 });
