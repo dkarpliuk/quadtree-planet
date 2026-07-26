@@ -15,9 +15,14 @@ export interface MountainOptions {
   coverageFactor: number;
 }
 
+export interface RoughnessOptions {
+  heightMeters: number;
+}
+
 export interface TerrainOptions {
   continents: ContinentOptions;
   mountains: MountainOptions;
+  roughness: RoughnessOptions;
 }
 
 export interface LandmassConfig {
@@ -52,6 +57,9 @@ export const landmassConfig = new ConfigService<LandmassConfig>({
       maxHeightMeters: 12000,
       regionSizeMeters: 800 * KM,
       coverageFactor: 0.45,
+    },
+    roughness: {
+      heightMeters: 300,
     },
   },
 });

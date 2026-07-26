@@ -7,6 +7,7 @@ import { DomainWarp } from '../../lib/domain-warp';
 import { smoothstep } from '../../lib/math';
 import { ContinentSampler } from './continent-sampler';
 import { MountainSampler } from './mountain-sampler';
+import { RoughnessSampler } from './roughness-sampler';
 
 //fraction of the mountain height over which they fade in from the coast
 const COAST_FACTOR = 0.05;
@@ -29,17 +30,23 @@ function scaleWarp(raw: Coordinate, warped: Coordinate, factor: number): Coordin
 export class LandmassSector extends Sector {
   private static _continent: ContinentSampler | null = null;
   private static _mountain: MountainSampler | null = null;
+  private static _roughness: RoughnessSampler | null = null;
   private static _continentWarp: DomainWarp | null = null;
 
   private readonly _maxHeight: number;
   private readonly _mountainCoast: number;
+  private readonly _roughnessHeight: number;
+  private readonly _roughnessCoast: number;
 
   constructor() {
     super(planetConfig.value.radiusMeters * METER_UNITS, landmassConfig.value.density);
     this._maxHeight = landmassConfig.value.terrain.mountains.maxHeightMeters;
     this._mountainCoast = COAST_FACTOR * this._maxHeight;
+    this._roughnessHeight = landmassConfig.value.terrain.roughness.heightMeters;
+    this._roughnessCoast = COAST_FACTOR * this._roughnessHeight;
     LandmassSector._continent ??= new ContinentSampler();
     LandmassSector._mountain ??= new MountainSampler();
+    LandmassSector._roughness ??= new RoughnessSampler();
     LandmassSector._continentWarp ??= LandmassSector.buildContinentWarp();
   }
 
@@ -57,13 +64,17 @@ export class LandmassSector extends Sector {
     const raw = { x: vx, y: vy, z: vz };
     const warped = LandmassSector._continentWarp!.apply(raw);
 
-    const continent = LandmassSector._continent!.sample(warped);
-    
-    const mountainCeiling = this._maxHeight * smoothstep(0, this._mountainCoast, continent);
-    const mountainHeadroom = Math.max(0, mountainCeiling - continent);
-    const mountainWarped = scaleWarp(raw, warped, MOUNTAIN_WARP);
-    const mountain = LandmassSector._mountain!.sample(raw, mountainWarped) * mountainHeadroom;
+    let base = LandmassSector._continent!.sample(warped);
 
-    return (continent + mountain) * METER_UNITS;
+    const mountainCeiling = this._maxHeight * smoothstep(0, this._mountainCoast, base);
+    const mountainHeadroom = Math.max(0, mountainCeiling - base);
+    const mountainWarped = scaleWarp(raw, warped, MOUNTAIN_WARP);
+    base += LandmassSector._mountain!.sample(raw, mountainWarped) * mountainHeadroom;
+
+    const roughnessCeiling = Math.min(this._roughnessHeight, Math.abs(base));
+    const roughnessMask = smoothstep(0, this._roughnessCoast, Math.abs(base));
+    base += LandmassSector._roughness!.sample(raw) * roughnessCeiling * roughnessMask;
+
+    return base * METER_UNITS;
   }
 }
