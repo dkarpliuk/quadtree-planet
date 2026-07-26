@@ -1,4 +1,4 @@
-import { type Coordinate, METER_UNITS } from '@config/common';
+import { type Coordinate, KM, METER_UNITS } from '@config/common';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
@@ -12,11 +12,15 @@ import { RoughnessSampler } from './roughness-sampler';
 //fraction of the mountain height over which they fade in from the coast
 const COAST_FACTOR = 0.05;
 
-const WARP_OCTAVES = 6;
+const WARP_OCTAVES = 5;
 const WARP_PERSISTENCE = 0.5;
 
 //extra warp strength for mountain regions, relative to the continent warp
 const MOUNTAIN_WARP = 2;
+
+//fine single-octave warp that frays the coastline; strength is a fraction of its feature size
+const COAST_WARP_SIZE = 40 * KM;
+const COAST_WARP_STRENGTH = 0.1;
 
 //scales the shared warp displacement (warped - raw) by a factor, no extra noise sampling
 function scaleWarp(raw: Coordinate, warped: Coordinate, factor: number): Coordinate {
@@ -32,6 +36,7 @@ export class LandmassSector extends Sector {
   private static _mountain: MountainSampler | null = null;
   private static _roughness: RoughnessSampler | null = null;
   private static _continentWarp: DomainWarp | null = null;
+  private static _coastWarp: DomainWarp | null = null;
 
   private readonly _maxHeight: number;
   private readonly _mountainCoast: number;
@@ -48,6 +53,7 @@ export class LandmassSector extends Sector {
     LandmassSector._mountain ??= new MountainSampler();
     LandmassSector._roughness ??= new RoughnessSampler();
     LandmassSector._continentWarp ??= LandmassSector.buildContinentWarp();
+    LandmassSector._coastWarp ??= LandmassSector.buildCoastWarp();
   }
 
   private static buildContinentWarp(): DomainWarp {
@@ -60,9 +66,19 @@ export class LandmassSector extends Sector {
     });
   }
 
+  private static buildCoastWarp(): DomainWarp {
+    const size = COAST_WARP_SIZE * METER_UNITS;
+    return new DomainWarp(planetConfig.value.seed + 5, COAST_WARP_STRENGTH * size, {
+      octaves: 1,
+      persistence: WARP_PERSISTENCE,
+      frequency: 1 / size,
+    });
+  }
+
   protected getHeightOffset(vx: number, vy: number, vz: number): number {
     const raw = { x: vx, y: vy, z: vz };
-    const warped = LandmassSector._continentWarp!.apply(raw);
+    const coastWarped = LandmassSector._coastWarp!.apply(raw);
+    const warped = LandmassSector._continentWarp!.apply(coastWarped);
 
     let base = LandmassSector._continent!.sample(warped);
 
