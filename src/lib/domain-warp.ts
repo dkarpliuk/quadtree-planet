@@ -1,7 +1,6 @@
-import type { Coordinate } from '@config/common';
-
 import { Noise, type OctaveNoiseOptions } from './noise';
 import { SimplexNoise } from './simplex-noise';
+import type { Coordinate } from './types';
 
 //Offsets from Inigo Quilez, "Domain Warping"
 const OFFSET_Y: [number, number, number] = [5.2, 1.3, 8.3];

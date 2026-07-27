@@ -8,5 +8,3 @@ export const METER_UNITS = 0.001;
 
 //meters per kilometer, for readable SI distances
 export const KM = 1000;
-
-export interface Coordinate { x: number; y: number; z: number }

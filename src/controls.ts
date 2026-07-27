@@ -1,4 +1,4 @@
-import { METER_UNITS } from '@config/common';
+import { METER_UNITS } from '@config/constants';
 import type { ControlsConfig } from '@config/controls-config';
 import { Object3D } from 'three';
 

@@ -1,5 +1,6 @@
-import { type Coordinate, KM } from './common';
+import type { Coordinate } from '../lib/types';
 import { ConfigService } from './config-service';
+import { KM } from './constants';
 
 export interface SceneConfig {
   planetPositionMeters: Coordinate;

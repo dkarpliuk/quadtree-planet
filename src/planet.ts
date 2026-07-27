@@ -29,10 +29,8 @@ export class Planet {
     this._layers.push(layer);
   }
 
-  initialize() {
-    for (const layer of this._layers) {
-      layer.initialize();
-    }
+  async initialize() {
+    await Promise.all(this._layers.map(layer => layer.initialize()));
   }
 
   update() {

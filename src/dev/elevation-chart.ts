@@ -1,17 +1,15 @@
+import type { ElevationProfile } from '@config/landmass-config';
 import { Chart, type ChartConfiguration } from 'chart.js/auto';
 
-import { type ElevationProfile, ElevationProfileSampler } from '../lib/elevation-profile-sampler';
+import { ElevationSampler } from '../lib/elevation-sampler';
 
 const ELEVATION_SAMPLES = 128;
 
-interface Point {
-  x: number;
-  y: number;
-}
+interface Point { x: number; y: number; }
 
 function sampleElevationProfile(profile: ElevationProfile): Point[] {
-  const sampler = new ElevationProfileSampler(profile);
-  sampler.warm();
+  const sampler = new ElevationSampler();
+  sampler.warm(profile);
 
   const min = profile[0][0];
   const max = profile[profile.length - 1][0];

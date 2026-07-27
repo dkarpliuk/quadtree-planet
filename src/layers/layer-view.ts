@@ -1,7 +1,8 @@
 import { Group } from 'three';
 
-import type { EngineChunk, IChunkEngine, Vector3Like } from '../engine';
+import type { EngineChunk, IChunkEngine } from '../engine';
 import { asyncThrottle } from '../lib/async-throttle';
+import type { Coordinate } from '../lib/types';
 import type { SectorMesh } from './sector-mesh';
 
 /**
@@ -28,7 +29,7 @@ export class LayerView {
     this._apply(await this._engine.initialize());
   }
 
-  async update(spectatorLocalPosition: Vector3Like) {
+  async update(spectatorLocalPosition: Coordinate) {
     const chunk = await this._engine.execute(spectatorLocalPosition);
     this._apply(chunk);
   }

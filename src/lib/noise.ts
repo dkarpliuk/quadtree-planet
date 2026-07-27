@@ -14,22 +14,7 @@ export abstract class Noise {
     this._options = options;
   }
 
-  //standard deviation of the fBM output, measured over a batch of samples
-  getStd(samples: number): number {
-    const spread = 1000 / this._options.frequency; //span many feature periods so samples decorrelate
-    let sum = 0;
-    let sumSquares = 0;
-
-    for (let i = 0; i < samples; i++) {
-      const value = this.getFbm(Math.random() * spread, Math.random() * spread, Math.random() * spread);
-      sum += value;
-      sumSquares += value * value;
-    }
-
-    const mean = sum / samples;
-    return Math.sqrt(sumSquares / samples - mean * mean);
-  }
-
+  //output [-1, 1]
   getFbm(x: number, y: number, z: number): number {
     const { octaves, persistence } = this._options;
     let frequency = this._options.frequency;

@@ -1,6 +1,7 @@
-import type { ElevationProfile } from '../lib/elevation-profile-sampler';
-import { KM } from './common';
 import { ConfigService } from './config-service';
+import { KM } from './constants';
+
+export type ElevationProfile = [number, number][];
 
 export interface ContinentOptions {
   sizeMeters: number;

@@ -1,5 +1,5 @@
-import { KM } from './common';
 import { ConfigService } from './config-service';
+import { KM } from './constants';
 
 export interface ControlsConfig {
   speedMetersSec: number;

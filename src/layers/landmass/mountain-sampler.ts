@@ -1,10 +1,11 @@
-import { type Coordinate, METER_UNITS } from '@config/common';
+import { METER_UNITS } from '@config/constants';
 import { landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
 
-import { smoothstep } from '../../lib/math';
+import { lerp3D, smoothstep } from '../../lib/math';
 import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
+import type { Coordinate } from '../../lib/types';
 
 const RIDGE_OCTAVES = 4;
 const RIDGE_PERSISTENCE = 0.5;
@@ -17,15 +18,29 @@ const MOUNTAIN_ASPECT = 6;
 //width of the region border fade, in region-noise units (smaller = tighter border)
 const REGION_FADE = 0.3;
 
-export class MountainSampler {
-  private readonly _ridge: Noise;
-  private readonly _region: Noise;
-  private readonly _regionThreshold: number;
+//fraction of the mountain height over which they fade in from the coast
+const COAST_FACTOR = 0.05;
 
-  constructor() {
+//extra warp strength for mountain regions, relative to the continent warp
+const MOUNTAIN_WARP = 2;
+
+export interface MountainSampleOptions {
+  raw: Coordinate;
+  continentWarped: Coordinate;
+  base: number;
+}
+
+class MountainSampler {
+  private _noise!: Noise;
+  private _region!: Noise;
+  private _regionThreshold!: number;
+  private _maxHeight!: number;
+  private _coast!: number;
+
+  warm(): void {
     const options = landmassConfig.value.terrain.mountains;
     const seed = planetConfig.value.seed;
-    this._ridge = new SimplexNoise(seed + 2, {
+    this._noise = new SimplexNoise(seed + 2, {
       octaves: RIDGE_OCTAVES,
       persistence: RIDGE_PERSISTENCE,
       frequency: 1 / (options.maxHeightMeters * MOUNTAIN_ASPECT * METER_UNITS),
@@ -36,13 +51,21 @@ export class MountainSampler {
       frequency: 1 / (options.regionSizeMeters * METER_UNITS),
     });
     this._regionThreshold = 1 - options.coverageFactor;
+    this._maxHeight = options.maxHeightMeters;
+    this._coast = COAST_FACTOR * options.maxHeightMeters;
   }
 
-  sample(raw: Coordinate, warped: Coordinate): number {
+  sample({ raw, continentWarped, base }: MountainSampleOptions): number {
+    const warped = lerp3D(raw, continentWarped, MOUNTAIN_WARP);
     const region = (this._region.getFbm(warped.x, warped.y, warped.z) + 1) / 2;
     if (region <= this._regionThreshold) return 0;
 
+    //room left under the coast-faded ceiling, so underwater ridges rise only up to the waterline
+    const headroom = Math.max(0, this._maxHeight * smoothstep(0, this._coast, base) - base);
     const mask = smoothstep(this._regionThreshold, this._regionThreshold + REGION_FADE, region);
-    return this._ridge.getRidgedFbm(raw.x, raw.y, raw.z) * mask;
+
+    return this._noise.getRidgedFbm(raw.x, raw.y, raw.z) * mask * headroom;
   }
 }
+
+export const mountainSampler = new MountainSampler();

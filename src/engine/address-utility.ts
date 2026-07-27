@@ -1,4 +1,4 @@
-import { Axis, Direction } from './enums';
+import { Axis, Direction } from './types';
 
 type ConversionEntry = [Axis, number[] | null];
 

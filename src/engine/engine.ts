@@ -1,8 +1,9 @@
+import { calcDistance } from '../lib/math';
+import type { Coordinate } from '../lib/types';
 import { AddressUtility } from './address-utility';
-import { CalcMisc, type Vector3Like } from './calc-misc';
-import { Direction } from './enums';
 import { Sector, type SectorBuffer } from './sector';
 import { TreeNode } from './tree-node';
+import { Direction } from './types';
 
 //for each Z-order quadrant (0 1 / 2 3), the two sides lying on the parent's
 //outer edge; the other two sides face siblings inside the parent
@@ -30,7 +31,7 @@ export class Engine<T extends Sector> {
   private readonly _tree: TreeNode<T>;
   private readonly _addresses = new Set<string>();
 
-  private _spectatorLocalPosition!: Vector3Like;
+  private _spectatorLocalPosition!: Coordinate;
 
   /**
    * set when a split/merge changes the tree topology this execution,
@@ -71,7 +72,7 @@ export class Engine<T extends Sector> {
     });
   }
 
-  execute(spectatorLocalPosition: Vector3Like) {
+  execute(spectatorLocalPosition: Coordinate) {
     this._spectatorLocalPosition = spectatorLocalPosition;
     this._topologyDirty = false;
 
@@ -125,7 +126,7 @@ export class Engine<T extends Sector> {
     this._options.sphereRadius / Math.pow(2, level - 2);
 
   private _getDistanceToSpectator(sector: Sector): number {
-    const distance = CalcMisc.calcDistance(this._spectatorLocalPosition, sector.center);
+    const distance = calcDistance(this._spectatorLocalPosition, sector.center);
     return Math.max(0, distance - sector.boundingRadius);
   }
 
