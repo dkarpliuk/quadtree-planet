@@ -7,7 +7,7 @@ import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
 import type { Coordinate } from '../../lib/types';
 
-const RIDGE_OCTAVES = 4;
+const RIDGE_OCTAVES = 5;
 const RIDGE_PERSISTENCE = 0.5;
 
 //how much the crest of a ridge is rounded off, in noise units
