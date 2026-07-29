@@ -7,11 +7,11 @@ import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
 import type { Coordinate } from '../../lib/types';
 
-const RIDGE_OCTAVES = 5;
+const RIDGE_OCTAVES = 6;
 const RIDGE_PERSISTENCE = 0.5;
+const RIDGE_CREASE = 0.9;
+const RIDGE_GAIN = 0.6;
 
-//how much the crest of a ridge is rounded off, in noise units
-const RIDGE_CREASE = 0.1;
 const REGION_OCTAVES = 2;
 const REGION_PERSISTENCE = 0.5;
 
@@ -48,6 +48,7 @@ class MountainSampler {
       persistence: RIDGE_PERSISTENCE,
       frequency: 1 / (options.maxHeightMeters * MOUNTAIN_ASPECT * METER_UNITS),
       crease: RIDGE_CREASE,
+      gain: RIDGE_GAIN,
     });
     this._region = new SimplexNoise(seed + 3, {
       octaves: REGION_OCTAVES,
@@ -68,7 +69,7 @@ class MountainSampler {
     const headroom = Math.max(0, this._maxHeight * smoothstep(0, this._coast, base) - base);
     const mask = smoothstep(this._regionThreshold, this._regionThreshold + REGION_FADE, region);
 
-    return this._noise.getRidgedFbm(raw.x, raw.y, raw.z) * mask * headroom;
+    return this._noise.getRidged(raw.x, raw.y, raw.z) * mask * headroom;
   }
 }
 

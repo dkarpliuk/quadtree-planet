@@ -7,11 +7,11 @@ import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
 import type { Coordinate } from '../../lib/types';
 
-const OCTAVES = 3;
-const PERSISTENCE = 0.6;
+const OCTAVES = 4;
+const PERSISTENCE = 0.5;
 
-//how much the bottom of a valley between hills is rounded off, in noise units
-const CREASE = 0.1;
+const CREASE = 0.8;
+const GAIN = 0.5;
 
 //a hill is this many times wider than it is tall
 const ROUGHNESS_ASPECT = 30;
@@ -46,6 +46,7 @@ class RoughnessSampler {
       persistence: PERSISTENCE,
       frequency: 1 / (options.heightMeters * ROUGHNESS_ASPECT * METER_UNITS),
       crease: CREASE,
+      gain: GAIN,
     });
     this._region = new SimplexNoise(seed + 6, {
       octaves: 2,

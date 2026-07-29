@@ -21,13 +21,13 @@ export function calcDistance(from: Coordinate, to: Coordinate): number {
 }
 
 /**
- * abs() folds at zero, which creases along the whole zero level of a noise and reads as a
- * drawn line; within the crease band it gives way to a parabola matching its value and slope
- * @param invCrease reciprocal of crease, precomputed by the caller
+ * A smooth abs(): inside the smoothing band around zero the sharp fold becomes
+ * a parabola with the same value and slope at the edges of the band.
+ * @param invSmoothing reciprocal of smoothing, precomputed by the caller
  */
-export function softAbs(x: number, crease: number, invCrease: number): number {
+export function softAbs(x: number, smoothing: number, invSmoothing: number): number {
   const value = Math.abs(x);
-  return value >= crease ? value : (x * x * invCrease + crease) * 0.5;
+  return value >= smoothing ? value : (x * x * invSmoothing + smoothing) * 0.5;
 }
 
 export function smoothstep(edge0: number, edge1: number, x: number): number {
