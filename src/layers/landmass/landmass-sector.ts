@@ -6,19 +6,26 @@ import { Sector } from '../../engine';
 import { continentSampler } from './continent-sampler';
 import { mountainSampler } from './mountain-sampler';
 import { roughnessSampler } from './roughness-sampler';
+import { createTerrainSample } from './terrain-sample';
 
 export class LandmassSector extends Sector {
+  private readonly _sample = createTerrainSample();
+
   constructor() {
     super(planetConfig.value.radiusMeters * METER_UNITS, landmassConfig.value.density);
   }
 
   protected getHeightOffset(vx: number, vy: number, vz: number): number {
-    const raw = { x: vx, y: vy, z: vz };
+    const sample = this._sample;
+    sample.raw.x = vx;
+    sample.raw.y = vy;
+    sample.raw.z = vz;
+    sample.base = 0;
 
-    let { height: base, warped: continentWarped } = continentSampler.sample(raw);
-    base += mountainSampler.sample({ raw, continentWarped, base });
-    base += roughnessSampler.sample({ raw, continentWarped, base });
+    continentSampler.apply(sample);
+    mountainSampler.apply(sample);
+    roughnessSampler.apply(sample);
 
-    return base * METER_UNITS;
+    return sample.base * METER_UNITS;
   }
 }

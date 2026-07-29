@@ -7,7 +7,7 @@ import { DomainWarp } from '../../lib/domain-warp';
 import { ElevationSampler } from '../../lib/elevation-sampler';
 import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
-import type { Coordinate } from '../../lib/types';
+import type { TerrainSample } from './terrain-sample';
 import seedrandom from 'seedrandom';
 
 const OCTAVES = 8;
@@ -19,11 +19,6 @@ const WARP_PERSISTENCE = 0.5;
 //fine single-octave warp that frays the coastline; strength is a fraction of its feature size
 const COAST_WARP_SIZE = 30 * KM;
 const COAST_WARP_STRENGTH = 0.1;
-
-export interface ContinentSample {
-  height: number;
-  warped: Coordinate; //continent-warped coordinate, for downstream features
-}
 
 //the hypsometry profile is normalized by default (50:50 land/water)
 //landFactor shifts the control point to the desired split
@@ -82,13 +77,15 @@ class ContinentSampler {
     ));
   }
 
-  sample(raw: Coordinate): ContinentSample {
-    const warped = this._warp.apply(this._coastWarp.apply(raw));
+  apply(sample: TerrainSample): void {
+    const warped = sample.continentWarped;
+    warped.x = sample.raw.x;
+    warped.y = sample.raw.y;
+    warped.z = sample.raw.z;
+    this._coastWarp.apply(warped);
+    this._warp.apply(warped);
 
-    return {
-      height: this._elevation.sample(this._noise.getFbm(warped.x, warped.y, warped.z)),
-      warped,
-    };
+    sample.base += this._elevation.sample(this._noise.getFbm(warped.x, warped.y, warped.z));
   }
 }
 

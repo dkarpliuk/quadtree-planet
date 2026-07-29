@@ -4,12 +4,11 @@ export function lerp(a: number, b: number, t: number): number {
   return a + t * (b - a);
 }
 
-export function lerp3D(a: Coordinate, b: Coordinate, t: number): Coordinate {
-  return {
-    x: lerp(a.x, b.x, t),
-    y: lerp(a.y, b.y, t),
-    z: lerp(a.z, b.z, t),
-  };
+//writes into out instead of returning, so that hot paths allocate nothing
+export function lerp3D(a: Coordinate, b: Coordinate, t: number, out: Coordinate): void {
+  out.x = lerp(a.x, b.x, t);
+  out.y = lerp(a.y, b.y, t);
+  out.z = lerp(a.z, b.z, t);
 }
 
 export function calcDistance(from: Coordinate, to: Coordinate): number {

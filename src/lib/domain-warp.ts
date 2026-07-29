@@ -26,12 +26,11 @@ export class DomainWarp {
     this._offsetZ = [OFFSET_Z[0] * featureSize, OFFSET_Z[1] * featureSize, OFFSET_Z[2] * featureSize];
   }
 
-  apply(coord: Coordinate): Coordinate {
+  //warps in place, so that hot paths allocate nothing
+  apply(coord: Coordinate): void {
     const { x, y, z } = coord;
-    return {
-      x: x + this._strength * this._noise.getFbm(x, y, z),
-      y: y + this._strength * this._noise.getFbm(x + this._offsetY[0], y + this._offsetY[1], z + this._offsetY[2]),
-      z: z + this._strength * this._noise.getFbm(x + this._offsetZ[0], y + this._offsetZ[1], z + this._offsetZ[2]),
-    };
+    coord.x = x + this._strength * this._noise.getFbm(x, y, z);
+    coord.y = y + this._strength * this._noise.getFbm(x + this._offsetY[0], y + this._offsetY[1], z + this._offsetY[2]);
+    coord.z = z + this._strength * this._noise.getFbm(x + this._offsetZ[0], y + this._offsetZ[1], z + this._offsetZ[2]);
   }
 }

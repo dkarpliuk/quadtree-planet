@@ -5,7 +5,7 @@ import { planetConfig } from '@config/planet-config';
 import { smoothstep } from '../../lib/math';
 import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
-import type { Coordinate } from '../../lib/types';
+import type { TerrainSample } from './terrain-sample';
 
 const OCTAVES = 4;
 const PERSISTENCE = 0.5;
@@ -24,12 +24,6 @@ const REGION_SOFTNESS = 0.5;
 
 //fraction of the hill height over which they fade in from the coast
 const COAST_FACTOR = 0.05;
-
-export interface RoughnessSampleOptions {
-  raw: Coordinate;
-  continentWarped: Coordinate;
-  base: number;
-}
 
 class RoughnessSampler {
   private _noise!: Noise;
@@ -58,20 +52,24 @@ class RoughnessSampler {
     this._waterEnabled = planetConfig.value.waterEnabled;
   }
 
-  sample({ raw, continentWarped, base }: RoughnessSampleOptions): number {
+  apply(sample: TerrainSample): void {
+    const { raw, continentWarped, base } = sample;
     //hills fill wherever the region noise is positive, blending across a band around its sign flip
     const region = this._region.getFbm(continentWarped.x, continentWarped.y, continentWarped.z);
-    if (region <= -REGION_SOFTNESS) return 0;
+    if (region <= -REGION_SOFTNESS) return;
 
     const mask = smoothstep(-REGION_SOFTNESS, REGION_SOFTNESS, region);
     const hills = this._noise.getBillow(raw.x, raw.y, raw.z) * mask;
-    if (!this._waterEnabled) return hills * this._height;
+
+    if (!this._waterEnabled) {
+      sample.base += hills * this._height;
+      return;
+    }
 
     //fade to the waterline so hills never surface as islands or texture the coast
     const distance = Math.abs(base);
     const ceiling = Math.min(this._height, distance);
-
-    return hills * ceiling * smoothstep(0, this._coast, distance);
+    sample.base += hills * ceiling * smoothstep(0, this._coast, distance);
   }
 }
 
