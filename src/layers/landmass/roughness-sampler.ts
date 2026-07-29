@@ -10,6 +10,9 @@ import type { Coordinate } from '../../lib/types';
 const OCTAVES = 3;
 const PERSISTENCE = 0.6;
 
+//how much the bottom of a valley between hills is rounded off, in noise units
+const CREASE = 0.1;
+
 //a hill is this many times wider than it is tall
 const ROUGHNESS_ASPECT = 30;
 
@@ -42,6 +45,7 @@ class RoughnessSampler {
       octaves: OCTAVES,
       persistence: PERSISTENCE,
       frequency: 1 / (options.heightMeters * ROUGHNESS_ASPECT * METER_UNITS),
+      crease: CREASE,
     });
     this._region = new SimplexNoise(seed + 6, {
       octaves: 2,

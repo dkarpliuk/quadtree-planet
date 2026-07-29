@@ -9,6 +9,9 @@ import type { Coordinate } from '../../lib/types';
 
 const RIDGE_OCTAVES = 4;
 const RIDGE_PERSISTENCE = 0.5;
+
+//how much the crest of a ridge is rounded off, in noise units
+const RIDGE_CREASE = 0.1;
 const REGION_OCTAVES = 2;
 const REGION_PERSISTENCE = 0.5;
 
@@ -44,6 +47,7 @@ class MountainSampler {
       octaves: RIDGE_OCTAVES,
       persistence: RIDGE_PERSISTENCE,
       frequency: 1 / (options.maxHeightMeters * MOUNTAIN_ASPECT * METER_UNITS),
+      crease: RIDGE_CREASE,
     });
     this._region = new SimplexNoise(seed + 3, {
       octaves: REGION_OCTAVES,
