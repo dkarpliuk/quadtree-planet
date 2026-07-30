@@ -1,4 +1,4 @@
-import { atmosphereConfig } from '@config/atmosphere-config';
+import { atmosphereConfig, shellHeightMeters } from '@config/atmosphere-config';
 import { METER_UNITS } from '@config/constants';
 import { planetConfig } from '@config/planet-config';
 import { sceneConfig } from '@config/scene-config';
@@ -19,7 +19,8 @@ export function createAtmosphereMaterial(): ShaderMaterial {
     uniforms: {
       center: { value: toWorld(sceneConfig.value.planetPositionMeters) },
       planetRadius: { value: planetRadius },
-      shellRadius: { value: planetRadius + atmosphereConfig.value.heightMeters * METER_UNITS },
+      shellRadius: { value: planetRadius + shellHeightMeters() * METER_UNITS },
+      scaleHeight: { value: atmosphereConfig.value.scaleHeightMeters * METER_UNITS },
     },
     vertexShader,
     fragmentShader,
