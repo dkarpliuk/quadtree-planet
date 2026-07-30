@@ -89,6 +89,7 @@ async function initPlanet() {
   await Promise.all([
     planet.createLandmass(),
     planetConfig.value.waterEnabled && planet.createWater(),
+    planet.createAtmosphere(),
   ]);
 
   await planet.initialize();

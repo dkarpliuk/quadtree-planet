@@ -1,5 +1,6 @@
 import { Group, Object3D, Vector3 } from 'three';
 
+import { createAtmosphereLayer } from './layers/atmosphere';
 import { createLandmassLayer } from './layers/landmass';
 import type { LayerView } from './layers/layer-view';
 import { createWaterLayer } from './layers/water';
@@ -25,6 +26,12 @@ export class Planet {
 
   async createWater() {
     const layer = await createWaterLayer();
+    this._group.add(layer.object3d);
+    this._layers.push(layer);
+  }
+
+  async createAtmosphere() {
+    const layer = await createAtmosphereLayer();
     this._group.add(layer.object3d);
     this._layers.push(layer);
   }
