@@ -1,5 +1,5 @@
-import type { Vector3Like } from './calc-misc';
-import { Axis } from './enums';
+import type { Coordinate } from '../lib/types';
+import { Axis } from './types';
 
 export type ModelMatrix = [
   number, number, number, number,
@@ -79,7 +79,7 @@ export class SectorTransform {
     return matrix as ModelMatrix;
   }
 
-  static calculateTranslation(address: number[], sphereRadius: number): Vector3Like {
+  static calculateTranslation(address: number[], sphereRadius: number): Coordinate {
     let a = 0;
     let b = 0;
     //first calculates relative translation

@@ -1,7 +1,7 @@
 import './styles.css';
 
-import { type Coordinate, METER_UNITS } from '@config/common';
 import { warmConfig } from '@config/config-service';
+import { METER_UNITS } from '@config/constants';
 import { controlsConfig } from '@config/controls-config';
 import { planetConfig } from '@config/planet-config';
 import { sceneConfig } from '@config/scene-config';
@@ -19,6 +19,7 @@ import {
 import { Vector3 } from 'three';
 
 import { Controls } from './controls';
+import type { Coordinate } from './lib/types';
 import { Planet } from './planet';
 
 let stats: Stats[];
@@ -40,14 +41,14 @@ function getVector3(metersCoord: Coordinate): Vector3 {
   return new Vector3(metersCoord.x, metersCoord.y, metersCoord.z).multiplyScalar(METER_UNITS);
 }
 
-init();
+await init();
 
-function init() {
+async function init() {
   initStats();
   initCamera();
   initControls();
   initScene();
-  initPlanet();
+  await initPlanet();
   initLight();
   initSun();
   initRenderer();
@@ -93,7 +94,7 @@ async function initPlanet() {
     planetConfig.value.waterEnabled && planet.createWater(),
   ]);
 
-  planet.initialize();
+  await planet.initialize();
 }
 
 function initLight() {

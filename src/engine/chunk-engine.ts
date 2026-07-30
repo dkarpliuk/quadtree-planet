@@ -1,4 +1,4 @@
-import type { Vector3Like } from './calc-misc';
+import type { Coordinate } from '../lib/types';
 import { Engine, type EngineOptions } from './engine';
 import { Sector, type SectorBuffer } from './sector';
 
@@ -19,7 +19,7 @@ type Awaitable<T> = T | Promise<T>;
  */
 export interface IChunkEngine {
   initialize(): Awaitable<EngineChunk>;
-  execute(spectatorLocalPosition: Vector3Like): Awaitable<EngineChunk>;
+  execute(spectatorLocalPosition: Coordinate): Awaitable<EngineChunk>;
 }
 
 /**
@@ -47,7 +47,7 @@ export class ChunkEngine<T extends Sector> implements IChunkEngine {
     return this._flush();
   }
 
-  execute(spectatorLocalPosition: Vector3Like): EngineChunk {
+  execute(spectatorLocalPosition: Coordinate): EngineChunk {
     this._engine.execute(spectatorLocalPosition);
     return this._flush();
   }

@@ -1,5 +1,5 @@
-import { METER_UNITS } from '@config/common';
 import { warmConfig } from '@config/config-service';
+import { METER_UNITS } from '@config/constants';
 import { planetConfig } from '@config/planet-config';
 import { waterConfig } from '@config/water-config';
 import { expose } from 'comlink';

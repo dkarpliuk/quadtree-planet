@@ -1,7 +1,8 @@
-import { CalcMisc, type Vector3Like } from './calc-misc';
-import { Direction } from './enums';
-import { GeometryMath } from './geometry-math';
+import { calcDistance } from '../lib/math';
+import type { Coordinate } from '../lib/types';
+import { buildGrid, computeNormals, getPerimeterIndices } from './geometry-math';
 import { SectorTransform } from './sector-transform';
+import { Direction } from './types';
 
 export interface SectorBuffer {
   positions: Float32Array;
@@ -13,7 +14,7 @@ export class Sector {
   onDisposed?: (address: string) => void;
 
   private _address = '';
-  private _center: Vector3Like | null = null;
+  private _center: Coordinate | null = null;
   private _boundingRadius: number | null = null;
   protected _sphereRadius: number;
   private _density: number;
@@ -33,7 +34,7 @@ export class Sector {
 
   get buffer(): SectorBuffer { return this._buffer!; }
 
-  get center(): Vector3Like {
+  get center(): Coordinate {
     if (!this._center) {
       const n = this._density + 1;
       this._center = this._readVertex((n * n - 1) / 2);
@@ -50,7 +51,7 @@ export class Sector {
     if (this._boundingRadius === null) {
       const n = this._density + 1;
       const corners = [0, n - 1, n * (n - 1), n * n - 1];
-      this._boundingRadius = Math.max(...corners.map(v => CalcMisc.calcDistance(this._readVertex(v), this.center)));
+      this._boundingRadius = Math.max(...corners.map(v => calcDistance(this._readVertex(v), this.center)));
     }
 
     return this._boundingRadius!;
@@ -79,10 +80,10 @@ export class Sector {
 
     //1-segment padding used for correct normals computation, scale is adjusted
     const scaleFactor = (this._density + 2) / this._density;
-    const workPositions = GeometryMath.buildGrid(this._density + 2, modelMatrix, scaleFactor);
+    const workPositions = buildGrid(this._density + 2, modelMatrix, scaleFactor);
     this._applyTangentWarp(workPositions);
     this._spherize(workPositions);
-    const workNormals = GeometryMath.computeNormals(workPositions);
+    const workNormals = computeNormals(workPositions);
 
     //copy work buffers to render buffers without padding
     this._copyInnerGrid(workPositions, this._buffer.positions);
@@ -145,7 +146,7 @@ export class Sector {
   }
 
   private _capturePerimeterVertices(positions: Float32Array, normals: Float32Array) {
-    const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
+    const perimeter = getPerimeterIndices(this._density + 1);
     this._pristinePositions = new Float32Array(perimeter.length);
     this._pristineNormals = new Float32Array(perimeter.length);
 
@@ -156,7 +157,7 @@ export class Sector {
   }
 
   private _restorePerimeterVertices(positions: Float32Array, normals: Float32Array) {
-    const perimeter = CalcMisc.getPerimeterIndices(this._density + 1);
+    const perimeter = getPerimeterIndices(this._density + 1);
     for (let p = 0; p < perimeter.length; p++) {
       positions[perimeter[p]] = this._pristinePositions![p];
       normals[perimeter[p]] = this._pristineNormals![p];
@@ -204,7 +205,7 @@ export class Sector {
     }
   }
 
-  private _readVertex(index: number): Vector3Like {
+  private _readVertex(index: number): Coordinate {
     const vertices = this._buffer!.positions;
     const i = index * 3;
     return { x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] };
