@@ -54,11 +54,11 @@ class RoughnessSampler {
 
   apply(sample: TerrainSample): void {
     const { raw, continentWarped, base } = sample;
-    //hills fill wherever the region noise is positive, blending across a band around its sign flip
+    //hills fill their own regions, and all of a mountain region
     const region = this._region.getFbm(continentWarped.x, continentWarped.y, continentWarped.z);
-    if (region <= -REGION_SOFTNESS) return;
+    const mask = Math.max(smoothstep(-REGION_SOFTNESS, REGION_SOFTNESS, region), sample.mountainRegion);
+    if (mask <= 0) return;
 
-    const mask = smoothstep(-REGION_SOFTNESS, REGION_SOFTNESS, region);
     const hills = this._noise.getBillow(raw.x, raw.y, raw.z) * mask;
 
     if (!this._waterEnabled) {

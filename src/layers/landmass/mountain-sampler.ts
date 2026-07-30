@@ -59,6 +59,8 @@ class MountainSampler {
   }
 
   apply(sample: TerrainSample): void {
+    sample.mountainRegion = 0;
+
     const { raw, base } = sample;
     const warped = this._warped;
     lerp3D(raw, sample.continentWarped, MOUNTAIN_WARP, warped);
@@ -67,9 +69,9 @@ class MountainSampler {
 
     //room left under the coast-faded ceiling, so underwater ridges rise only up to the waterline
     const headroom = Math.max(0, this._maxHeight * smoothstep(0, this._coast, base) - base);
-    const mask = smoothstep(this._regionThreshold, this._regionThreshold + REGION_FADE, region);
+    sample.mountainRegion = smoothstep(this._regionThreshold, this._regionThreshold + REGION_FADE, region);
 
-    sample.base += this._noise.getRidged(raw.x, raw.y, raw.z) * mask * headroom;
+    sample.base += this._noise.getRidged(raw.x, raw.y, raw.z) * sample.mountainRegion * headroom;
   }
 }
 

@@ -10,6 +10,8 @@ export interface TerrainSample {
   raw: Coordinate;
   //raw put through the continent warps
   continentWarped: Coordinate;
+  //1 inside a mountain region, 0 outside
+  mountainRegion: number;
   //height in meters, summed up by the features
   base: number;
 }
@@ -18,6 +20,7 @@ export function createTerrainSample(): TerrainSample {
   return {
     raw: { x: 0, y: 0, z: 0 },
     continentWarped: { x: 0, y: 0, z: 0 },
+    mountainRegion: 0,
     base: 0,
   };
 }
