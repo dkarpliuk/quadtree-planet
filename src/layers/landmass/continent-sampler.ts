@@ -1,6 +1,7 @@
 import { KM, METER_UNITS } from '@config/constants';
 import { type ElevationProfile, landmassConfig } from '@config/landmass-config';
 import { planetConfig } from '@config/planet-config';
+import seedrandom from 'seedrandom';
 
 import { distribution, type QuantileFn } from '../../lib/distribution';
 import { DomainWarp } from '../../lib/domain-warp';
@@ -8,7 +9,6 @@ import { ElevationSampler } from '../../lib/elevation-sampler';
 import { Noise } from '../../lib/noise';
 import { SimplexNoise } from '../../lib/simplex-noise';
 import type { TerrainSample } from './terrain-sample';
-import seedrandom from 'seedrandom';
 
 const OCTAVES = 8;
 const PERSISTENCE = 0.5;
