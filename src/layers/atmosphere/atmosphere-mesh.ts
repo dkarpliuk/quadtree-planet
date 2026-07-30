@@ -14,10 +14,13 @@ import { SectorMesh } from '../sector-mesh';
  */
 export function createAtmosphereMaterial(): ShaderMaterial {
   const planetRadius = planetConfig.value.radiusMeters * METER_UNITS;
+  const { planetPositionMeters, sunPositionMeters } = sceneConfig.value;
+  const center = toWorld(planetPositionMeters);
 
   return new ShaderMaterial({
     uniforms: {
-      center: { value: toWorld(sceneConfig.value.planetPositionMeters) },
+      center: { value: center },
+      sunDirection: { value: toWorld(sunPositionMeters).sub(center).normalize() },
       planetRadius: { value: planetRadius },
       shellRadius: { value: planetRadius + shellHeightMeters() * METER_UNITS },
       scaleHeight: { value: atmosphereConfig.value.scaleHeightMeters * METER_UNITS },

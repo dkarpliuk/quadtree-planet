@@ -14,7 +14,7 @@ export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
   maxLod: 4,
   density: 16,
   updateFrequencyMs: 3000,
-  scaleHeightMeters: 8 * KM,
+  scaleHeightMeters: 12 * KM,
 });
 
 //gas thinner than this cannot tint a pixel, 8 bit color rounds it away

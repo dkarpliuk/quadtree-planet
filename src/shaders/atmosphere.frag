@@ -5,6 +5,7 @@ uniform vec3 center;
 uniform float planetRadius;
 uniform float shellRadius;
 uniform float scaleHeight;
+uniform vec3 sunDirection;
 
 varying vec3 vWorld;
 
@@ -55,6 +56,9 @@ void main() {
   float cosIn = dot(entry / radiusIn, ray);
   float cosOut = dot(exit / radiusOut, ray);
 
+  //the deepest the ray ever gets, where nearly all of its gas sits
+  vec3 lowest = origin + ray * clamp(-dot(origin, ray), near, far);
+
   float gas;
 
   if (cosIn >= 0.0) {
@@ -64,12 +68,15 @@ void main() {
     gas = columnUp(radiusOut, -cosOut) - columnUp(radiusIn, -cosIn);
   } else {
     //the ray falls, bottoms out, then rises, so add up the two halves
-    float lowest = length(cross(origin, ray));
-    gas = 2.0 * columnUp(lowest, 0.0) - columnUp(radiusIn, -cosIn) - columnUp(radiusOut, cosOut);
+    gas = 2.0 * columnUp(length(lowest), 0.0) - columnUp(radiusIn, -cosIn) - columnUp(radiusOut, cosOut);
   }
+
+  //the sun still reaches the air this far past the terminator, in cosines
+  float twilight = sqrt(2.0 * scaleHeight / planetRadius);
+  float lit = smoothstep(-twilight, twilight, dot(normalize(lowest), sunDirection));
 
   //the thickest path there is, grazing the surface and rising away to both sides
   float thickest = 2.0 * columnUp(planetRadius, 0.0);
 
-  gl_FragColor = vec4(vec3(gas / thickest), 1.0);
+  gl_FragColor = vec4(vec3(gas / thickest * lit), 1.0);
 }
