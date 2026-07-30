@@ -7,7 +7,6 @@ export interface AtmosphereConfig {
   density: number;
   updateFrequencyMs: number;
   heightMeters: number;
-  mass: number;
 }
 
 export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
@@ -16,5 +15,4 @@ export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
   density: 16,
   updateFrequencyMs: 3000,
   heightMeters: 100 * KM,
-  mass: 0.5,
 });
