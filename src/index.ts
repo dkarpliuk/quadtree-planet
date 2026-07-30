@@ -9,11 +9,8 @@ import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
 import {
   DirectionalLight,
-  Mesh,
-  MeshBasicMaterial,
   PerspectiveCamera,
   Scene,
-  SphereGeometry,
   WebGLRenderer,
 } from 'three';
 import { Vector3 } from 'three';
@@ -21,6 +18,7 @@ import { Vector3 } from 'three';
 import { Controls } from './controls';
 import type { Coordinate } from './lib/types';
 import { Planet } from './planet';
+import { Sun } from './sun';
 
 let stats: Stats[];
 let scene: Scene;
@@ -33,7 +31,6 @@ await warmConfig();
 
 const planetPosition = getVector3(sceneConfig.value.planetPositionMeters);
 const sunPosition = getVector3(sceneConfig.value.sunPositionMeters);
-const sunRadius = sceneConfig.value.sunRadiusMeters * METER_UNITS;
 const cameraPosition = getVector3(sceneConfig.value.cameraPositionMeters);
 const cameraFar = sceneConfig.value.cameraFarMeters * METER_UNITS;
 
@@ -104,11 +101,7 @@ function initLight() {
 }
 
 function initSun() {
-  const geometry = new SphereGeometry(sunRadius, 32, 32);
-  const material = new MeshBasicMaterial({ color: 0xffffff });
-  const sun = new Mesh(geometry, material);
-  sun.position.copy(sunPosition);
-  scene.add(sun);
+  scene.add(new Sun());
 }
 
 function initRenderer() {
