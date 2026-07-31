@@ -13,6 +13,9 @@ varying vec3 vWorld;
 //in reality light rescatters multiple times
 const float RESCATTERING = 2.5;
 
+//how softly green is held back, as a share of brightness
+const float GREEN_EASE = 0.2;
+
 //where the ray enters and leaves the sphere, swapped around when it misses
 vec2 hitSphere(vec3 origin, vec3 ray, float radius) {
   float b = dot(origin, ray);
@@ -102,5 +105,11 @@ void main() {
   float mu = dot(ray, sunDirection);
   float phase = 0.75 * (1.0 + mu * mu);
 
-  gl_FragColor = vec4(sunlight * (1.0 - exp(-depth)) * lit * phase, 1.0);
+  vec3 sky = sunlight * (1.0 - exp(-depth)) * lit * phase;
+
+  //a real sky never has green ahead of both its neighbours, so hold it back to their midpoint
+  float middle = (sky.r + sky.b) * 0.5;
+  sky.g = smoothMin(sky.g, middle, middle * GREEN_EASE);
+
+  gl_FragColor = vec4(sky, 1.0);
 }
