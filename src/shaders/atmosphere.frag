@@ -10,6 +10,9 @@ uniform vec3 scattering;
 
 varying vec3 vWorld;
 
+//in reality light rescatters multiple times
+const float RESCATTERING = 2.5;
+
 //where the ray enters and leaves the sphere, swapped around when it misses
 vec2 hitSphere(vec3 origin, vec3 ray, float radius) {
   float b = dot(origin, ray);
@@ -80,7 +83,7 @@ void main() {
   float lit = smoothstep(-twilight, twilight, cosSun);
 
   //each channel of scattering is how much gas a straight up column holds, so scale the path to them
-  vec3 depth = scattering * gas / scaleHeight;
+  vec3 depth = RESCATTERING * scattering * gas / scaleHeight;
 
   //sunlight crosses the gas before it scatters, and loses the channels that scatter most
   vec3 sunlight = exp(-scattering * columnUp(lowestRadius, max(cosSun, 0.0)) / scaleHeight);

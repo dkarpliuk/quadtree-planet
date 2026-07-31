@@ -8,6 +8,7 @@ import { sceneConfig } from '@config/scene-config';
 import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
 import {
+  NeutralToneMapping,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
@@ -98,6 +99,7 @@ function initSun() {
 
 function initRenderer() {
   renderer = new WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+  renderer.toneMapping = NeutralToneMapping;
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
