@@ -97,5 +97,10 @@ void main() {
   //sunlight crosses the gas before it scatters, and loses the channels that scatter most
   vec3 sunlight = exp(-scattering * columnUp(sunRadius, max(cosSun, 0.0)) / scaleHeight);
 
-  gl_FragColor = vec4(sunlight * (1.0 - exp(-depth)) * lit, 1.0);
+  //gas scatters best towards the sun and straight back from it, and worst across
+  //https://en.wikipedia.org/wiki/Rayleigh_scattering
+  float mu = dot(ray, sunDirection);
+  float phase = 0.75 * (1.0 + mu * mu);
+
+  gl_FragColor = vec4(sunlight * (1.0 - exp(-depth)) * lit * phase, 1.0);
 }
