@@ -15,7 +15,7 @@ export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
   maxLod: 4,
   density: 16,
   updateFrequencyMs: 3000,
-  scaleHeightMeters: 12 * KM,
+  scaleHeightMeters: 20 * KM,
   color: 'hsl(217, 42%, 33%)',
 });
 

@@ -59,6 +59,7 @@ void main() {
 
   //the deepest the ray ever gets, where nearly all of its gas sits
   vec3 lowest = origin + ray * clamp(-dot(origin, ray), near, far);
+  float lowestRadius = length(lowest);
 
   float gas;
 
@@ -69,15 +70,20 @@ void main() {
     gas = columnUp(radiusOut, -cosOut) - columnUp(radiusIn, -cosIn);
   } else {
     //the ray falls, bottoms out, then rises, so add up the two halves
-    gas = 2.0 * columnUp(length(lowest), 0.0) - columnUp(radiusIn, -cosIn) - columnUp(radiusOut, cosOut);
+    gas = 2.0 * columnUp(lowestRadius, 0.0) - columnUp(radiusIn, -cosIn) - columnUp(radiusOut, cosOut);
   }
 
-  //the sun still reaches the air this far past the terminator, in cosines
+  float cosSun = dot(lowest / lowestRadius, sunDirection);
+
+  //the sun still reaches the gas this far past the terminator, in cosines
   float twilight = sqrt(2.0 * scaleHeight / planetRadius);
-  float lit = smoothstep(-twilight, twilight, dot(normalize(lowest), sunDirection));
+  float lit = smoothstep(-twilight, twilight, cosSun);
 
   //each channel of color is how much gas a straight up column holds, so scale the path to it
   vec3 depth = color * gas / scaleHeight;
 
-  gl_FragColor = vec4((1.0 - exp(-depth)) * lit, 1.0);
+  //sunlight crosses the gas before it scatters, and loses the channels that scatter most
+  vec3 sunlight = exp(-color * columnUp(lowestRadius, max(cosSun, 0.0)) / scaleHeight);
+
+  gl_FragColor = vec4(sunlight * (1.0 - exp(-depth)) * lit, 1.0);
 }
