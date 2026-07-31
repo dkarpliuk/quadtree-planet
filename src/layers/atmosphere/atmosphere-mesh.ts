@@ -2,7 +2,7 @@ import { atmosphereConfig, shellHeightMeters } from '@config/atmosphere-config';
 import { METER_UNITS } from '@config/constants';
 import { planetConfig } from '@config/planet-config';
 import { sceneConfig } from '@config/scene-config';
-import { AdditiveBlending, BackSide, Material, ShaderMaterial, Vector3 } from 'three';
+import { AdditiveBlending, BackSide, Color, Material, ShaderMaterial, Vector3 } from 'three';
 
 import type { Coordinate } from '../../lib/types';
 import fragmentShader from '../../shaders/atmosphere.frag?raw';
@@ -24,6 +24,7 @@ export function createAtmosphereMaterial(): ShaderMaterial {
       planetRadius: { value: planetRadius },
       shellRadius: { value: planetRadius + shellHeightMeters() * METER_UNITS },
       scaleHeight: { value: atmosphereConfig.value.scaleHeightMeters * METER_UNITS },
+      color: { value: new Color(atmosphereConfig.value.color) },
     },
     vertexShader,
     fragmentShader,

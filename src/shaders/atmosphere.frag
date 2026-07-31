@@ -6,6 +6,7 @@ uniform float planetRadius;
 uniform float shellRadius;
 uniform float scaleHeight;
 uniform vec3 sunDirection;
+uniform vec3 color;
 
 varying vec3 vWorld;
 
@@ -75,8 +76,8 @@ void main() {
   float twilight = sqrt(2.0 * scaleHeight / planetRadius);
   float lit = smoothstep(-twilight, twilight, dot(normalize(lowest), sunDirection));
 
-  //the thickest path there is, grazing the surface and rising away to both sides
-  float thickest = 2.0 * columnUp(planetRadius, 0.0);
+  //each channel of color is how much gas a straight up column holds, so scale the path to it
+  vec3 depth = color * gas / scaleHeight;
 
-  gl_FragColor = vec4(vec3(gas / thickest * lit), 1.0);
+  gl_FragColor = vec4((1.0 - exp(-depth)) * lit, 1.0);
 }
