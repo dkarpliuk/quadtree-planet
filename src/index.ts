@@ -8,7 +8,6 @@ import { sceneConfig } from '@config/scene-config';
 import { debounce } from 'lodash-es';
 import Stats from 'stats.js';
 import {
-  DirectionalLight,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
@@ -30,7 +29,6 @@ let planet: Planet;
 await warmConfig();
 
 const planetPosition = getVector3(sceneConfig.value.planetPositionMeters);
-const sunPosition = getVector3(sceneConfig.value.sunPositionMeters);
 const cameraPosition = getVector3(sceneConfig.value.cameraPositionMeters);
 const cameraFar = sceneConfig.value.cameraFarMeters * METER_UNITS;
 
@@ -45,9 +43,8 @@ async function init() {
   initCamera();
   initControls();
   initScene();
-  await initPlanet();
-  initLight();
   initSun();
+  await initPlanet();
   initRenderer();
   initResizeHandler();
   animate();
@@ -95,14 +92,8 @@ async function initPlanet() {
   await planet.initialize();
 }
 
-function initLight() {
-  const light = new DirectionalLight(0xffffff, Math.PI);
-  light.position.copy(sunPosition);
-  scene.add(light);
-}
-
 function initSun() {
-  scene.add(new Sun());
+  scene.add(new Sun().object3d);
 }
 
 function initRenderer() {
