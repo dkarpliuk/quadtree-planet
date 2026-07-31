@@ -32,6 +32,10 @@ float chapman(float x, float cosAngle) {
   return sqrt(x * PI * 0.5) * scaled;
 }
 
+//max and min with the corner rounded off, so a limit never leaves a crease in the sky
+float smoothMax(float a, float b, float k) { return 0.5 * (a + b + sqrt((a - b) * (a - b) + k * k)); }
+float smoothMin(float a, float b, float k) { return 0.5 * (a + b - sqrt((a - b) * (a - b) + k * k)); }
+
 //gas between this point and space, as a thickness of ground level air, for a rising ray only
 float columnUp(float radius, float cosAngle) {
   float height = radius - planetRadius;
@@ -61,8 +65,8 @@ void main() {
   float cosOut = dot(exit / radiusOut, ray);
 
   //the deepest the ray ever gets, where nearly all of its gas sits
-  vec3 lowest = origin + ray * clamp(-dot(origin, ray), near, far);
-  float lowestRadius = length(lowest);
+  float toBottom = -dot(origin, ray);
+  float lowestRadius = length(origin + ray * clamp(toBottom, near, far));
 
   float gas;
 
@@ -76,7 +80,12 @@ void main() {
     gas = 2.0 * columnUp(lowestRadius, 0.0) - columnUp(radiusIn, -cosIn) - columnUp(radiusOut, cosOut);
   }
 
-  float cosSun = dot(lowest / lowestRadius, sunDirection);
+  //clamping this point would crease the sky, so round the limits off over the distance the sun
+  //angle needs to change, but never past half the ray
+  float rounding = min(sqrt(2.0 * scaleHeight * planetRadius), 0.5 * (far - near));
+  vec3 sunPoint = origin + ray * smoothMin(smoothMax(toBottom, near, rounding), far, rounding);
+  float sunRadius = length(sunPoint);
+  float cosSun = dot(sunPoint / sunRadius, sunDirection);
 
   //the sun still reaches the gas this far past the terminator, in cosines
   float twilight = sqrt(2.0 * scaleHeight / planetRadius);
@@ -86,7 +95,7 @@ void main() {
   vec3 depth = RESCATTERING * scattering * gas / scaleHeight;
 
   //sunlight crosses the gas before it scatters, and loses the channels that scatter most
-  vec3 sunlight = exp(-scattering * columnUp(lowestRadius, max(cosSun, 0.0)) / scaleHeight);
+  vec3 sunlight = exp(-scattering * columnUp(sunRadius, max(cosSun, 0.0)) / scaleHeight);
 
   gl_FragColor = vec4(sunlight * (1.0 - exp(-depth)) * lit, 1.0);
 }
