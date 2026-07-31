@@ -7,7 +7,7 @@ export interface AtmosphereConfig {
   density: number;
   updateFrequencyMs: number;
   scaleHeightMeters: number;
-  color: string;
+  scattering: string;
 }
 
 export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
@@ -16,7 +16,7 @@ export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
   density: 16,
   updateFrequencyMs: 3000,
   scaleHeightMeters: 20 * KM,
-  color: 'hsl(217, 42%, 33%)',
+  scattering: 'hsl(208, 36%, 53%)',
 });
 
 //gas thinner than this cannot tint a pixel, 8 bit color rounds it away

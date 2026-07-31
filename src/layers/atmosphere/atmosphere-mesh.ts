@@ -24,7 +24,7 @@ export function createAtmosphereMaterial(): ShaderMaterial {
       planetRadius: { value: planetRadius },
       shellRadius: { value: planetRadius + shellHeightMeters() * METER_UNITS },
       scaleHeight: { value: atmosphereConfig.value.scaleHeightMeters * METER_UNITS },
-      color: { value: new Color(atmosphereConfig.value.color) },
+      scattering: { value: new Color(atmosphereConfig.value.scattering) },
     },
     vertexShader,
     fragmentShader,

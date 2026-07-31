@@ -6,7 +6,7 @@ uniform float planetRadius;
 uniform float shellRadius;
 uniform float scaleHeight;
 uniform vec3 sunDirection;
-uniform vec3 color;
+uniform vec3 scattering;
 
 varying vec3 vWorld;
 
@@ -79,11 +79,11 @@ void main() {
   float twilight = sqrt(2.0 * scaleHeight / planetRadius);
   float lit = smoothstep(-twilight, twilight, cosSun);
 
-  //each channel of color is how much gas a straight up column holds, so scale the path to it
-  vec3 depth = color * gas / scaleHeight;
+  //each channel of scattering is how much gas a straight up column holds, so scale the path to them
+  vec3 depth = scattering * gas / scaleHeight;
 
   //sunlight crosses the gas before it scatters, and loses the channels that scatter most
-  vec3 sunlight = exp(-color * columnUp(lowestRadius, max(cosSun, 0.0)) / scaleHeight);
+  vec3 sunlight = exp(-scattering * columnUp(lowestRadius, max(cosSun, 0.0)) / scaleHeight);
 
   gl_FragColor = vec4(sunlight * (1.0 - exp(-depth)) * lit, 1.0);
 }
