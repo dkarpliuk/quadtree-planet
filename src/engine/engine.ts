@@ -72,6 +72,11 @@ export class Engine<T extends Sector> {
     });
   }
 
+  /*
+  TODO: resolve the topology first, then build every new sector at once on a pool of workers
+  the tree walk and the stitch directions are cheap, the vertices are not
+  only landmass needs it, water and atmosphere have no heights to sample
+  */
   execute(spectatorLocalPosition: Coordinate) {
     this._spectatorLocalPosition = spectatorLocalPosition;
     this._topologyDirty = false;
