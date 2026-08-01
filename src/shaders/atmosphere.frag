@@ -1,3 +1,6 @@
+//TODO: light the sky with the star's color and brightness, both stand at 1 here
+//TODO: add mie scattering (haze) https://en.wikipedia.org/wiki/Mie_scattering
+
 #include <common>
 #include <logdepthbuf_pars_fragment>
 
