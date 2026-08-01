@@ -2,6 +2,8 @@ import { Material, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 
 import type { SectorBuffer } from '../engine';
 
+//TODO: every sector of a layer gets the same index and uv, build them once and share
+
 const defaultMaterial = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
 /**

@@ -5,6 +5,10 @@ import { asyncThrottle } from '../lib/async-throttle';
 import type { Coordinate } from '../lib/types';
 import type { SectorMesh } from './sector-mesh';
 
+//layers can deliver their buffers at the same time
+//copying them all in one frame causes a microfreeze
+//TODO: split the work across frames
+
 /**
  * main-side half of a layer: drives its worker engine
  * and turns the geometry chunks it streams back into meshes under one group.
