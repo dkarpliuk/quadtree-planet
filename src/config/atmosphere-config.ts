@@ -8,6 +8,7 @@ export interface AtmosphereConfig {
   updateFrequencyMs: number;
   scaleHeightMeters: number;
   scattering: string;
+  greenAbsorption: number;
 }
 
 export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
@@ -17,6 +18,8 @@ export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
   updateFrequencyMs: 3000,
   scaleHeightMeters: 8 * KM,
   scattering: 'hsl(217, 38%, 38%)',
+  //how much green the gas absorbs with the sun at the horizon, none of it with the sun overhead
+  greenAbsorption: 0.8,
 });
 
 //gas thinner than this cannot tint a pixel, 8 bit color rounds it away

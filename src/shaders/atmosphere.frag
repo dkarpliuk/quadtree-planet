@@ -7,14 +7,12 @@ uniform float shellRadius;
 uniform float scaleHeight;
 uniform vec3 sunDirection;
 uniform vec3 scattering;
+uniform float greenAbsorption;
 
 varying vec3 vWorld;
 
 //in reality light rescatters multiple times
 const float RESCATTERING = 2.5;
-
-//how softly green is held back, as a share of brightness
-const float GREEN_EASE = 0.2;
 
 //how much longer the sky keeps its light after sunset than the shadow alone would allow
 const float TWILIGHT_TAIL = 6.0;
@@ -112,9 +110,12 @@ void main() {
 
   vec3 sky = sunlight * (1.0 - exp(-depth)) * lit * phase;
 
-  //a real sky never has green ahead of both its neighbours, so hold it back to their midpoint
+  //the lower the sun, the longer its light stays in the ozone that absorbs green
+  float absorbed = greenAbsorption * (1.0 - max(cosSun, 0.0));
+
+  //ozone takes green out of the middle, so it never gets to lead its neighbours
   float middle = (sky.r + sky.b) * 0.5;
-  sky.g = smoothMin(sky.g, middle, middle * GREEN_EASE);
+  sky.g -= max(sky.g - middle, 0.0) * absorbed;
 
   gl_FragColor = vec4(sky, 1.0);
 }
