@@ -101,6 +101,7 @@ function initRenderer() {
   renderer = new WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
   renderer.toneMapping = NeutralToneMapping;
   renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 }
@@ -109,6 +110,7 @@ function initResizeHandler() {
   window.addEventListener('resize', debounce(() => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
   }, 500));
 }
