@@ -1,28 +1,73 @@
+/*
+# An optimized atmosphere shader for a round planet, with rayleigh scattering
+
+## uniforms
+
+- `center`           where the planet stands
+- `planetRadius`     the solid surface, where rays stop
+- `shellRadius`      the top of the gas, where the mesh ends
+- `scaleHeight`      https://en.wikipedia.org/wiki/Scale_height
+- `sunDirection`     which way the star is
+- `scattering`       a color, its channels are how hard the gas scatters each of them,
+                     written as HSL in the config: HS picks the color, L the strength
+- `greenAbsorption`  how much green the gas absorbs (with the sun at the horizon)
+
+## optimizations
+
+these replace physics with analytic, so that no ray has to be walked step by step:
+
+- the gas along a ray is taken through the `chapman` function, eliminating the need for a loop
+- `RESCATTERING` multiplier stands for the way light rescatters multiple times in reality
+- `greenAbsorption` stands for ozone, which absorbs green instead of scattering it
+- `twilightTail` follows from `RESCATTERING`: right after sunset the upper gas keeps the sky lit
+- sunlight is taken once per ray, eliminating the need for a loop
+*/
+
+//TODO: light the sky with the star's color and brightness, both stand at 1 here
+//TODO: add mie scattering (haze) https://en.wikipedia.org/wiki/Mie_scattering
+
 #include <common>
 #include <logdepthbuf_pars_fragment>
 
-uniform vec3 color;
-uniform float twilight;
 uniform vec3 center;
-uniform vec3 sunDirection;
 uniform float planetRadius;
 uniform float shellRadius;
-uniform float density;
+uniform float scaleHeight;
+uniform vec3 sunDirection;
+uniform vec3 scattering;
+uniform float greenAbsorption;
 
 varying vec3 vWorld;
 
-const int STEPS = 3;
+const float RESCATTERING = 2.5;
 
-const float FADE_POWER = 2.0;
-
-//distances along the ray where it enters and leaves the sphere, both huge when it misses
+//where the ray enters and leaves the sphere, swapped around when it misses
 vec2 hitSphere(vec3 origin, vec3 ray, float radius) {
   float b = dot(origin, ray);
   float d = b * b - dot(origin, origin) + radius * radius;
-  if (d < 0.0) return vec2(1e20, -1e20);
+  if (d < 0.0) return vec2(1.0, -1.0);
 
   float root = sqrt(d);
   return vec2(-b - root, -b + root);
+}
+
+//how much more gas a slanted ray meets than one going straight up
+//https://en.wikipedia.org/wiki/Chapman_function
+float chapman(float x, float cosAngle) {
+  float z = cosAngle * sqrt(x * 0.5);
+  //exp(z * z) * erfc(z) as one piece, either half alone runs out of float range here
+  float scaled = 2.0 / (z * sqrt(PI) + sqrt(z * z * PI + 4.0));
+  return sqrt(x * PI * 0.5) * scaled;
+}
+
+//max and min with the corner rounded off, so a limit never leaves a crease in the sky
+float smoothMax(float a, float b, float k) { return 0.5 * (a + b + sqrt((a - b) * (a - b) + k * k)); }
+float smoothMin(float a, float b, float k) { return 0.5 * (a + b - sqrt((a - b) * (a - b) + k * k)); }
+
+//gas between this point and space, as a thickness of ground level gas, for a rising ray only
+float columnUp(float radius, float cosAngle) {
+  float height = radius - planetRadius;
+  return scaleHeight * exp(-height / scaleHeight) * chapman(radius / scaleHeight, cosAngle);
 }
 
 void main() {
@@ -34,31 +79,70 @@ void main() {
   vec2 shell = hitSphere(origin, ray, shellRadius);
   vec2 ground = hitSphere(origin, ray, planetRadius);
 
-  //looking up still hits the planet, only behind us, so a hit counts only when it is ahead
-  float blocked = ground.x > 0.0 ? ground.x : 1e20;
+  //the ground stops the ray only when it is really hit, and in front of the camera
+  float blocked = (ground.x < ground.y && ground.x > 0.0) ? ground.x : shell.y;
 
-  //start at the camera when it is already inside the shell
   float near = max(shell.x, 0.0);
   float far = max(min(shell.y, blocked), near);
 
-  float thickness = shellRadius - planetRadius;
-  float stride = (far - near) / float(STEPS);
+  vec3 entry = origin + ray * near;
+  vec3 exit = origin + ray * far;
+  float radiusIn = length(entry);
+  float radiusOut = length(exit);
+  float cosIn = dot(entry / radiusIn, ray);
+  float cosOut = dot(exit / radiusOut, ray);
 
-  float total = 0.0;
+  //the deepest the ray ever gets, where nearly all of its gas sits
+  float toBottom = -dot(origin, ray);
+  float lowestRadius = length(origin + ray * clamp(toBottom, near, far));
 
-  for (int i = 0; i < STEPS; i++) {
-    vec3 point = origin + ray * (near + (float(i) + 0.5) * stride);
-    float altitude = length(point) - planetRadius;
+  float gas;
 
-    //thick at the ground, gone at the top of the shell
-    float air = pow(max(0.0, 1.0 - altitude / thickness), FADE_POWER);
-    float lit = smoothstep(-twilight, twilight, dot(normalize(point), sunDirection));
-
-    total += air * lit;
+  if (cosIn >= 0.0) {
+    gas = columnUp(radiusIn, cosIn) - columnUp(radiusOut, cosOut);
+  } else if (cosOut < 0.0) {
+    //still falling at the end, so mirror the piece onto the rising half of the ray
+    gas = columnUp(radiusOut, -cosOut) - columnUp(radiusIn, -cosIn);
+  } else {
+    //the ray falls, bottoms out, then rises, so add up the two halves
+    gas = 2.0 * columnUp(lowestRadius, 0.0) - columnUp(radiusIn, -cosIn) - columnUp(radiusOut, cosOut);
   }
 
-  //air also swallows what it scatters, so thick paths level off instead of growing forever
-  float depth = total * stride / thickness * density;
+  //clamping this point would crease the sky, so round the limits off over the distance the sun
+  //angle needs to change, but never past half the ray
+  float rounding = min(sqrt(2.0 * scaleHeight * planetRadius), 0.5 * (far - near));
+  vec3 sunPoint = origin + ray * smoothMin(smoothMax(toBottom, near, rounding), far, rounding);
+  float sunRadius = length(sunPoint);
+  float cosSun = dot(sunPoint / sunRadius, sunDirection);
 
-  gl_FragColor = vec4(color * (1.0 - exp(-depth)), 1.0);
+  //the sun still reaches the gas this far past the terminator, in cosines
+  float twilight = sqrt(2.0 * scaleHeight / planetRadius);
+
+  //the shadow clears the shell this many times later, and rescattering drags the glow further still
+  float twilightTail = sqrt((shellRadius - planetRadius) / scaleHeight) * RESCATTERING;
+
+  //hold full light until the sun touches the horizon, then let it go out slowly
+  float lit = smoothstep(-twilight * twilightTail, 0.0, cosSun);
+
+  //each channel of scattering is how much gas a straight up column holds, so scale the path to them
+  vec3 depth = RESCATTERING * scattering * gas / scaleHeight;
+
+  //sunlight crosses the gas before it scatters, and loses the channels that scatter most
+  vec3 sunlight = exp(-scattering * columnUp(sunRadius, max(cosSun, 0.0)) / scaleHeight);
+
+  //gas scatters best towards the sun and straight back from it, and worst across
+  //https://en.wikipedia.org/wiki/Rayleigh_scattering
+  float mu = dot(ray, sunDirection);
+  float phase = 0.75 * (1.0 + mu * mu);
+
+  vec3 sky = sunlight * (1.0 - exp(-depth)) * lit * phase;
+
+  //the lower the sun, the longer its light stays in the ozone that absorbs green
+  float absorbed = greenAbsorption * (1.0 - max(cosSun, 0.0));
+
+  //ozone takes green out of the middle, so it never gets to lead its neighbours
+  float middle = (sky.r + sky.b) * 0.5;
+  sky.g -= max(sky.g - middle, 0.0) * absorbed;
+
+  gl_FragColor = vec4(sky, 1.0);
 }
