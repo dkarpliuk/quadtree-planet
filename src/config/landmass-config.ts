@@ -37,7 +37,7 @@ export interface LandmassConfig {
 export const landmassConfig = new ConfigService<LandmassConfig>({
   minLod: 4,
   maxLod: 12,
-  density: 32,
+  density: 64,
   updateFrequencyMs: 500,
   terrain: {
     continents: {
