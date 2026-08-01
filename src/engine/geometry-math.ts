@@ -1,31 +1,11 @@
-import { BufferAttribute, BufferGeometry, Matrix4, PlaneGeometry, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, Matrix4, Vector3 } from 'three';
 
+import { getGridTemplate } from '../lib/grid';
 import { type ModelMatrix, NORMALIZED } from './sector-transform';
 
 /**
- * everything about a grid that does not depend on where the sector sits,
- * so every sector of that density can share it
- */
-export interface GridTopology {
-  //triangle topology, immutable across builds
-  index: BufferAttribute;
-  //texture coordinates, spanning the grid from 0 to 1
-  uv: BufferAttribute;
-}
-
-interface GridTemplate extends GridTopology {
-  //pristine planar positions to transform from
-  positions: Float32Array;
-}
-
-const _gridTemplates = new Map<number, GridTemplate>();
-
-//flat buffer indices of the perimeter, computed once and reused
-const _perimeterCache = new Map<number, Int32Array>();
-
-/**
  * Returns a fresh `density`*`density` segments grid, transformed by the `modelMatrix`.
- * 
+ *
  * Additional `scaleFactor` can be applied (default = 1).
  */
 export function buildGrid(
@@ -33,11 +13,13 @@ export function buildGrid(
   modelMatrix: ModelMatrix,
   scaleFactor: number = 1): Float32Array {
   //copy: applyMatrix4 mutates in place, the template must stay pristine
-  const positions = Float32Array.from(_getOrAddTemplate(density).positions);
+  const positions = Float32Array.from(getGridTemplate(density).positions);
   const geometry = new BufferGeometry();
+  //the template is one unit wide, a cube face spans twice the normalized half width
+  const scale = scaleFactor * NORMALIZED * 2;
   const matrix = new Matrix4()
     .set(...modelMatrix)
-    .scale(new Vector3(scaleFactor, scaleFactor, scaleFactor));
+    .scale(new Vector3(scale, scale, scale));
 
   geometry.setAttribute('position', new BufferAttribute(positions, 3));
   geometry.applyMatrix4(matrix);
@@ -56,51 +38,8 @@ export function computeNormals(positions: Float32Array): Float32Array {
   const geometry = new BufferGeometry();
   //position by reference (read-only here), index shared, normals written fresh
   geometry.setAttribute('position', new BufferAttribute(positions, 3));
-  geometry.setIndex(_getOrAddTemplate(density).index);
+  geometry.setIndex(getGridTemplate(density).index);
   geometry.computeVertexNormals();
 
   return geometry.attributes.normal.array as Float32Array;
-}
-
-/**
- * The parts of a `density`*`density` segments grid that every sector of that
- * density has in common, so that each one does not rebuild them.
- */
-export function getGridTopology(density: number): GridTopology {
-  const { index, uv } = _getOrAddTemplate(density);
-  return { index, uv };
-}
-
-function _getOrAddTemplate(density: number): GridTemplate {
-  let template = _gridTemplates.get(density);
-  if (!template) {
-    const plane = new PlaneGeometry(NORMALIZED * 2, NORMALIZED * 2, density, density);
-    template = {
-      positions: Float32Array.from(plane.attributes.position.array),
-      index: plane.index!,
-      uv: plane.attributes.uv as BufferAttribute,
-    };
-    _gridTemplates.set(density, template);
-  }
-
-  return template;
-}
-
-/**
- * Flat x/y/z buffer indices for the perimeter vertices of an n x n row-major
- * grid, walking clockwise from the top-left corner.
- */
-export function getPerimeterIndices(n: number): Int32Array {
-  let indices = _perimeterCache.get(n);
-  if (indices) return indices;
-
-  const vertices: number[] = [];
-  for (let col = 0; col < n; col++) vertices.push(col);
-  for (let row = 1; row < n; row++) vertices.push(row * n + (n - 1));
-  for (let col = n - 2; col >= 0; col--) vertices.push((n - 1) * n + col);
-  for (let row = n - 2; row >= 1; row--) vertices.push(row * n);
-
-  indices = Int32Array.from(vertices.flatMap(i => [i * 3, i * 3 + 1, i * 3 + 2]));
-  _perimeterCache.set(n, indices);
-  return indices;
 }

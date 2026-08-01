@@ -1,6 +1,7 @@
+import { getPerimeterIndices } from '../lib/grid';
 import { calcDistance } from '../lib/math';
 import type { Coordinate } from '../lib/types';
-import { buildGrid, computeNormals, getPerimeterIndices } from './geometry-math';
+import { buildGrid, computeNormals } from './geometry-math';
 import { SectorTransform } from './sector-transform';
 import { Direction } from './types';
 

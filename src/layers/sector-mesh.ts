@@ -1,6 +1,7 @@
 import { BufferAttribute, BufferGeometry, Material, Mesh, MeshBasicMaterial } from 'three';
 
-import { getGridTopology, type SectorBuffer } from '../engine';
+import type { SectorBuffer } from '../engine';
+import { getGridTemplate } from '../lib/grid';
 
 const defaultMaterial = new MeshBasicMaterial({ color: 0xffffff, wireframe: true });
 
@@ -53,7 +54,7 @@ export class SectorMesh {
 
 function createGeometry(buffer: SectorBuffer): BufferGeometry {
   const vertices = buffer.positions.length / 3;
-  const { index, uv } = getGridTopology(Math.sqrt(vertices) - 1);
+  const { index, uv } = getGridTemplate(Math.sqrt(vertices) - 1);
   const geometry = new BufferGeometry();
 
   geometry.setIndex(index);
