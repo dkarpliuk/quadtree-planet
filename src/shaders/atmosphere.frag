@@ -1,3 +1,28 @@
+/*
+# An optimized atmosphere shader for a round planet, with rayleigh scattering
+
+## uniforms
+
+- `center`           where the planet stands
+- `planetRadius`     the solid surface, where rays stop
+- `shellRadius`      the top of the gas, where the mesh ends
+- `scaleHeight`      https://en.wikipedia.org/wiki/Scale_height
+- `sunDirection`     which way the star is
+- `scattering`       a color, its channels are how hard the gas scatters each of them,
+                     written as HSL in the config: HS picks the color, L the strength
+- `greenAbsorption`  how much green the gas absorbs (with the sun at the horizon)
+
+## optimizations
+
+these replace physics with analytic, so that no ray has to be walked step by step:
+
+- the gas along a ray is taken through the `chapman` function, eliminating the need for a loop
+- `RESCATTERING` multiplier stands for the way light rescatters multiple times in reality
+- `greenAbsorption` stands for ozone, which absorbs green instead of scattering it
+- `twilightTail` follows from `RESCATTERING`: right after sunset the upper gas keeps the sky lit
+- sunlight is taken once per ray, eliminating the need for a loop
+*/
+
 //TODO: light the sky with the star's color and brightness, both stand at 1 here
 //TODO: add mie scattering (haze) https://en.wikipedia.org/wiki/Mie_scattering
 
@@ -14,7 +39,6 @@ uniform float greenAbsorption;
 
 varying vec3 vWorld;
 
-//in reality light rescatters multiple times
 const float RESCATTERING = 2.5;
 
 //where the ray enters and leaves the sphere, swapped around when it misses
@@ -40,7 +64,7 @@ float chapman(float x, float cosAngle) {
 float smoothMax(float a, float b, float k) { return 0.5 * (a + b + sqrt((a - b) * (a - b) + k * k)); }
 float smoothMin(float a, float b, float k) { return 0.5 * (a + b - sqrt((a - b) * (a - b) + k * k)); }
 
-//gas between this point and space, as a thickness of ground level air, for a rising ray only
+//gas between this point and space, as a thickness of ground level gas, for a rising ray only
 float columnUp(float radius, float cosAngle) {
   float height = radius - planetRadius;
   return scaleHeight * exp(-height / scaleHeight) * chapman(radius / scaleHeight, cosAngle);
