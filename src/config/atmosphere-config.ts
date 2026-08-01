@@ -18,7 +18,7 @@ export const atmosphereConfig = new ConfigService<AtmosphereConfig>({
   updateFrequencyMs: 3000,
   scaleHeightMeters: 8 * KM,
   scattering: 'hsl(217, 38%, 38%)',
-  //how much green the gas absorbs with the sun at the horizon, none of it with the sun overhead
+  //how much green the gas absorbs (with the sun at the horizon)
   greenAbsorption: 0.8,
 });
 

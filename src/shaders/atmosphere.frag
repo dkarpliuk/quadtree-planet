@@ -14,9 +14,6 @@ varying vec3 vWorld;
 //in reality light rescatters multiple times
 const float RESCATTERING = 2.5;
 
-//how much longer the sky keeps its light after sunset than the shadow alone would allow
-const float TWILIGHT_TAIL = 6.0;
-
 //where the ray enters and leaves the sphere, swapped around when it misses
 vec2 hitSphere(vec3 origin, vec3 ray, float radius) {
   float b = dot(origin, ray);
@@ -94,8 +91,11 @@ void main() {
   //the sun still reaches the gas this far past the terminator, in cosines
   float twilight = sqrt(2.0 * scaleHeight / planetRadius);
 
+  //the shadow clears the shell this many times later, and rescattering drags the glow further still
+  float twilightTail = sqrt((shellRadius - planetRadius) / scaleHeight) * RESCATTERING;
+
   //hold full light until the sun touches the horizon, then let it go out slowly
-  float lit = smoothstep(-twilight * TWILIGHT_TAIL, 0.0, cosSun);
+  float lit = smoothstep(-twilight * twilightTail, 0.0, cosSun);
 
   //each channel of scattering is how much gas a straight up column holds, so scale the path to them
   vec3 depth = RESCATTERING * scattering * gas / scaleHeight;
